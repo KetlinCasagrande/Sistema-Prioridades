@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+<meta charset="UTF-8">
+<title>Histórico</title>
+
+<link rel="stylesheet" href="/static/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+    margin:0;
+    font-family:'Poppins',sans-serif;
+    background:#f4f6f9;
+    display:flex;
+}
+
+/* SIDEBAR */
+.sidebar{
+    width:220px;
+    background:#111827;
+    color:white;
+    height:100vh;
+    padding:20px;
+}
+
+.sidebar a{
+    display:block;
+    color:white;
+    text-decoration:none;
+    margin:12px 0;
+    font-size:14px;
+}
+
+/* CONTEÚDO */
+.conteudo{
+    flex:1;
+    padding:25px;
+}
+
+/* TÍTULO */
+.topo h1{
+    margin:0;
+}
+
+/* TABELA */
+.box{
+    margin-top:20px;
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.06);
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th, td{
+    text-align:left;
+    padding:12px;
+    border-bottom:1px solid #eee;
+}
+
+th{
+    background:#f9fafb;
+}
+
+.status{
+    padding:4px 8px;
+    border-radius:6px;
+    font-size:12px;
+    background:#e5e7eb;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+
+    <h2>Menu</h2>
+
+    <a href="/home">🏠 Home</a>
+    <a href="/historico">📜 Histórico</a>
+    <a href="/clt">💼 CLT</a>
+    <a href="/inss">👴 INSS</a>
+    <a href="/fgts">🏠 FGTS</a>
+
+    {% if tipo in ["master","adm"] %}
+    <a href="/admin">⚙ Admin</a>
+    {% endif %}
+
+    <a href="/logout">🚪 Sair</a>
+
+</div>
+
+<!-- CONTEÚDO -->
+<div class="conteudo">
+
+    <div class="topo">
+        <h1>📜 Histórico de Comissões</h1>
+        <p>Todos os registros do sistema</p>
+    </div>
+
+    <div class="box">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Promotora</th>
+                    <th>Valor</th>
+                    <th>Banco</th>
+                    <th>Data</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for item in historico %}
+                <tr>
+                    <td>{{ item["promotora"] }}</td>
+                    <td>R$ {{ item["valor"] }}</td>
+                    <td>{{ item["banco"] }}</td>
+                    <td>{{ item["data"] }}</td>
+                    <td>
+                        <span class="status">{{ item["status"] }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+</body>
+</html>

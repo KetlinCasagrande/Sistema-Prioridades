@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+
+    <title>{% block titulo %}{% endblock %}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+
+    <h2 class="text">Sistema</h2>
+
+    <a href="/clt">💼 CLT</a>
+    <a href="/inss">👴 INSS</a>
+    <a href="/fgts">🏠 FGTS</a>
+    <a href="/compra-divida">💳 Compra</a>
+    <a href="/termos">📄 Gerar Termo</a>
+
+    {% if tipo == "master" %}
+    <a href="/admin">⚙️ Painel Admin</a>
+    {% endif %}
+
+    {% if tipo in ["master", "adm"] %}
+    <a href="/usuarios">👥 Usuários</a>
+    <a href="/termos/historico">📚 Histórico</a>
+    {% endif %}
+
+    <a href="/logout">🚪 Sair</a>
+
+</div>
+
+<!-- CONTEÚDO -->
+<div class="conteudo">
+
+    {% block conteudo %}{% endblock %}
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert-success">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+</div>
+
+</body>
+</html>

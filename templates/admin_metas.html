@@ -1,0 +1,57 @@
+<h1>👑 Admin - Metas</h1>
+
+<h2>📦 Metas por Produto</h2>
+
+<table border="1">
+  <tr>
+    <th>Produto</th>
+    <th>Meta</th>
+    <th>Ação</th>
+  </tr>
+
+  {% for m in metas %}
+  <tr>
+    <form method="POST" action="/admin/meta-produto">
+      <td>
+        <input name="produto" value="{{ m['produto'] }}" readonly>
+      </td>
+
+      <td>
+        <input name="meta" value="{{ m['meta'] }}">
+      </td>
+
+      <td>
+        <button type="submit">Salvar</button>
+      </td>
+    </form>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>👩‍💼 Metas por Usuário</h2>
+
+<table border="1">
+  <tr>
+    <th>Usuário ID</th>
+    <th>Meta Total</th>
+    <th>Ação</th>
+  </tr>
+
+  {% for u in usuarios %}
+  <tr>
+    <form method="POST" action="/admin/meta-usuario">
+      <td>
+        <input name="usuario_id" value="{{ u['usuario_id'] }}" readonly>
+      </td>
+
+      <td>
+        <input name="meta_total" value="{{ u['meta_total'] }}">
+      </td>
+
+      <td>
+        <button type="submit">Salvar</button>
+      </td>
+    </form>
+  </tr>
+  {% endfor %}
+</table>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+
+<meta charset="UTF-8">
+<title>{{ titulo }}</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<script>
+    function removerHighlights(root){
+    root.querySelectorAll(".highlight").forEach(el => {
+        el.replaceWith(document.createTextNode(el.textContent));
+    });
+}
+
+function highlightText(root, term){
+
+    if(!term) return;
+
+    const regex = new RegExp(term, "gi");
+
+    function walk(node){
+
+        if(node.nodeType === 3){ // TEXT NODE
+
+            let match = node.nodeValue.match(regex);
+
+            if(match){
+
+                let span = document.createElement("span");
+                span.className = "highlight";
+                span.textContent = node.nodeValue;
+
+                let replaced = node.nodeValue.replace(
+                    regex,
+                    (m) => `§${m}§`
+                );
+
+                let parts = replaced.split("§");
+
+                let fragment = document.createDocumentFragment();
+
+                parts.forEach(part => {
+
+                    if(part.toLowerCase() === term.toLowerCase()){
+                        let mark = document.createElement("span");
+                        mark.className = "highlight";
+                        mark.textContent = part;
+                        fragment.appendChild(mark);
+                    } else {
+                        fragment.appendChild(document.createTextNode(part));
+                    }
+
+                });
+
+                node.replaceWith(fragment);
+            }
+
+        } else {
+
+            node.childNodes.forEach(walk);
+
+        }
+    }
+
+    walk(root);
+}
+
+function toggleTabela(id){
+
+    let div = document.getElementById(id);
+
+    if(div.style.display === "block"){
+        div.style.display = "none";
+    } else {
+        div.style.display = "block";
+    }
+}
+
+function filtrarBancos(){
+
+    let input = document.getElementById("buscaBanco");
+    let filtro = input.value.toLowerCase().trim();
+
+    let itens = document.querySelectorAll(".tabela-item");
+
+    itens.forEach(item => {
+
+        // limpa highlight anterior (IMPORTANTE)
+        item.querySelectorAll(".highlight").forEach(el => {
+            el.replaceWith(document.createTextNode(el.textContent));
+        });
+
+        let texto = item.innerText.toLowerCase();
+
+        if(!filtro){
+            item.style.display = "";
+            return;
+        }
+
+        if(texto.includes(filtro)){
+            item.style.display = "";
+
+            // highlight simples e seguro
+            highlightSimple(item, filtro);
+
+        } else {
+            item.style.display = "none";
+        }
+
+    });
+}
+
+function highlightSimple(element, term){
+
+    let regex = new RegExp(term, "gi");
+
+    element.querySelectorAll("*").forEach(el => {
+
+        if(el.children.length === 0 && el.textContent){
+
+            if(el.textContent.toLowerCase().includes(term)){
+
+                el.innerHTML = el.textContent.replace(
+                    regex,
+                    match => `<span class="highlight">${match}</span>`
+                );
+            }
+        }
+    });
+}
+
+</script>
+
+</head>
+
+<body>
+<div class="sidebar" id="sidebar">
+
+    <button class="toggle-btn" onclick="toggleSidebar()">
+        ◀
+    </button>
+
+    <a href="/home" class="{% if titulo == 'Home' %}active{% endif %}">
+        <span class="icon">🏠</span>
+        <span class="text">Home</span>
+    </a>
+
+    <a href="/vendas">
+        <span class="icon">💰</span>
+        <span class="text">Minhas Vendas</span>
+    </a>
+    
+    <a href="/termos">
+    <span class="icon">📄</span>
+    <span class="text">Gerar Termo</span>
+    </a>
+
+    <a href="/bancos" class="{% if titulo == 'Bancos' %}active{% endif %}">
+        <span class="icon">🏦</span>
+        <span class="text">Bancos</span>
+    </a>
+
+    <a href="/clt" class="{% if titulo == 'CLT' %}active{% endif %}">
+        <span class="icon">💼</span>
+        <span class="text">CLT</span>
+    </a>
+
+    <a href="/inss" class="{% if titulo == 'INSS' %}active{% endif %}">
+        <span class="icon">👴</span>
+        <span class="text">INSS</span>
+    </a>
+
+    <a href="/fgts" class="{% if titulo == 'FGTS' %}active{% endif %}">
+        <span class="icon">🔐</span>
+        <span class="text">FGTS</span>
+    </a>
+
+    <a href="/compra-divida"
+       class="{% if 'COMPRA' in titulo|upper %}active{% endif %}">
+        <span class="icon">💲</span>
+        <span class="text">Compra</span>
+    </a>
+
+    {% if tipo|lower|trim in ["master", "admin", "adm"] %}
+    <a href="/admin">
+        <span class="icon">⚙️</span>
+        <span class="text">Admin</span>
+    </a>
+    {% endif %}
+
+    <a href="/logout">
+        <span class="icon">🚪</span>
+        <span class="text">Sair</span>
+    </a>
+
+</div>
+
+<!-- CONTEÚDO -->
+<div class="conteudo">
+
+    <!-- TOPO -->
+    <div class="topo">
+       
+
+        <div>
+
+            
+
+            <span>Consulte prioridades e tabelas disponíveis</span>
+
+        </div>
+
+    </div>
+
+    <!-- BUSCA GLOBAL (ÚNICA) -->
+    <div class="box">
+
+        <input
+            type="text"
+            id="buscaBanco"
+            placeholder="Buscar banco, promotora ou tabela..."
+            oninput="filtrarBancos()"
+        >
+
+    </div>
+
+    <!-- AVISOS -->
+    {% if avisos %}
+
+    <div class="box">
+
+        <h2 style="margin-bottom:20px;">📢 Avisos</h2>
+
+        {% for aviso in avisos %}
+
+        <div class="aviso">
+
+            <strong>{{ aviso["titulo"] }}</strong>
+
+            <div style="margin-top:8px;">
+                {{ aviso["mensagem"] }}
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    {% endif %}
+
+    <!-- BANCOS -->
+    {% for banco in bancos %}
+    {% set posicao = loop.index %}
+
+    <div class="produto-card box">
+
+        <!-- HEADER -->
+        <div class="banco-header"
+             onclick="toggleTabela('banco{{ loop.index }}')">
+
+            <h2>
+
+                {% if posicao == 1 %} 🥇 {% elif posicao == 2 %} 🥈 {% elif posicao == 3 %} 🥉 {% endif %}
+
+                🏦 {{ banco.nome }}
+
+            </h2>
+
+        </div>
+
+        <!-- TABELAS -->
+        <div class="tabelas"
+             id="banco{{ loop.index }}"
+             style="display:none;">
+
+            {% for tabela in banco.tabelas %}
+
+            <div class="tabela-item"
+     data-tabela="{{ tabela['tabela_nome'] }}"
+     data-prazo="{{ tabela['prazo'] }}"
+     data-promotora="{{ tabela['promotora'] }}"
+     data-comissao="{{ tabela['comissao'] }}">
+
+                <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px;">
+
+                    <!-- ESQUERDA -->
+                    <div>
+
+                        <h3 style="font-size:22px;">
+                            {{ tabela["tabela_nome"] }}
+                        </h3>
+
+                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+
+                            {% if tipo == "master" %}
+                            <div class="card">
+                                💰 Comissão: <strong>{{ tabela["comissao"] }}%</strong>
+                            </div>
+                            {% endif %}
+
+                            <div class="card">
+                                📅 Prazo: <strong>{{ tabela["prazo"] }}</strong>
+                            </div>
+
+                        </div>
+
+                        {% if tabela["promotora"] %}
+                        <div style="margin-top:10px;">
+                            <span class="online">👩‍💼 {{ tabela["promotora"] }}</span>
+                        </div>
+                        {% endif %}
+
+                        <div style="margin-top:10px;">
+
+                            {% if tabela["status"] == "LIBERADA" %}
+                                <span class="status-liberada">✅ LIBERADA</span>
+
+                            {% elif tabela["status"] == "PRECISA_LIBERACAO" %}
+                                <span class="status-liberacao">⚠ PRECISA LIBERAÇÃO</span>
+
+                            {% else %}
+                                <span class="status-pausada">⛔ PAUSADA</span>
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                    <!-- DIREITA -->
+                    {% if tipo == "master" %}
+
+                    <div>
+                        <a class="btn btn-verde"
+                           href="/toggle-tabela/{{ tabela['id'] }}">
+
+                            {% if tabela["ativo"] == 1 %}
+                                Desativar
+                            {% else %}
+                                Ativar
+                            {% endif %}
+
+                        </a>
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+<script>
+
+
+
+// aplica tema ao carregar a página
+window.onload = function(){
+
+    let theme = localStorage.getItem("theme");
+
+    if(theme === "dark"){
+        document.body.classList.add("dark");
+    }
+}
+
+</script>
+<script>
+function toggleSidebar() {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    sidebar.classList.toggle("closed");
+
+    if (conteudo) {
+        conteudo.classList.toggle("sidebar-fechada");
+    }
+
+    localStorage.setItem(
+        "sidebarFechada",
+        sidebar.classList.contains("closed")
+    );
+
+    btn.innerHTML =
+        sidebar.classList.contains("closed")
+        ? "▶"
+        : "◀";
+}
+
+window.addEventListener("load", () => {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    if(localStorage.getItem("sidebarFechada") === "true"){
+
+        sidebar.classList.add("closed");
+
+        if(conteudo){
+            conteudo.classList.add("sidebar-fechada");
+        }
+
+        btn.innerHTML = "▶";
+    }
+});
+</script>
+</body>
+</html>

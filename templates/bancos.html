@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+
+<meta charset="UTF-8">
+<title>Bancos</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<script>
+
+function copiarTexto(texto){
+
+    navigator.clipboard.writeText(texto)
+    .then(() => {
+        alert("Copiado!");
+    })
+    .catch(() => {
+        alert("Erro ao copiar.");
+    });
+}
+
+function toggleBanco(id){
+
+    const conteudo = document.getElementById(id);
+
+    if(conteudo.style.display === "block"){
+        conteudo.style.display = "none";
+    } else {
+        conteudo.style.display = "block";
+    }
+}
+
+</script>
+
+</head>
+
+<body>
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+
+    <button class="toggle-btn" onclick="toggleSidebar()">
+        ◀
+    </button>
+
+    <a href="/home" class="{% if titulo == 'Home' %}active{% endif %}">
+        <span class="icon">🏠</span>
+        <span class="text">Home</span>
+    </a>
+
+    <a href="/vendas">
+        <span class="icon">💰</span>
+        <span class="text">Minhas Vendas</span>
+    </a>
+
+    <a href="/termos">
+    <span class="icon">📄</span>
+    <span class="text">Gerar Termo</span>
+    </a>
+
+    <a href="/bancos" class="{% if titulo == 'Bancos' %}active{% endif %}">
+        <span class="icon">🏦</span>
+        <span class="text">Bancos</span>
+    </a>
+
+    <a href="/clt" class="{% if titulo == 'CLT' %}active{% endif %}">
+        <span class="icon">💼</span>
+        <span class="text">CLT</span>
+    </a>
+
+    <a href="/inss" class="{% if titulo == 'INSS' %}active{% endif %}">
+        <span class="icon">👴</span>
+        <span class="text">INSS</span>
+    </a>
+
+    <a href="/fgts" class="{% if titulo == 'FGTS' %}active{% endif %}">
+        <span class="icon">🔐</span>
+        <span class="text">FGTS</span>
+    </a>
+
+    <a href="/compra-divida"
+       class="{% if 'COMPRA' in titulo|upper %}active{% endif %}">
+        <span class="icon">💲</span>
+        <span class="text">Compra</span>
+    </a>
+
+    {% if tipo|lower|trim in ["master", "admin", "adm"] %}
+    <a href="/admin">
+        <span class="icon">⚙️</span>
+        <span class="text">Admin</span>
+    </a>
+    {% endif %}
+
+    <a href="/logout">
+        <span class="icon">🚪</span>
+        <span class="text">Sair</span>
+    </a>
+
+</div>
+<!-- CONTEÚDO -->
+<div class="conteudo">
+
+<div class="page">
+
+    <!-- TOPO -->
+    <div class="topo">
+
+        <div>
+            <h1>🏦 Bancos</h1>
+            <span>Links e acessos internos</span>
+        </div>
+
+    </div>
+
+    <!-- GRID -->
+    <div class="grid-home">
+
+        {% for banco in bancos %}
+
+        <div class="card-home banco-card">
+
+            <!-- TOPO -->
+            <div
+                class="banco-topo"
+                onclick="toggleBanco('banco{{ banco.id }}')"
+            >
+
+                <div>
+
+                    <h3>🏦 {{ banco.nome }}</h3>
+
+                    {% if banco.observacao %}
+                    <p class="subtexto">
+                        {{ banco.observacao }}
+                    </p>
+                    {% endif %}
+
+                </div>
+
+                <div class="seta">
+                    ▼
+                </div>
+
+            </div>
+
+            <!-- BOTÃO -->
+            <a
+                href="{{ banco.link }}"
+                target="_blank"
+                class="btn btn-verde"
+                style="
+                    margin-top:15px;
+                    display:block;
+                    text-align:center;
+                    text-decoration:none;
+                "
+            >
+                🚀 Abrir Sistema
+            </a>
+
+            <!-- EXPANSÍVEL -->
+            <div
+                id="banco{{ banco.id }}"
+                class="conteudo-banco"
+            >
+
+                <!-- ACESSOS -->
+                <div style="margin-top:20px;">
+
+                    {% for acesso in banco.acessos %}
+
+                    <div class="acesso-box">
+
+                       {% if tipo|lower|trim in ["master","adm","admin"] %}
+
+                        <!-- MASTER -->
+                        <form
+                            method="POST"
+                            action="/bancos/acesso/editar/{{ acesso.id }}"
+                        >
+
+                            <input
+                                name="descricao"
+                                value="{{ acesso.descricao }}"
+                                placeholder="Descrição"
+                                style="margin-bottom:10px;"
+                            >
+
+                            <input
+                                name="login"
+                                value="{{ acesso.login }}"
+                                placeholder="Login"
+                                style="margin-bottom:10px;"
+                            >
+
+                            <div style="
+                                display:flex;
+                                gap:10px;
+                                margin-bottom:10px;
+                            ">
+
+                                <input
+                                    type="password"
+                                    name="senha"
+                                    value="{{ acesso.senha }}"
+                                    placeholder="Senha"
+                                >
+
+                                <button
+                                    type="button"
+                                    class="btn btn-roxo"
+                                    onclick="copiarTexto('{{ acesso.senha|escape }}')"
+                                >
+                                    Copiar
+                                </button>
+
+                            </div>
+
+                            <div class="acoes-banco">
+
+                                <button class="btn btn-verde">
+                                    Salvar
+                                </button>
+
+                                <a
+                                    href="/bancos/acesso/deletar/{{ acesso.id }}"
+                                    class="btn btn-vermelho"
+                                >
+                                    Excluir
+                                </a>
+
+                            </div>
+
+                        </form>
+
+                        {% else %}
+
+                        <!-- VISUALIZAÇÃO -->
+                        <div style="
+                            display:flex;
+                            flex-direction:column;
+                            gap:10px;
+                        ">
+
+                            <input
+                                value="{{ acesso.descricao }}"
+                                readonly
+                            >
+
+                            <input
+                                value="{{ acesso.login }}"
+                                readonly
+                            >
+
+                            <div style="
+                                display:flex;
+                                gap:10px;
+                            ">
+
+                                <input
+                                    type="password"
+                                    value="{{ acesso.senha }}"
+                                    readonly
+                                >
+
+                                <button
+                                    type="button"
+                                    class="btn btn-roxo"
+                                    onclick="copiarTexto('{{ acesso.senha|escape }}')"
+                                >
+                                    Copiar
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+                <!-- NOVO ACESSO -->
+                {% if tipo|lower|trim in ["master","adm","admin"] %}
+
+                <div class="novo-acesso">
+
+                    <form method="POST" action="/bancos/acesso/criar">
+
+                        <input
+                            type="hidden"
+                            name="banco_id"
+                            value="{{ banco.id }}"
+                        >
+
+                        <input
+                            name="descricao"
+                            placeholder="Descrição"
+                            style="margin-bottom:10px;"
+                        >
+
+                        <input
+                            name="login"
+                            placeholder="Login"
+                            style="margin-bottom:10px;"
+                        >
+
+                        <input
+                            name="senha"
+                            placeholder="Senha"
+                            style="margin-bottom:10px;"
+                        >
+
+                        <button
+                            class="btn btn-roxo"
+                            style="width:100%;"
+                        >
+                            ➕ Adicionar acesso
+                        </button>
+
+                    </form>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+</div>
+<script>
+function toggleSidebar() {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    sidebar.classList.toggle("closed");
+
+    if (conteudo) {
+        conteudo.classList.toggle("sidebar-fechada");
+    }
+
+    localStorage.setItem(
+        "sidebarFechada",
+        sidebar.classList.contains("closed")
+    );
+
+    btn.innerHTML =
+        sidebar.classList.contains("closed")
+        ? "▶"
+        : "◀";
+}
+
+window.addEventListener("load", () => {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    if(localStorage.getItem("sidebarFechada") === "true"){
+
+        sidebar.classList.add("closed");
+
+        if(conteudo){
+            conteudo.classList.add("sidebar-fechada");
+        }
+
+        btn.innerHTML = "▶";
+    }
+});
+</script>
+</body>
+</html>

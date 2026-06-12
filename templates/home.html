@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+<meta charset="UTF-8">
+<title>HOME</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div class="sidebar" id="sidebar">
+
+    <button class="toggle-btn" onclick="toggleSidebar()">
+        ◀
+    </button>
+
+    <a href="/home" class="active">
+        <span class="icon">🏠</span>
+        <span class="text">Home</span>
+    </a>
+
+    <a href="/vendas">
+        <span class="icon">💰</span>
+        <span class="text">Minhas Vendas</span>
+        
+    </a>
+    <a href="/termos">
+    <span class="icon">📄</span>
+    <span class="text">Gerar Termo</span>
+    </a>
+
+    <a href="/bancos">
+        <span class="icon">🏦</span>
+        <span class="text">Bancos</span>
+    </a>
+
+    <a href="/clt">
+        <span class="icon">💼</span>
+        <span class="text">CLT</span>
+    </a>
+
+    <a href="/inss">
+        <span class="icon">👴</span>
+        <span class="text">INSS</span>
+    </a>
+
+    <a href="/fgts">
+        <span class="icon">🔐</span>
+        <span class="text">FGTS</span>
+    </a>
+
+    <a href="/compra-divida">
+        <span class="icon">💲</span>
+        <span class="text">Compra</span>
+    </a>
+
+    {% if tipo|lower|trim in ["master", "admin", "adm"] %}
+    <a href="/admin">
+        <span class="icon">⚙️</span>
+        <span class="text">Admin</span>
+    </a>
+    {% endif %}
+
+    <a href="/logout">
+        <span class="icon">🚪</span>
+        <span class="text">Sair</span>
+    </a>
+
+</div>
+
+<!-- CONTEÚDO -->
+
+
+<div class="conteudo">
+
+    <div class="page">
+
+        <!-- TOPO -->
+        <div class="topo">
+            <div>
+                <h1>👋 Olá, {{ usuario }}</h1>
+                <span>Bem-vindo ao Sistema de Prioridades Bancárias</span>
+            </div>
+
+            <div class="tag tag-master">
+                {{ tipo|upper }}
+            </div>
+        </div>
+
+
+</div>
+        <!-- CARDS RESUMO -->
+<!-- PAINEL OPERACIONAL -->
+<div class="grid-home" style="margin-top:20px;">
+    <!-- AVISOS -->
+<div class="section">
+
+    <h2>📢 Avisos Internos</h2>
+
+    {% if avisos %}
+
+        {% for aviso in avisos %}
+
+        <div class="aviso-home">
+
+            <strong>{{ aviso["titulo"] }}</strong>
+
+            <p>{{ aviso["mensagem"] }}</p>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="aviso-home">
+            Nenhum aviso disponível.
+        </div>
+
+    {% endif %}
+<div class="card ranking-card">
+
+    <h3>🏆 Top 3 do Mês</h3>
+
+    <div class="ranking">
+
+        {% if top3|length > 0 %}
+        <div class="posicao primeiro">
+            🥇 {{ top3[0][0] }}
+        </div>
+        {% endif %}
+
+        {% if top3|length > 1 %}
+        <div class="posicao">
+            🥈 {{ top3[1][0] }}
+        </div>
+        {% endif %}
+
+        {% if top3|length > 2 %}
+        <div class="posicao">
+            🥉 {{ top3[2][0] }}
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+    
+
+    <!-- ACESSO RÁPIDO -->
+    <div class="box">
+
+        <h2 style="margin-bottom:18px;">
+            ⚡ Acesso Rápido
+        </h2>
+
+        <div class="atalhos-grid">
+
+            <a href="/clt" class="atalho-btn">
+                💼 CLT
+            </a>
+
+            <a href="/inss" class="atalho-btn">
+                👴 INSS
+            </a>
+
+            <a href="/fgts" class="atalho-btn">
+                🏠 FGTS
+            </a>
+
+            <a href="/compra-divida" class="atalho-btn">
+                💲 Compra
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</div>
+        
+</div>
+<script>
+function toggleSidebar() {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    sidebar.classList.toggle("closed");
+
+    if (conteudo) {
+        conteudo.classList.toggle("sidebar-fechada");
+    }
+
+    localStorage.setItem(
+        "sidebarFechada",
+        sidebar.classList.contains("closed")
+    );
+
+    btn.innerHTML =
+        sidebar.classList.contains("closed")
+        ? "▶"
+        : "◀";
+}
+
+window.addEventListener("load", () => {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    if(localStorage.getItem("sidebarFechada") === "true"){
+
+        sidebar.classList.add("closed");
+
+        if(conteudo){
+            conteudo.classList.add("sidebar-fechada");
+        }
+
+        btn.innerHTML = "▶";
+    }
+});
+</script>
+</body>
+</html>
