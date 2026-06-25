@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Status</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar" id="sidebar">
+
+    <button class="toggle-btn" onclick="toggleSidebar()">
+        ◀
+    </button>
+
+    <a href="/home">
+        <span class="icon">🏠</span>
+        <span class="text">Home</span>
+    </a>
+
+   
+
+
+    
+  
+
+  
+
+
+
+    {% if tipo|lower|trim in ["master", "admin", "adm"] %}
+    <a href="/admin">
+        <span class="icon">⚙️</span>
+        <span class="text">Admin</span>
+    </a>
+    {% endif %}
+
+    <a href="/logout">
+        <span class="icon">🚪</span>
+        <span class="text">Sair</span>
+    </a>
+
+</div>
+
+
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="sidebar" id="sidebar">
+
+<button class="toggle-btn" onclick="toggleSidebar()">◀</button>
+
+<a href="/home">
+    <span class="icon">🏠</span>
+    <span class="text">Home</span>
+</a>
+
+{% if tipo|lower|trim in ["master","adm","admin"] %}
+
+<a href="#" class="menu-admin active" data-menu="usuarios" onclick="abrir('usuarios')">
+    <span class="icon">👤</span>
+    <span class="text">Usuários</span>
+</a>
+<a href="/status">
+    <span class="icon">📫</span>
+    <span class="text">Status</span>
+</a>
+
+{% if tipo in ["master", "adm"] %}
+<a href="/termos/historico">
+    <span class="icon">📚</span>
+    <span class="text">Histórico de Termos</span>
+</a>
+{% endif %}
+
+<a href="#" class="menu-admin" data-menu="comissoes" onclick="abrir('comissoes')">
+    <span class="icon">💰</span>
+    <span class="text">Comissões</span>
+</a>
+
+<a href="#" class="menu-admin" data-menu="avisos" onclick="abrir('avisos')">
+    <span class="icon">📢</span>
+    <span class="text">Avisos</span>
+</a>
+
+<a href="#" class="menu-admin" data-menu="metas" onclick="abrir('metas')">
+    <span class="icon">⚙️</span>
+    <span class="text">Metas</span>
+</a>
+
+{% endif %}
+
+<a href="/logout">
+    <span class="icon">🚪</span>
+    <span class="text">Sair</span>
+</a>
+
+</div>
+
+<div class="conteudo">
+<div class="page">
+
+<div class="topo">
+    <h1>Painel Administrativo</h1>
+    <span>Sistema Interno Bancário</span>
+</div>
+
+    <!-- CONTEÚDO -->
+    <div class="content">
+
+        <h1>📊 Status do Sistema</h1>
+
+        <a href="/backup" class="btn">💾 Fazer Backup</a>
+
+        <!-- CARDS SIMPLES (SEM INVENTAR ESTILO NOVO) -->
+        <div class="cards">
+
+            <div class="card">
+                <h3>Vendas Hoje</h3>
+                <p>{{ vendas_hoje }}</p>
+            </div>
+
+            <div class="card">
+                <h3>Usuários</h3>
+                <p>{{ usuarios }}</p>
+            </div>
+
+            <div class="card">
+                <h3>Termos Hoje</h3>
+                <p>{{ termos_hoje if termos_hoje is defined else 0 }}</p>
+            </div>
+
+            <div class="card">
+                <h3>Última Atividade</h3>
+                <p>{{ logs[0]["data_hora"] if logs else "—" }}</p>
+            </div>
+
+        </div>
+
+        <hr>
+
+        <h2>📋 Últimas atividades</h2>
+
+        <table>
+
+            <tr>
+                <th>Data</th>
+                <th>Usuário</th>
+                <th>Ação</th>
+                <th>Detalhes</th>
+            </tr>
+
+            {% for log in logs %}
+            <tr>
+                <td>{{ log["data_hora"] }}</td>
+                <td>{{ log["usuario"] }}</td>
+                <td>{{ log["acao"] }}</td>
+                <td>{{ log["detalhes"] }}</td>
+            </tr>
+            {% endfor %}
+
+        </table>
+
+    </div>
+</div>
+
+</body>
+</html>

@@ -10,11 +10,10 @@
 </head>
 
 <body>
+
 <div class="sidebar" id="sidebar">
 
-    <button class="toggle-btn" onclick="toggleSidebar()">
-        ◀
-    </button>
+    <button class="toggle-btn" onclick="toggleSidebar()">◀</button>
 
     <a href="/home" class="active">
         <span class="icon">🏠</span>
@@ -24,11 +23,16 @@
     <a href="/vendas">
         <span class="icon">💰</span>
         <span class="text">Minhas Vendas</span>
-        
     </a>
+
     <a href="/termos">
-    <span class="icon">📄</span>
-    <span class="text">Gerar Termo</span>
+        <span class="icon">📄</span>
+        <span class="text">Gerar Termo</span>
+    </a>
+
+    <a href="/termos/historico">
+        <span class="icon">📚</span>
+        <span class="text">Termos Gerados</span>
     </a>
 
     <a href="/bancos">
@@ -70,120 +74,105 @@
 
 </div>
 
-<!-- CONTEÚDO -->
-
-
 <div class="conteudo">
+<div class="page">
 
-    <div class="page">
-
-        <!-- TOPO -->
-        <div class="topo">
-            <div>
-                <h1>👋 Olá, {{ usuario }}</h1>
-                <span>Bem-vindo ao Sistema de Prioridades Bancárias</span>
-            </div>
-
-            <div class="tag tag-master">
-                {{ tipo|upper }}
-            </div>
+    <div class="home-welcome">
+        <div>
+            <h1>👋 Olá, {{ usuario }}</h1>
+            <span> Gestão inteligente de vendas, bancos e operações. </span>
         </div>
 
-
-</div>
-        <!-- CARDS RESUMO -->
-<!-- PAINEL OPERACIONAL -->
-<div class="grid-home" style="margin-top:20px;">
-    <!-- AVISOS -->
-<div class="section">
-
-    <h2>📢 Avisos Internos</h2>
-
-    {% if avisos %}
-
-        {% for aviso in avisos %}
-
-        <div class="aviso-home">
-
-            <strong>{{ aviso["titulo"] }}</strong>
-
-            <p>{{ aviso["mensagem"] }}</p>
-
-        </div>
-
-        {% endfor %}
-
-    {% else %}
-
-        <div class="aviso-home">
-            Nenhum aviso disponível.
-        </div>
-
-    {% endif %}
-<div class="card ranking-card">
-
-    <h3>🏆 Top 3 do Mês</h3>
-
-    <div class="ranking">
-
-        {% if top3|length > 0 %}
-        <div class="posicao primeiro">
-            🥇 {{ top3[0][0] }}
-        </div>
-        {% endif %}
-
-        {% if top3|length > 1 %}
-        <div class="posicao">
-            🥈 {{ top3[1][0] }}
-        </div>
-        {% endif %}
-
-        {% if top3|length > 2 %}
-        <div class="posicao">
-            🥉 {{ top3[2][0] }}
-        </div>
-        {% endif %}
-
+        <strong>{{ tipo|upper }}</strong>
     </div>
 
-</div>
-    
+    <div class="home-kpis">
 
-    <!-- ACESSO RÁPIDO -->
-    <div class="box">
+        <div class="home-kpi">
+            <span>💰 Produção do mês</span>
+            <strong>R$ {{ "%.2f"|format(producao_mes) }}</strong>
+        </div>
 
-        <h2 style="margin-bottom:18px;">
-            ⚡ Acesso Rápido
-        </h2>
+        <div class="home-kpi">
+            <span>📌 Vendas hoje</span>
+            <strong>{{ vendas_hoje }}</strong>
+        </div>
 
-        <div class="atalhos-grid">
+        <div class="home-kpi">
+            <span>📄 Termos hoje</span>
+            <strong>{{ termos_hoje }}</strong>
+        </div>
 
-            <a href="/clt" class="atalho-btn">
-                💼 CLT
-            </a>
-
-            <a href="/inss" class="atalho-btn">
-                👴 INSS
-            </a>
-
-            <a href="/fgts" class="atalho-btn">
-                🏠 FGTS
-            </a>
-
-            <a href="/compra-divida" class="atalho-btn">
-                💲 Compra
-            </a>
-
+        <div class="home-kpi">
+            <span>👥 Usuários</span>
+            <strong>{{ usuarios_ativos }}</strong>
         </div>
 
     </div>
 
-</div>
+    <div class="home-grid">
+
+        <div class="home-box">
+            <h2>📢 Avisos Internos</h2>
+
+            {% if avisos %}
+                {% for aviso in avisos %}
+                <div class="aviso-home">
+                    <strong>{{ aviso["titulo"] }}</strong>
+                    <p>{{ aviso["mensagem"] }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="texto-vazio">Nenhum aviso no momento.</p>
+            {% endif %}
+        </div>
+
+        <div class="home-box">
+            <h2>🏆 Top 3 do Mês</h2>
+
+            {% if top3 %}
+                {% for r in top3 %}
+                <div class="ranking-item">
+                    <strong>
+                        {% if loop.index == 1 %}
+                            🥇
+                        {% elif loop.index == 2 %}
+                            🥈
+                        {% else %}
+                            🥉
+                        {% endif %}
+                        {{ r[0] }}
+                    </strong>
+
+                    <span>R$ {{ "%.2f"|format(r[1] or 0) }}</span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="texto-vazio">Nenhuma venda registrada.</p>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <div class="home-box">
+        <h2>⚡ Acesso Rápido</h2>
+
+        <div class="atalhos-home">
+
+            <a href="/clt">💼 CLT</a>
+            <a href="/inss">👴 INSS</a>
+            <a href="/fgts">🔐 FGTS</a>
+            <a href="/compra-divida">💲 Compra</a>
+            <a href="/termos">📄 Termos</a>
+            <a href="/vendas">💰 Vendas</a>
+
+        </div>
+    </div>
 
 
 </div>
-        
 </div>
+
 <script>
 function toggleSidebar() {
 
@@ -226,5 +215,6 @@ window.addEventListener("load", () => {
     }
 });
 </script>
+
 </body>
 </html>

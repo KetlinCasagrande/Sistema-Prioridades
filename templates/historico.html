@@ -10,140 +10,489 @@
 
 <style>
 
-body{
-    margin:0;
-    font-family:'Poppins',sans-serif;
-    background:#f4f6f9;
-    display:flex;
-}
-
-/* SIDEBAR */
-.sidebar{
-    width:220px;
-    background:#111827;
-    color:white;
-    height:100vh;
-    padding:20px;
-}
-
-.sidebar a{
-    display:block;
-    color:white;
-    text-decoration:none;
-    margin:12px 0;
-    font-size:14px;
-}
-
 /* CONTEÚDO */
 .conteudo{
     flex:1;
     padding:25px;
 }
 
-/* TÍTULO */
+.page{
+    max-width:1400px;
+}
+
+/* TOPO */
+.topo{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+}
+
 .topo h1{
     margin:0;
 }
 
-/* TABELA */
-.box{
-    margin-top:20px;
-    background:white;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.06);
+/* INFORMAÇÕES */
+.info-termos{
+    margin:15px 0 20px 0;
+    color:#cbd5e1;
+    font-size:14px;
 }
 
+.info-termos strong{
+    color:#a855f7;
+}
+.busca-box{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    margin:18px 0;
+}
+
+.busca-box input{
+    flex:1;
+    height:52px;
+    border-radius:12px;
+}
+
+.btn-busca{
+    height:52px;
+    padding:0 24px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(135deg,#6d28d9,#7c3aed);
+    color:white;
+    font-weight:700;
+    cursor:pointer;
+}
+
+.btn-limpar{
+    color:#94a3b8;
+    text-decoration:none;
+    font-weight:600;
+    padding:0 8px;
+}
+
+.btn-limpar:hover{
+    color:#fff;
+}
+/* BOX DA TABELA */
+.box{
+    margin-top:20px;
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px;
+    overflow:hidden;
+    backdrop-filter:blur(12px);
+    box-shadow:0 10px 20px rgba(109,40,217,0.25);
+}
+
+/* TABELA */
 table{
     width:100%;
     border-collapse:collapse;
 }
 
-th, td{
-    text-align:left;
-    padding:12px;
-    border-bottom:1px solid #eee;
+thead{
+    background:rgba(255,255,255,0.03);
 }
 
 th{
-    background:#f9fafb;
+    padding:14px;
+    text-align:left;
+    color:#cbd5e1;
+    font-size:13px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.5px;
 }
 
+td{
+    padding:14px;
+    color:#e5e7eb;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    vertical-align:middle;
+}
+
+tbody tr{
+    transition:.2s;
+}
+
+tbody tr:hover{
+    background:rgba(124,58,237,0.08);
+}
+
+/* VALORES */
+.valor{
+    color:#22c55e;
+    font-weight:600;
+}
+
+
+.btn-visualizar,
+.btn-excluir{
+    height:38px;
+    padding:0 14px;
+    border-radius:10px;
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+
+    border:none;
+    outline:none;
+
+    text-decoration:none;
+    font-family:'Poppins', sans-serif;
+    font-size:13px;
+    font-weight:600;
+
+    cursor:pointer;
+    transition:.2s;
+}
+
+.btn-visualizar{
+    background:linear-gradient(135deg,#6d28d9,#7c3aed);
+    color:white;
+}
+
+.btn-excluir{
+    background:linear-gradient(135deg,#dc2626,#ef4444);
+    color:white;
+}
+
+.btn-visualizar:hover,
+.btn-excluir:hover{
+    transform:translateY(-2px);
+}
+
+/* STATUS */
 .status{
     padding:4px 8px;
     border-radius:6px;
     font-size:12px;
-    background:#e5e7eb;
+    background:rgba(255,255,255,0.08);
 }
 
-</style>
+/* RESPONSIVO */
+@media(max-width:900px){
 
+    .busca-box{
+        flex-direction:column;
+    }
+
+    .btn-busca{
+        width:100%;
+    }
+
+    table{
+        font-size:13px;
+    }
+}
+.paginacao{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:8px;
+    margin:25px auto 0 auto;
+    flex-wrap:wrap;
+}
+
+.paginacao a,
+.paginacao span{
+    padding:8px 14px;
+    border-radius:8px;
+    text-decoration:none;
+    font-size:14px;
+    font-weight:500;
+}
+
+.paginacao a{
+    background:rgba(255,255,255,0.05);
+    color:#fff;
+    border:1px solid rgba(255,255,255,0.1);
+}
+
+.paginacao a:hover{
+    background:#6d28d9;
+}
+
+.paginacao .ativa{
+    background:#6d28d9;
+    color:#fff;
+}
+
+.paginacao .desabilitado{
+    opacity:.4;
+    pointer-events:none;
+}
+</style>
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
 
-    <h2>Menu</h2>
+<div class="sidebar" id="sidebar">
 
-    <a href="/home">🏠 Home</a>
-    <a href="/historico">📜 Histórico</a>
-    <a href="/clt">💼 CLT</a>
-    <a href="/inss">👴 INSS</a>
-    <a href="/fgts">🏠 FGTS</a>
+    <button class="toggle-btn" onclick="toggleSidebar()">
+        ◀
+    </button>
 
-    {% if tipo in ["master","adm"] %}
-    <a href="/admin">⚙ Admin</a>
+    <a href="/home">
+        <span class="icon">🏠</span>
+        <span class="text">Home</span>
+    </a>
+
+    <a href="/vendas">
+        <span class="icon">💰</span>
+        <span class="text">Minhas Vendas</span>
+        
+    </a>
+    <a href="/termos">
+    <span class="icon">📄</span>
+    <span class="text">Gerar Termo</span>
+    </a>
+
+    <a href="/termos/historico" class="active">
+    <span class="icon">📚</span>
+    <span class="text">Termos Gerados</span>
+    </a>
+
+    <a href="/bancos">
+        <span class="icon">🏦</span>
+        <span class="text">Bancos</span>
+    </a>
+
+    <a href="/clt">
+        <span class="icon">💼</span>
+        <span class="text">CLT</span>
+    </a>
+
+    <a href="/inss">
+        <span class="icon">👴</span>
+        <span class="text">INSS</span>
+    </a>
+
+    <a href="/fgts">
+        <span class="icon">🔐</span>
+        <span class="text">FGTS</span>
+    </a>
+
+    <a href="/compra-divida">
+        <span class="icon">💲</span>
+        <span class="text">Compra</span>
+    </a>
+
+    {% if tipo|lower|trim in ["master", "admin", "adm"] %}
+    <a href="/admin">
+        <span class="icon">⚙️</span>
+        <span class="text">Admin</span>
+    </a>
     {% endif %}
 
-    <a href="/logout">🚪 Sair</a>
+    <a href="/logout">
+        <span class="icon">🚪</span>
+        <span class="text">Sair</span>
+    </a>
 
 </div>
-
 <!-- CONTEÚDO -->
 <div class="conteudo">
 
-    <div class="topo">
-        <h1>📜 Histórico de Comissões</h1>
-        <p>Todos os registros do sistema</p>
-    </div>
+    <div class="page">
 
-    <div class="box">
+        <!-- TOPO -->
+        <div class="topo">
 
-        <table>
+            <div>
+                <h1>📜 Termos Gerados</h1>
+                <span>Histórico de termos cadastrados no sistema</span>
+            </div>
 
-            <thead>
-                <tr>
-                    <th>Promotora</th>
-                    <th>Valor</th>
-                    <th>Banco</th>
-                    <th>Data</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
+            <div class="info-termos">
+            📄 Total de termos encontrados:
+            <strong>{{ historico|length }}</strong>
+            </div>
 
-            <tbody>
+           
 
-                {% for item in historico %}
-                <tr>
-                    <td>{{ item["promotora"] }}</td>
-                    <td>R$ {{ item["valor"] }}</td>
-                    <td>{{ item["banco"] }}</td>
-                    <td>{{ item["data"] }}</td>
-                    <td>
-                        <span class="status">{{ item["status"] }}</span>
-                    </td>
-                </tr>
-                {% endfor %}
+            <div class="tag tag-master">
+                {{ tipo|upper }}
+            </div>
 
-            </tbody>
+        </div>
+        
+      <form method="GET" action="/termos/historico" class="busca-box">
 
-        </table>
+    <input type="text"
+           name="busca"
+           value="{{ busca or '' }}"
+           placeholder="Buscar por cliente ou CPF">
+
+    <button type="submit" class="btn-busca">
+        🔍 Buscar
+    </button>
+
+    {% if busca %}
+    <a href="/termos/historico" class="btn-limpar">
+        Limpar
+    </a>
+    {% endif %}
+
+</form>
+
+        <!-- TABELA -->
+        <div class="box">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>CPF</th>
+                        <th>Valor</th>
+                        <th>Usuário</th>
+                        <th>Data</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+<tbody>
+
+{% if historico %}
+
+    {% for item in historico %}
+    <tr>
+
+        <td>{{ item["cliente"] }}</td>
+
+        <td>{{ item["cpf"] }}</td>
+
+        <td class="valor">
+            R$ {{ item["valor_total"] }}
+        </td>
+
+        <td>{{ item["usuario_nome"] }}</td>
+
+        <td>{{ item["data_criacao"] }}</td>
+
+        <td>
+
+    <a href="/termos/ver/{{ item['id'] }}"
+       class="btn-visualizar">
+        👁 Visualizar
+    </a>
+
+    {% if tipo == "master" %}
+
+    <form action="/termos/excluir/{{ item['id'] }}"
+          method="POST"
+          style="display:inline;">
+
+        <button
+            type="submit"
+            class="btn-excluir"
+            onclick="return confirm('Deseja realmente excluir este termo?')">
+
+            🗑 Excluir
+
+        </button>
+
+    </form>
+
+    {% endif %}
+    </td>
+
+        
+    
+   
+
+    </tr>
+    {% endfor %}
+
+{% else %}
+
+<tr>
+    <td colspan="6" style="text-align:center;padding:30px;">
+        Nenhum termo encontrado.
+    </td>
+</tr>
+
+{% endif %}
+
+</tbody>
+
+            </table>
+
+
+
+            
+<div class="paginacao">
+
+{% if pagina > 1 %}
+<a href="?pagina={{ pagina - 1 }}">⬅ Anterior</a>
+{% endif %}
+
+<span>
+Página {{ pagina }} de {{ total_paginas }}
+</span>
+
+{% if pagina < total_paginas %}
+<a href="?pagina={{ pagina + 1 }}">Próxima ➡</a>
+{% endif %}
+
+</div>
+
+        </div>
 
     </div>
 
 </div>
+
+
+<script>
+
+function toggleSidebar() {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    sidebar.classList.toggle("closed");
+
+    if (conteudo) {
+        conteudo.classList.toggle("sidebar-fechada");
+    }
+
+    localStorage.setItem(
+        "sidebarFechada",
+        sidebar.classList.contains("closed")
+    );
+
+    btn.innerHTML =
+        sidebar.classList.contains("closed")
+        ? "▶"
+        : "◀";
+}
+
+window.addEventListener("load", () => {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    if(localStorage.getItem("sidebarFechada") === "true"){
+
+        sidebar.classList.add("closed");
+
+        if(conteudo){
+            conteudo.classList.add("sidebar-fechada");
+        }
+
+        btn.innerHTML = "▶";
+    }
+});
+</script>
 
 </body>
 </html>

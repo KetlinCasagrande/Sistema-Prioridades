@@ -79,37 +79,72 @@ function toggleTabela(id){
         div.style.display = "block";
     }
 }
-
 function filtrarBancos(){
 
-    let input = document.getElementById("buscaBanco");
-    let filtro = input.value.toLowerCase().trim();
+    let filtro = document
+        .getElementById("buscaBanco")
+        .value
+        .toLowerCase()
+        .trim();
 
-    let itens = document.querySelectorAll(".tabela-item");
+    let bancos = document.querySelectorAll(".produto-card");
 
-    itens.forEach(item => {
+    // Lista de promotoras conhecidas
+    let promotoras = [
+        "consiga",
+        "conect",
+        "bevicred",
+        "credfranco",
+        "credfanco"
+    ];
 
-        // limpa highlight anterior (IMPORTANTE)
-        item.querySelectorAll(".highlight").forEach(el => {
-            el.replaceWith(document.createTextNode(el.textContent));
+    let filtroEhPromotora = promotoras.includes(filtro);
+
+    bancos.forEach(banco => {
+
+        let tabelas = banco.querySelectorAll(".tabela-item");
+        let encontrou = false;
+
+        let nomeBanco = banco
+            .querySelector(".banco-header")
+            .innerText
+            .toLowerCase();
+
+        tabelas.forEach(tabela => {
+
+            if(!filtro){
+                tabela.style.display = "";
+                encontrou = true;
+                return;
+            }
+
+            let nomeTabela = (tabela.dataset.tabela || "").toLowerCase();
+            let promotora = (tabela.dataset.promotora || "").toLowerCase();
+            let prazo = (tabela.dataset.prazo || "").toLowerCase();
+            let comissao = (tabela.dataset.comissao || "").toLowerCase();
+
+            let encontrouTabela = false;
+
+            if(filtroEhPromotora){
+                encontrouTabela = promotora === filtro;
+            } else {
+                encontrouTabela =
+                    nomeBanco.includes(filtro) ||
+                    nomeTabela.includes(filtro) ||
+                    promotora.includes(filtro) ||
+                    prazo.includes(filtro) ||
+                    comissao.includes(filtro);
+            }
+
+            tabela.style.display = encontrouTabela ? "" : "none";
+
+            if(encontrouTabela){
+                encontrou = true;
+            }
+
         });
 
-        let texto = item.innerText.toLowerCase();
-
-        if(!filtro){
-            item.style.display = "";
-            return;
-        }
-
-        if(texto.includes(filtro)){
-            item.style.display = "";
-
-            // highlight simples e seguro
-            highlightSimple(item, filtro);
-
-        } else {
-            item.style.display = "none";
-        }
+        banco.style.display = encontrou ? "" : "none";
 
     });
 }
@@ -157,6 +192,11 @@ function highlightSimple(element, term){
     <a href="/termos">
     <span class="icon">📄</span>
     <span class="text">Gerar Termo</span>
+    </a>
+
+    <a href="/termos/historico">
+    <span class="icon">📚</span>
+    <span class="text">Termos Gerados</span>
     </a>
 
     <a href="/bancos" class="{% if titulo == 'Bancos' %}active{% endif %}">
@@ -280,78 +320,55 @@ function highlightSimple(element, term){
 
             {% for tabela in banco.tabelas %}
 
-            <div class="tabela-item"
-     data-tabela="{{ tabela['tabela_nome'] }}"
-     data-prazo="{{ tabela['prazo'] }}"
-     data-promotora="{{ tabela['promotora'] }}"
-     data-comissao="{{ tabela['comissao'] }}">
+           <div class="tabela-item tabela-compacta {% if tabela['ativo'] == 0 %}tabela-desativada{% endif %}"
+            data-tabela="{{ tabela['tabela_nome'] }}"
+            data-prazo="{{ tabela['prazo'] }}"
+            data-promotora="{{ tabela['promotora'] }}"
+            data-comissao="{{ tabela['comissao'] }}">
 
-                <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px;">
+    <div class="tabela-info">
 
-                    <!-- ESQUERDA -->
-                    <div>
+        <div class="tabela-principal">
+            <strong>{{ tabela["tabela_nome"] }}</strong>
 
-                        <h3 style="font-size:22px;">
-                            {{ tabela["tabela_nome"] }}
-                        </h3>
+            {% if tabela["promotora"] %}
+            <span>👩‍💼 {{ tabela["promotora"] }}</span>
+            {% endif %}
+        </div>
+<div class="tabela-item tabela-compacta {% if tabela['ativo'] == 0 %}inativa{% endif %}"></div>
+        <div class="tabela-dados">
 
-                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <span>📅 {{ tabela["prazo"] }}</span>
+            {% if tipo|lower|trim == "master" %}
+            <span>💰 {{ tabela["comissao"] }}%</span>
+            {% endif %}
+            <span class="badge-info">🕒 {{ tabela["data_importacao"] or "—" }}
+            </span>
 
-                            {% if tipo == "master" %}
-                            <div class="card">
-                                💰 Comissão: <strong>{{ tabela["comissao"] }}%</strong>
-                            </div>
-                            {% endif %}
+            {% if tabela["status"] == "LIBERADA" %}
+                <span class="status-liberada">✅ LIBERADA</span>
+            {% elif tabela["status"] == "PRECISA_LIBERACAO" %}
+                <span class="status-liberacao">⚠ LIBERAÇÃO</span>
+            {% else %}
+                <span class="status-pausada">⛔ PAUSADA</span>
+            {% endif %}
 
-                            <div class="card">
-                                📅 Prazo: <strong>{{ tabela["prazo"] }}</strong>
-                            </div>
+        </div>
 
-                        </div>
+    </div>
 
-                        {% if tabela["promotora"] %}
-                        <div style="margin-top:10px;">
-                            <span class="online">👩‍💼 {{ tabela["promotora"] }}</span>
-                        </div>
-                        {% endif %}
+    {% if tipo|lower|trim in ["master", "adm", "admin"] %}
+    <a class="btn-toggle-tabela"
+       href="/toggle-tabela/{{ tabela['id'] }}">
+        {% if tabela["ativo"] == 1 %}
+            Desativar
+        {% else %}
+            Ativar
+        {% endif %}
+    </a>
+    {% endif %}
 
-                        <div style="margin-top:10px;">
-
-                            {% if tabela["status"] == "LIBERADA" %}
-                                <span class="status-liberada">✅ LIBERADA</span>
-
-                            {% elif tabela["status"] == "PRECISA_LIBERACAO" %}
-                                <span class="status-liberacao">⚠ PRECISA LIBERAÇÃO</span>
-
-                            {% else %}
-                                <span class="status-pausada">⛔ PAUSADA</span>
-                            {% endif %}
-
-                        </div>
-
-                    </div>
-
-                    <!-- DIREITA -->
-                    {% if tipo == "master" %}
-
-                    <div>
-                        <a class="btn btn-verde"
-                           href="/toggle-tabela/{{ tabela['id'] }}">
-
-                            {% if tabela["ativo"] == 1 %}
-                                Desativar
-                            {% else %}
-                                Ativar
-                            {% endif %}
-
-                        </a>
-                    </div>
-
-                    {% endif %}
-
-                </div>
-
-            </div>
+</div>
 
             {% endfor %}
 

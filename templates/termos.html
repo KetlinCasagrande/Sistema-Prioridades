@@ -30,6 +30,11 @@
             <span class="text">Gerar Termo</span>
         </a>
 
+        <a href="/termos/historico">
+        <span class="icon">📚</span>
+        <span class="text">Termos Gerados</span>
+        </a>
+
         <a href="/bancos">
             <span class="icon">🏦</span>
             <span class="text">Bancos</span>
@@ -56,11 +61,12 @@
         </a>
 
         {% if tipo|lower|trim in ["master", "admin", "adm"] %}
-        <a href="/admin">
-            <span class="icon">⚙️</span>
-            <span class="text">Admin</span>
-        </a>
-        {% endif %}
+    <a href="/admin">
+        <span class="icon">⚙️</span>
+        <span class="text">Admin</span>
+    </a>
+    {% endif %}
+
 
         <a href="/logout">
             <span class="icon">🚪</span>
@@ -72,20 +78,20 @@
     <div class="conteudo">
         <div class="vendas-container">
             <h2>📄 Gerador de Termo de Confissão de Dívida</h2>
-            <p style="color: #94a3b8; margin-bottom: 20px;">Preencha os campos abaixo de forma dinâmica para criar o documento oficial com os realces em bloco.</p>
-
+            <p style="color: #94a3b8; margin-bottom: 20px;">Preencha os campos abaixo</p>
+            <h3 class="secao-form">👤 Dados do Cliente</h3>
             <form method="POST" action="/termos" class="top-form" style="display: flex; flex-direction: column; gap: 15px;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
                     <input name="cliente" placeholder="Nome Completo do Cliente" required>
-                    <input name="cpf" placeholder="CPF (Apenas números)" required>
+                    <input name="cpf"id="cpf"placeholder="CPF (Apenas números)"maxlength="14"required>
                     <input name="rg" placeholder="RG do Cliente">
                     <input name="profissao" placeholder="Profissão">
                 </div>
-
+                <h3 class="secao-form">📍 Endereço</h3>
                 <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px;">
                     <input name="endereco" placeholder="Endereço / Logradouro">
                     <input name="numero" placeholder="Número">
-                    <input name="complemento" placeholder="Complemento (Ex: Casa, Apto)">
+                    <input name="complemento" placeholder="Bairro / Complemento">
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
@@ -94,28 +100,75 @@
                 </div>
 
                 <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 15px; margin-top: 5px;">
-                    <h3 style="font-size: 14px; color: #a78bfa; margin-bottom: 10px;">Dados do Contrato Anterior</h3>
-                    
-                    <div id="container-contratos" style="display: flex; flex-direction: column; gap: 12px;">
-                        <div class="linha-contrato" style="display: grid; grid-template-columns: 2fr 2fr 2fr 2fr 45px; gap: 15px; align-items: center;">
-                            <input name="banco[]" placeholder="Nome do Banco" required>
-                            <input name="contrato[]" placeholder="Número do Contrato" required>
-                            <input name="data_contratacao[]" placeholder="Data Contratação (DD/MM/AAAA)" required>
-                            <input name="saldo[]" placeholder="Valor do Saldo (Ex: 5000)" required>
-                            <button type="button" class="btn" style="background: #ef4444; color: white; border: none; padding: 8px; border-radius: 4px; cursor: not-allowed; opacity: 0.5;" disabled>X</button>
-                        </div>
-                    </div>
 
-                    <button type="button" onclick="adicionarContrato()" class="btn" style="background: rgba(167, 139, 250, 0.15); color: #a78bfa; border: 1px dashed rgba(167, 139, 250, 0.3); padding: 8px 16px; margin-top: 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">
-                        ➕ Adicionar Outro Contrato
-                    </button>
-                </div>
+    <h3 class="secao-form">📄 Dados dos Contratos</h3>
 
-                <button type="submit" class="btn btn-roxo" style="width: fit-content; padding: 12px 30px; margin-top: 10px;">
-                    ✨ Gerar Termo Oficial
-                </button>
-            </form>
+    <div id="container-contratos">
+
+        <div class="linha-contrato"
+             style="display:grid;
+                    grid-template-columns:2fr 2fr 1.2fr 1.5fr 45px;
+                    gap:15px;
+                    align-items:center;
+                    margin-bottom:12px;">
+
+            <input
+                name="contrato[]"
+                placeholder="Número do Contrato"
+                required>
+
+            <input
+                name="banco[]"
+                placeholder="Nome do Banco / Cartão"
+                required>
+
+            <input
+                name="parcela[]"
+                placeholder="Parcela Ex: 31,40"
+                required>
+
+            <input
+                name="saldo[]"
+                class="saldo-input"
+                placeholder="Valor / Saldo Ex: 890,14"
+                required>
+
+            <button type="button"
+                    class="btn"
+                    style="
+                        background:#ef4444;
+                        color:white;
+                        border:none;
+                        padding:8px;
+                        border-radius:8px;
+                        cursor:not-allowed;
+                        opacity:.5;"
+                    disabled>
+                X
+            </button>
+
         </div>
+
+    </div>
+
+    <button type="button"
+            onclick="adicionarContrato()"
+            class="btn btn-roxo"
+            style="margin-top:15px;">
+        ➕ Adicionar Outro Contrato
+    </button>
+
+</div>
+
+<button type="submit"
+        class="btn btn-roxo"
+        style="width:fit-content; padding:12px 30px; margin-top:20px;">
+    ✨ Gerar Termo Oficial
+</button>
+
+
+</form>
+</div>
 
         {% if texto_termo %}
             <style>
@@ -157,12 +210,7 @@
                     color: #000000 !important;
                 }
 
-                /* Limpeza de tabelas padrões na tela */
-                .documento-oficial table {
-                    width: 100% !important;
-                    border-collapse: collapse !important;
-                    margin-top: 20px !important;
-                }
+              
 
                 /* ==================================================================
                    🏛️ ESTILIZAÇÃO COMPACTA DA NOTA PROMISSÓRIA (MOLDE REAL)
@@ -201,7 +249,7 @@
                     position: absolute !important;
                     
                     /* Mantém do lado de fora da linha esquerda */
-                    left: -42px !important; 
+                    left: -58px !important; 
                     top: 50% !important;
                     
                     /* Rotação vertical */
@@ -296,9 +344,32 @@
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                     }
+                    .documento-oficial .conteudo-word table.tabela-contratos-termo{
+                        width:100% !important;
+                        border-collapse:collapse !important;
+                        table-layout:fixed !important;
+                        background:#fff !important;
+                        border:1px solid #000 !important;
+                    }
 
+                    .documento-oficial .conteudo-word table.tabela-contratos-termo th,
+                    .documento-oficial .conteudo-word table.tabela-contratos-termo td{
+                        border:1px solid #000 !important;
+                        background:#fff !important;
+                        color:#000 !important;
+                        padding:6px !important;
+                        text-align:center !important;
+                        vertical-align:middle !important;
+                    }
+
+                    .documento-oficial .conteudo-word table.tabela-contratos-termo th{
+                        font-weight:bold !important;
+                    }
+
+
+             }
                    
-                }
+                
             </style>
 
             <div class="painel-termo">
@@ -315,50 +386,59 @@
         
     </div>
 
+
+ <script>
+function adicionarContrato() {
+
+    const container =
+        document.getElementById("container-contratos");
+
+    const novaLinha =
+        document.createElement("div");
+
+    novaLinha.className = "linha-contrato";
+
+    novaLinha.style =
+        "display:grid;grid-template-columns:2fr 2fr 1.2fr 1.5fr 45px;gap:15px;align-items:center;margin-bottom:12px;";
+
+    novaLinha.innerHTML = `
+        <input name="contrato[]" placeholder="Número do Contrato" required>
+
+        <input name="banco[]" placeholder="Nome do Banco / Cartão" required>
+
+        <input name="parcela[]" placeholder="Parcela Ex: 31,40" required>
+
+        <input name="saldo[]" class="saldo-input" placeholder="Valor / Saldo Ex: 890,14" required>
+
+        <button type="button"
+                onclick="this.parentElement.remove()"
+                style="
+                    background:#ef4444;
+                    color:white;
+                    border:none;
+                    padding:8px;
+                    border-radius:8px;
+                    cursor:pointer;">
+            X
+        </button>
+    `;
+
+    container.appendChild(novaLinha);
+}
+</script>
     <script>
-    // Função para adicionar dinamicamente novas linhas de contrato
-    function adicionarContrato() {
-        const container = document.getElementById("container-contratos");
-        const novaLinha = document.createElement("div");
-        novaLinha.className = "linha-contrato";
-        novaLinha.style = "display: grid; grid-template-columns: 2fr 2fr 2fr 2fr 45px; gap: 15px; align-items: center;";
-        
-        novaLinha.innerHTML = `
-            <input name="banco[]" placeholder="Nome do Banco" required>
-            <input name="contrato[]" placeholder="Número do Contrato" required>
-            <input name="data_contratacao[]" placeholder="Data Contratação (DD/MM/AAAA)" required>
-            <input name="saldo[]" placeholder="Valor do Saldo (Ex: 5000)" required>
-            <button type="button" onclick="this.parentElement.remove()" class="btn" style="background: #ef4444; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">X</button>
-        `;
-        container.appendChild(novaLinha);
-    }
+document.getElementById("cpf").addEventListener("input", function () {
+    let valor = this.value.replace(/\D/g, "");
 
-    function toggleSidebar() {
-        const sidebar = document.getElementById("sidebar");
-        const conteudo = document.querySelector(".conteudo");
-        const btn = document.querySelector(".toggle-btn");
+    valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+    valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+    valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 
-        sidebar.classList.toggle("closed");
+    this.value = valor;
+});
+</script>
 
-        if (conteudo) {
-            conteudo.classList.toggle("sidebar-fechada");
-        }
 
-        localStorage.setItem("sidebarFechada", sidebar.classList.contains("closed"));
-        btn.innerHTML = sidebar.classList.contains("closed") ? "▶" : "◀";
-    }
 
-    window.addEventListener("load", () => {
-        const sidebar = document.getElementById("sidebar");
-        const conteudo = document.querySelector(".conteudo");
-        const btn = document.querySelector(".toggle-btn");
-
-        if (localStorage.getItem("sidebarFechada") === "true") {
-            sidebar.classList.add("closed");
-            if (conteudo) conteudo.classList.add("sidebar-fechada");
-            btn.innerHTML = "▶";
-        }
-    });
-    </script>
 </body>
 </html>

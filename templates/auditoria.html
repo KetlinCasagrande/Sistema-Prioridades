@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+<meta charset="UTF-8">
+<title>Auditoria</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div class="sidebar" id="sidebar">
+
+<button class="toggle-btn" onclick="toggleSidebar()">◀</button>
+
+<a href="/home">
+    <span class="icon">🏠</span>
+    <span class="text">Home</span>
+</a>
+
+{% if tipo|lower|trim in ["master","adm","admin"] %}
+<a href="/admin?aba=usuarios">
+    <span class="icon">👤</span>
+    <span class="text">Usuários</span>
+</a>
+{% if tipo|lower|trim == "master" %}
+<a href="/admin?aba=comissoes">
+    <span class="icon">💰</span>
+    <span class="text">Comissões</span>
+</a>
+{% endif %}
+
+<a href="/admin?aba=avisos">
+    <span class="icon">📢</span>
+    <span class="text">Avisos</span>
+</a>
+
+<a href="/admin?aba=metas">
+    <span class="icon">⚙️</span>
+    <span class="text">Metas</span>
+</a>
+
+<a href="/auditoria" class="active">
+    <span class="icon">📋</span>
+    <span class="text">Auditoria</span>
+</a>
+
+{% endif %}
+
+<a href="/logout">
+    <span class="icon">🚪</span>
+    <span class="text">Sair</span>
+</a>
+
+</div>
+
+<div class="conteudo">
+<div class="page">
+
+    <div class="topo">
+        <h1>📋 Auditoria do Sistema</h1>
+        <span>Histórico de ações realizadas</span>
+    </div>
+
+    <div class="box">
+
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:15px; margin-bottom:20px;">
+            <div>
+                <h2 style="margin-bottom:4px;">Registros</h2>
+                <p style="color:#94a3b8; font-size:14px;">
+                    Consulte as movimentações realizadas no sistema
+                </p>
+            </div>
+
+            <span class="btn btn-roxo" style="pointer-events:none;">
+                Total: {{ registros|length }}
+            </span>
+        </div>
+
+        <div class="table-wrapper">
+
+            <table class="tabela-auditoria">
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuário</th>
+                        <th>Usuário ID</th>
+                        <th>Ação</th>
+                        <th>Descrição</th>
+                        <th>Data/Hora</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for r in registros %}
+                    <tr>
+                        <td class="id-col">#{{ r["id"] }}</td>
+
+                        <td>
+                            <strong>{{ r["usuario"] }}</strong>
+                        </td>
+
+                        <td>{{ r["usuario_id"] }}</td>
+
+                        <td>
+                            <span class="badge-acao">
+                                {{ r["acao"] }}
+                            </span>
+                        </td>
+
+                        <td class="descricao-auditoria">
+                            {{ r["descricao"] }}
+                        </td>
+
+                        <td class="data-auditoria">
+                            {{ r["data_hora"] }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">
+                            Nenhum registro encontrado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+</div>
+
+<script>
+window.addEventListener("load", function () {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    if (localStorage.getItem("sidebarFechada") === "true") {
+        sidebar.classList.add("closed");
+
+        if (conteudo) conteudo.classList.add("sidebar-fechada");
+
+        if (btn) btn.innerHTML = "▶";
+    }
+});
+
+function toggleSidebar() {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    sidebar.classList.toggle("closed");
+
+    if (conteudo) {
+        conteudo.classList.toggle("sidebar-fechada");
+    }
+
+    localStorage.setItem(
+        "sidebarFechada",
+        sidebar.classList.contains("closed")
+    );
+
+    btn.innerHTML =
+        sidebar.classList.contains("closed")
+        ? "▶"
+        : "◀";
+}
+</script>
+
+</body>
+</html>

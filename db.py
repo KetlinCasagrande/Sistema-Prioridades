@@ -15,6 +15,32 @@ CREATE TABLE IF NOT EXISTS usuarios (
 )
 """)
 
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS auditoria (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario TEXT,
+    usuario_id INTEGER,
+    acao TEXT,
+    descricao TEXT,
+    data_hora DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS termos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cliente TEXT,
+    cpf TEXT,
+    valor_total REAL,
+    usuario TEXT,
+    html_termo TEXT,
+    data_hora DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
+
 # =========================
 # TABELA COMISSÕES
 # =========================
@@ -84,18 +110,6 @@ CREATE TABLE IF NOT EXISTS acessos_banco (
     senha TEXT
 )
 """)
-# =========================
-# TABELA VENDAS
-# =========================
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS vendas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    usuario_id INTEGER,
-    produto TEXT,
-    valor REAL,
-    data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
 
 # =========================
 # PLANILHA DE VENDAS
@@ -110,9 +124,30 @@ CREATE TABLE IF NOT EXISTS meta_usuario_produto (
     projecao REAL DEFAULT 0
 )
 """)
+
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS status (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario TEXT NOT NULL,
+    acao TEXT NOT NULL,
+    detalhes TEXT,
+    data_hora DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+""")
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario TEXT,
+    acao TEXT,
+    detalhes TEXT,
+    data_hora DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
+
+
 conn.commit()
 conn.close()
 
 print("✔ banco.db criado")
-
-

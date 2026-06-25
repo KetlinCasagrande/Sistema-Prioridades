@@ -84,7 +84,10 @@ ONLOAD (UNIFICADO - ESSENCIAL)
 ========================= */
 window.addEventListener("load", function () {
 
-    let aba = localStorage.getItem("abaAtiva") || "usuarios";
+    const params = new URLSearchParams(window.location.search);
+    let abaUrl = params.get("aba");
+
+    let aba = abaUrl || localStorage.getItem("abaAtiva") || "usuarios";
     abrir(aba);
 
     const sidebar = document.getElementById("sidebar");
@@ -125,6 +128,20 @@ function toggleSidebar() {
 
 </script>
 
+
+<script>
+function selecionarTodos(master) {
+
+    let checkboxes = document.querySelectorAll(
+        'input[name="ids"]'
+    );
+
+    checkboxes.forEach(cb => {
+        cb.checked = master.checked;
+    });
+}
+</script>
+
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
@@ -139,6 +156,7 @@ function toggleSidebar() {
     <span class="text">Home</span>
 </a>
 
+
 {% if tipo|lower|trim in ["master","adm","admin"] %}
 
 <a href="#" class="menu-admin active" data-menu="usuarios" onclick="abrir('usuarios')">
@@ -146,17 +164,12 @@ function toggleSidebar() {
     <span class="text">Usuários</span>
 </a>
 
-{% if tipo in ["master", "adm"] %}
-<a href="/termos/historico">
-    <span class="icon">📚</span>
-    <span class="text">Histórico de Termos</span>
-</a>
-{% endif %}
-
+{% if tipo|lower|trim == "master" %}
 <a href="#" class="menu-admin" data-menu="comissoes" onclick="abrir('comissoes')">
     <span class="icon">💰</span>
     <span class="text">Comissões</span>
 </a>
+{% endif %}
 
 <a href="#" class="menu-admin" data-menu="avisos" onclick="abrir('avisos')">
     <span class="icon">📢</span>
@@ -169,6 +182,11 @@ function toggleSidebar() {
 </a>
 
 {% endif %}
+
+<a href="/auditoria">
+    <span class="icon">📋</span>
+    <span class="text">Auditoria</span>
+    </a>
 
 <a href="/logout">
     <span class="icon">🚪</span>
@@ -264,14 +282,13 @@ function toggleSidebar() {
 
         <input type="text" name="produto" placeholder="Produto" required>
         <input type="number" step="0.01" name="meta" placeholder="Meta" required>
-
        <button type="submit" class="btn btn-roxo">
     ➕ Adicionar
 </button>
 
     </form>
 
-    <table class="tabela-metas">
+    <table class="tabela-metas tabela-metas-moderna">
 
         <tr>
             <th>Usuário</th>
@@ -281,37 +298,59 @@ function toggleSidebar() {
         </tr>
 
         {% for m in metas_usuarios %}
-        <tr>
+<tr>
 
-            <td>{{ m["usuario"] }}</td>
-            <td>{{ m["produto"] }}</td>
+    <td>
+        <strong>{{ m["usuario"] }}</strong>
+    </td>
 
-            <td>
-                <form method="POST" action="/admin/salvar-meta-vendedora">
-                    <input type="hidden" name="id" value="{{ m['id'] }}">
-                    <input type="number" step="0.01" name="meta" value="{{ m['meta'] }}">
-            </td>
+    <td>
+        <span class="badge-produto-meta">
+            {{ m["produto"] }}
+        </span>
+    </td>
 
-            <td>
-                   <button type="submit" class="btn btn-roxo">
-    💾 Salvar
-</button>
-                </form>
+    <td>
+        <form method="POST"
+              action="/admin/salvar-meta-vendedora"
+              class="form-meta-linha">
 
-                <a class="btn btn-vermelho"
-                   href="/admin/meta/deletar/{{ m['id'] }}?next={{ request.full_path }}">
-                    Excluir
-                </a>
-            </td>
+            <input type="hidden" name="id" value="{{ m['id'] }}">
 
-        </tr>
-        {% endfor %}
+            <div class="input-money-wrap">
+            <span>R$</span>
+
+            <input
+                type="text"
+                name="meta"
+                value="{{ '{:,.2f}'.format(m['meta']|float).replace(',', 'X').replace('.', ',').replace('X', '.') }}"
+                class="input-meta input-money">
+            </div>
+
+            <button class="btn btn-verde btn-acao-mini" title="Salvar">
+                💾
+            </button>
+
+        </form>
+    </td>
+
+    <td class="acoes-meta">
+        <a class="btn btn-vermelho btn-acao-mini"
+           title="Excluir"
+           href="/admin/meta/deletar/{{ m['id'] }}?next={{ request.full_path }}"
+           onclick="return confirm('Deseja excluir esta meta?')">
+            🗑
+        </a>
+    </td>
+
+</tr>
+{% endfor %}
 
     </table>
 
 </div>
 <!-- ========================= COMISSÕES ========================= -->
-{% if tipo|lower|trim in ["master","adm","admin"] %}
+{% if tipo|lower|trim in ["master"] %}
 <div id="comissoes" class="admin-box" style="display:none;">
 
     <div class="box">
@@ -319,12 +358,21 @@ function toggleSidebar() {
         <h2>Comissões</h2>
 
         <!-- IMPORTAÇÃO EXCEL -->
-        <form method="POST" action="/admin/importar-excel" enctype="multipart/form-data">
-            <input type="file" name="arquivo" required>
-            <button type="submit" class="btn btn-verde">
-                📊 Importar Comissões
-            </button>
-        </form>
+    <form method="POST"
+    action="/admin/importar-excel"
+     enctype="multipart/form-data">
+
+    <input type="file" name="arquivo" required>
+
+    <button type="submit" class="btn-importar">
+        📊 Importar Comissões
+    </button>
+
+    <a href="/admin/comissoes/exportar" class="btn btn-verde">
+    📤 Exportar Comissões
+</a>
+    
+    </form>
 
         <!-- FILTROS -->
         <form method="GET" class="filtros-comissoes">
@@ -379,124 +427,168 @@ function toggleSidebar() {
 
         </div>
 
-        <!-- TABELA + EXCLUSÃO EM MASSA -->
-       <form method="POST" action="/admin/comissao/deletar/selecionadas">
 
-            <div class="table-wrapper">
+<form method="POST"
+      action="/admin/comissoes/limpar-promotora"
+      onsubmit="return confirm('Tem certeza que deseja excluir todas as comissões dessa promotora?')"
+      style="display:flex; gap:10px; margin:15px 0; align-items:center;">
 
-                <table>
-                  <thead>
-<tr>
-    <th>
-        <input type="checkbox" onclick="selecionarTodos(this)">
-    </th>
+    <select name="promotora" required>
+        <option value="">🧹 Limpar por promotora</option>
+        <option value="Consiga">Consiga</option>
+        <option value="Credfranco">Credfranco</option>
+        <option value="Bevicred">Bevicred</option>
+        <option value="Conect">Conect</option>
+    </select>
 
-    <!-- BANCO -->
-    <th>
-     <a href="/admin?pagina=1&q={{ request.args.get('q','') }}&banco={{ request.args.get('banco','') }}&produto={{ request.args.get('produto','') }}&ordenar=banco&direcao={% if ordenar == 'comissao' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+    <button type="submit" class="btn btn-vermelho">
+        🧹 Limpar
+    </button>
+</form>
 
-            🏦 Banco
-            {% if ordenar == "banco" %}
-                {% if direcao == "asc" %} ↑ {% else %} ↓ {% endif %}
-            {% endif %}
-        </a>
-    </th>
+ <!-- TABELA + EXCLUSÃO EM MASSA -->
 
-    <th>Tabela</th>
+<form id="form-excluir-selecionadas"
+      method="POST"
+      action="/admin/comissao/deletar/selecionadas">
+</form>
 
-    <!-- PRODUTO -->
-    <th>
-      <a href="/admin?pagina=1&q={{ request.args.get('q','') }}&banco={{ request.args.get('banco','') }}&produto={{ request.args.get('produto','') }}&ordenar=produto&direcao={% if ordenar == 'comissao' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+<div class="table-wrapper">
 
-            💳 Produto
-            {% if ordenar == "produto" %}
-                {% if direcao == "asc" %} ↑ {% else %} ↓ {% endif %}
-            {% endif %}
-        </a>
-    </th>
+    <table>
+        <thead>
+            <tr>
 
-    <!-- COMISSÃO -->
-    <th>
-      <a href="/admin?pagina=1&q={{ request.args.get('q','') }}&banco={{ request.args.get('banco','') }}&produto={{ request.args.get('produto','') }}&ordenar=comissao&direcao={% if ordenar == 'comissao' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+                <!-- CHECKBOX GERAL -->
+                <th>
+                    <input
+                        type="checkbox"
+                        id="selecionarTodos"
+                        onclick="selecionarTodos(this)">
+                </th>
 
-            💰 Comissão
-            {% if ordenar == "comissao" %}
-                {% if direcao == "asc" %} ↑ {% else %} ↓ {% endif %}
-            {% endif %}
-        </a>
-    </th>
+                <!-- BANCO -->
+                <th>
+                    <a href="/admin?pagina=1&q={{ request.args.get('q','') }}&banco={{ request.args.get('banco','') }}&produto={{ request.args.get('produto','') }}&ordenar=banco&direcao={% if ordenar == 'banco' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+                        🏦 Banco
+                        {% if ordenar == "banco" %}
+                            {% if direcao == "asc" %} ↑ {% else %} ↓ {% endif %}
+                        {% endif %}
+                    </a>
+                </th>
 
-    <th>Prazo</th>
-    <th>Promotora</th>
-    <th>Ações</th>
-</tr>
-</thead>
+                <th>Tabela</th>
 
-                    
-                    <tbody>
+                <!-- PRODUTO -->
+                <th>
+                    <a href="/admin?pagina=1&q={{ request.args.get('q','') }}&banco={{ request.args.get('banco','') }}&produto={{ request.args.get('produto','') }}&ordenar=produto&direcao={% if ordenar == 'produto' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+                        💳 Produto
+                        {% if ordenar == "produto" %}
+                            {% if direcao == "asc" %} ↑ {% else %} ↓ {% endif %}
+                        {% endif %}
+                    </a>
+                </th>
+
+                <!-- COMISSÃO -->
+                <th>
+                    <a href="/admin?pagina=1&q={{ request.args.get('q','') }}&banco={{ request.args.get('banco','') }}&produto={{ request.args.get('produto','') }}&ordenar=comissao&direcao={% if ordenar == 'comissao' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+                        💰 Comissão
+                        {% if ordenar == "comissao" %}
+                            {% if direcao == "asc" %} ↑ {% else %} ↓ {% endif %}
+                        {% endif %}
+                    </a>
+                </th>
+
+                <th>Prazo</th>
+                <th>Promotora</th>
+                <th>Ações</th>
+
+            </tr>
+        </thead>
+<tbody>
 {% for c in comissoes %}
 <tr>
 
-    
+    <td>
+        <input
+            type="checkbox"
+            name="ids"
+            value="{{ c.id }}"
+            form="form-excluir-selecionadas">
+    </td>
 
-        <td>
-            <input type="checkbox" name="ids" value="{{ c.id }}">
-        </td>
+    <td>
+        <input form="form-editar-{{ c.id }}" type="text" name="banco" value="{{ c.banco }}">
+    </td>
 
-        <td>
-            <input type="text" name="banco" value="{{ c.banco }}">
-        </td>
+    <td>
+        <input form="form-editar-{{ c.id }}" name="tabela_nome" value="{{ c.tabela_nome }}">
+    </td>
 
-        <td>
-            <input name="tabela_nome" value="{{ c.tabela_nome }}" style="width:200px;">
-        </td>
+    <td>
+        <input form="form-editar-{{ c.id }}" type="text" name="produto" value="{{ c.produto }}">
+    </td>
 
-        <td>
-            <input type="text" name="produto" value="{{ c.produto }}">
-        </td>
+    <td>
+        <input
+            form="form-editar-{{ c.id }}"
+            type="number"
+            step="0.01"
+            name="comissao"
+            value="{{ c.comissao }}"
+            class="input-comissao">
+    </td>
 
-        <td>
-         <input name="comissao" value="{{ c.comissao }}" style="width:60px;">
-        </td>
+    <td>
+        <input form="form-editar-{{ c.id }}" name="prazo" value="{{ c.prazo }}" class="input-prazo">
+    </td>
 
-        <td>
-         <input name="prazo" value="{{ c.prazo }}" style="width:70px;">
-        </td>
+    <td>
+        <input form="form-editar-{{ c.id }}" name="promotora" value="{{ c.promotora }}" class="input-promotora">
+    </td>
 
-        <td>
-            <input name="promotora" value="{{ c.promotora }}" style="width:90px;">
-        </td>
+    <td class="acoes-comissao">
 
-        <td>
+        <form
+            id="form-editar-{{ c.id }}"
+            method="POST"
+            action="/admin/comissao/editar/{{ c.id }}">
+        </form>
 
-            <button type="submit" class="btn btn-verde">
-                💾 Salvar
+        <button
+            form="form-editar-{{ c.id }}"
+            type="submit"
+            class="btn btn-verde btn-acao-mini"
+            title="Salvar">
+            💾
+        </button>
+
+        <form method="POST"
+              action="/admin/comissao/deletar/{{ c.id }}"
+              style="display:inline;">
+
+            <button
+                type="submit"
+                class="btn btn-vermelho btn-acao-mini"
+                title="Excluir"
+                onclick="return confirm('Deseja excluir esta comissão?')">
+                🗑
             </button>
 
-        
+        </form>
 
-            <form method="POST"
-                  action="/admin/comissao/deletar/{{ c.id }}"
-                  style="display:inline;">
-
-                <button type="submit" class="btn btn-vermelho">
-                    Excluir
-                </button>
-
-            </form>
-
-        </td>
+    </td>
 
 </tr>
 {% endfor %}
 </tbody>
+
+
                 </table>
 
             </div>
 
-            <button type="submit" class="btn btn-vermelho" style="margin-top:10px;">
-                🗑 Excluir selecionados
-            </button>
+            
 
         </form>
 
@@ -533,9 +625,13 @@ function toggleSidebar() {
                 <tr>
                     <td>{{ aviso["titulo"] }}</td>
                     <td>{{ aviso["mensagem"] }}</td>
-                    <td>
-                        <a href="/admin/aviso/deletar/{{ aviso['id'] }}">Excluir</a>
-                    </td>
+                   <td class="acoes">
+   <a href="/admin/aviso/deletar/{{ aviso['id'] }}"
+   class="btn btn-vermelho btn-acao-mini"
+   onclick="return confirm('Deseja excluir este aviso?')">
+   🗑
+</a>
+</td>
                 </tr>
                 {% endfor %}
             </tbody>

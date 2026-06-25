@@ -3,17 +3,70 @@ import sqlite3
 import bcrypt
 from functools import wraps
 import os
+import shutil
 import pandas as pd
 import calendar
 from datetime import date
 from math import ceil
 from num2words import num2words
-from datetime import datetime
+from datetime import datetime, timedelta
+from flask import send_file
 
 
 
 app = Flask(__name__)
 app.secret_key = "123"
+
+def db():
+    conn = sqlite3.connect("banco.db")
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def fazer_backup(usuario="sistema"):
+    os.makedirs("backups", exist_ok=True)
+
+    data = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    destino = f"backups/banco_{data}.db"
+
+    shutil.copy2("banco.db", destino)
+
+    # registra no log
+    conn = sqlite3.connect("banco.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO logs (usuario, acao, detalhes)
+        VALUES (?, ?, ?)
+    """, (usuario, "BACKUP", destino))
+
+    conn.commit()
+    conn.close()
+
+    return destino
+
+
+
+def limpar_backups_antigos(dias=30):
+    pasta = "backups"
+
+    if not os.path.exists(pasta):
+        return
+
+    limite = datetime.now() - timedelta(days=dias)
+
+    for arquivo in os.listdir(pasta):
+        caminho = os.path.join(pasta, arquivo)
+
+        if os.path.isfile(caminho):
+            data_modificacao = datetime.fromtimestamp(
+                os.path.getmtime(caminho)
+            )
+
+            if data_modificacao < limite:
+                os.remove(caminho)
+                print(f"🗑️ Removido: {arquivo}")
+
 def home():
 
     ranking = buscar_ranking()
@@ -86,6 +139,34 @@ def dias_uteis_restantes():
 
     return restantes
 
+def registrar_log(usuario, acao, detalhes=""):
+    conn = sqlite3.connect("banco.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO logs (usuario, acao, detalhes)
+        VALUES (?, ?, ?)
+    """, (usuario, acao, detalhes))
+
+    conn.commit()
+    conn.close()
+
+def limpar_promotora(promotora):
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        DELETE FROM comissoes
+        WHERE promotora = ?
+    """, (promotora,))
+
+    removidas = cursor.rowcount
+
+    conn.commit()
+    conn.close()
+
+    return removidas
+
 
 def status_meta(meta, projecao):
 
@@ -146,7 +227,38 @@ def conectar():
 
     return conn
 
+def registrar_auditoria(acao, descricao):
+    try:
+        conn = conectar()
+        cursor = conn.cursor()
 
+        print("AUDITORIA CHAMADA:", acao, descricao)  # 🔥 teste
+
+        cursor.execute("""
+            INSERT INTO auditoria (
+                usuario,
+                usuario_id,
+                acao,
+                descricao
+            )
+            VALUES (?, ?, ?, ?)
+        """, (
+            session.get("usuario"),
+            session.get("usuario_id"),
+            acao,
+            descricao
+        ))
+
+        conn.commit()
+        conn.close()
+
+        print("AUDITORIA SALVA")  # 🔥 teste
+
+    except Exception as e:
+        print("Erro auditoria:", e)
+
+
+  
 # =========================
 # LOGIN CHECK
 # =========================
@@ -165,8 +277,7 @@ def apenas_master(f):
         if "usuario" not in session:
             return redirect("/")
 
-        if session.get("tipo") != "master":
-            return redirect("/home")
+        
 
         return f(*args, **kwargs)
 
@@ -209,11 +320,65 @@ def buscar_avisos():
     conn.close()
 
     return avisos
+# =========================
+# LOGS
+# =========================
+@app.route("/status")
+def status():
 
+    conn = sqlite3.connect("banco.db")
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
 
+    # 📋 logs recentes
+    cursor.execute("""
+        SELECT * FROM logs
+        ORDER BY id DESC
+        LIMIT 50
+    """)
+    logs = cursor.fetchall()
+
+    # 📊 vendas hoje
+    cursor.execute("""
+        SELECT COUNT(*) FROM vendas
+        WHERE date(data) = date('now')
+    """)
+    vendas_hoje = cursor.fetchone()[0]
+
+    # 📄 termos hoje
+    cursor.execute("""
+        SELECT COUNT(*) FROM termos_contratos
+        WHERE date(data) = date('now')
+    """)
+    termos_hoje = cursor.fetchone()[0]
+
+    # 👥 usuários
+    cursor.execute("SELECT COUNT(*) FROM usuarios")
+    usuarios = cursor.fetchone()[0]
+
+    # 🕒 última atividade
+    cursor.execute("""
+        SELECT data FROM logs
+        ORDER BY id DESC
+        LIMIT 1
+    """)
+    ultima = cursor.fetchone()
+    ultima_atividade = ultima[0] if ultima else "—"
+
+    conn.close()
+
+    return render_template(
+        "status.html",
+        logs=logs,
+        vendas_hoje=vendas_hoje,
+        termos_hoje=termos_hoje,
+        usuarios=usuarios,
+        ultima_atividade=ultima_atividade
+    )
 # =========================
 # LOGIN
 # =========================
+
 @app.route("/", methods=["GET", "POST"])
 def login():
 
@@ -356,7 +521,51 @@ def home():
     ranking = cursor.fetchall()
     top3 = ranking[:3]
 
+    # VENDAS HOJE
+    cursor.execute("""
+    SELECT COUNT(*) as total
+    FROM vendas
+    WHERE date(data) = date('now')
+    """)
+    vendas_hoje = cursor.fetchone()["total"]
+
+# PRODUÇÃO DO MÊS
+    cursor.execute("""
+    SELECT SUM(valor) as total
+    FROM vendas
+    WHERE strftime('%Y-%m', data) = strftime('%Y-%m', 'now')
+    """)
+    producao_mes = cursor.fetchone()["total"] or 0
+
+# TERMOS HOJE
+    cursor.execute("""
+    SELECT COUNT(*) as total
+    FROM termos
+    """)
+    termos_hoje = cursor.fetchone()["total"]
+
+# USUÁRIOS
+
+    cursor.execute("""
+    SELECT COUNT(*) as total
+    FROM usuarios
+    """)
+    
+    usuarios_ativos = cursor.fetchone()["total"]
+
+    cursor.execute("""
+    SELECT *
+    FROM logs
+    ORDER BY id DESC
+    LIMIT 5
+    """)
+
+    logs = cursor.fetchall()
+
+
+
     conn.close()
+    
 
     return render_template(
         "home.html",
@@ -366,6 +575,11 @@ def home():
         vendas=vendas_dict,
         top3=top3,   # 🔥 AQUI ESTAVA FALTANDO
         tipo=session["tipo"],
+        vendas_hoje=vendas_hoje,
+        producao_mes=producao_mes,
+        logs=logs,
+        termos_hoje=termos_hoje,
+        usuarios_ativos=usuarios_ativos,
         usuario=session["usuario"]
     )
 
@@ -409,78 +623,67 @@ def buscar_prioridades(produto):
     conn = conectar()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT DISTINCT banco
+    filtro_ativo = ""
+
+    if session.get("tipo") not in ["master", "adm", "admin"]:
+        filtro_ativo = "AND ativo = 1"
+
+    cursor.execute(f"""
+        SELECT 
+            banco,
+            MAX(CAST(REPLACE(comissao, ',', '.') AS REAL)) AS maior_comissao
         FROM comissoes
         WHERE produto = ?
-        AND ativo = 1
-        ORDER BY CAST(comissao AS REAL) DESC
+        {filtro_ativo}
+        GROUP BY banco
+        ORDER BY maior_comissao DESC
     """, (produto,))
 
     bancos = cursor.fetchall()
-
     resultado = []
 
     for banco in bancos:
 
-        cursor.execute("""
+        cursor.execute(f"""
             SELECT *
             FROM comissoes
             WHERE produto = ?
             AND banco = ?
-            AND ativo = 1
-            ORDER BY CAST(comissao AS REAL) DESC
+            {filtro_ativo}
+            ORDER BY
+            ativo DESC,
+            CAST(REPLACE(comissao, ',', '.') AS REAL) DESC
         """, (
             produto,
             banco["banco"]
         ))
 
         tabelas = cursor.fetchall()
-
         tabelas_formatadas = []
 
         for t in tabelas:
 
-            comissao = float(t["comissao"] or 0)
-
-            status = "PAUSADA"
-
-            # CLT
-            if produto == "CLT":
-
-                if comissao >= 3.5:
-                    status = "LIBERADA"
-                else:
-                    status = "PRECISA_LIBERACAO"
-
-            # INSS
-            elif produto == "INSS":
-
-                if comissao >= 7:
-                    status = "LIBERADA"
-                else:
-                    status = "PRECISA_LIBERACAO"
-
-            # FGTS
-            elif produto == "FGTS":
-
-                if comissao >= 10:
-                    status = "LIBERADA"
-                else:
-                    status = "PRECISA_LIBERACAO"
-
-            # COMPRA DIVIDA
-            elif produto == "COMPRA_DIVIDA":
-
-                if comissao >= 9:
-                    status = "LIBERADA"
-                else:
-                    status = "PRECISA_LIBERACAO"
-
             tabela_dict = dict(t)
 
-            tabela_dict["status"] = status
+            try:
+                comissao = float(str(t["comissao"] or 0).replace(",", "."))
+            except:
+                comissao = 0
 
+            if t["ativo"] == 0:
+                status = "PAUSADA"
+            elif produto == "CLT":
+                status = "LIBERADA" if comissao >= 3.5 else "PRECISA_LIBERACAO"
+            elif produto == "INSS":
+                status = "LIBERADA" if comissao >= 7 else "PRECISA_LIBERACAO"
+            elif produto == "FGTS":
+                status = "LIBERADA" if comissao >= 10 else "PRECISA_LIBERACAO"
+            elif produto == "COMPRA_DIVIDA":
+                status = "LIBERADA" if comissao >= 9 else "PRECISA_LIBERACAO"
+            else:
+                status = "PAUSADA"
+
+            tabela_dict["status"] = status
             tabelas_formatadas.append(tabela_dict)
 
         resultado.append({
@@ -491,6 +694,47 @@ def buscar_prioridades(produto):
     conn.close()
 
     return resultado
+# =========================
+# FILTRO DE BUSCA
+# =========================
+def aplicar_filtro(bancos, q):
+
+    if not q:
+        return bancos
+
+    q = q.lower().strip()
+
+    bancos_filtrados = []
+
+    for banco in bancos:
+
+        tabelas_filtradas = []
+
+        for t in banco["tabelas"]:
+
+            banco_nome = banco["nome"] or ""
+            promotora = t.get("promotora") or ""
+            tabela_nome = t.get("tabela_nome") or ""
+            comissao = str(t.get("comissao", ""))
+            prazo = str(t.get("prazo", ""))
+
+            if (
+                q in banco_nome.lower()
+                or q in promotora.lower()
+                or q in tabela_nome.lower()
+                or q in comissao.lower()
+                or q in prazo.lower()
+            ):
+                tabelas_filtradas.append(t)
+
+        if tabelas_filtradas:
+            bancos_filtrados.append({
+                "nome": banco["nome"],
+                "tabelas": tabelas_filtradas
+            })
+
+    return bancos_filtrados
+
 
 
 # =========================
@@ -514,6 +758,8 @@ def clt():
         avisos=buscar_avisos(),
         tipo=session["tipo"]
     )
+
+
 @app.route("/inss")
 def inss():
 
@@ -604,7 +850,7 @@ def admin():
     campos_validos = {
         "banco": "banco",
         "produto": "produto",
-        "comissao": "CAST(comissao AS REAL)"
+        "comissao": "CAST(REPLACE(comissao, ',', '.') AS REAL)"
     }
 
     campo = campos_validos.get(ordenar, "banco")
@@ -629,6 +875,39 @@ def admin():
         ORDER BY id DESC
     """)
     avisos = cursor.fetchall()
+
+    # =========================
+    # LOGS
+    # =========================
+    cursor.execute("SELECT * FROM logs ORDER BY id DESC LIMIT 50")
+    logs = cursor.fetchall()
+
+    # =========================
+    # VENDAS
+    # =========================
+    cursor.execute(
+    "SELECT COUNT(*) FROM vendas WHERE date(data)=date('now')")
+    vendas_hoje = cursor.fetchone()[0]
+
+    # =========================
+    # USUÁRIOS
+    # =========================
+    cursor.execute("SELECT COUNT(*) FROM usuarios")
+    total_usuarios = cursor.fetchone()[0]
+
+    # =========================
+    # TERMOS
+    # =========================
+    cursor.execute("""
+    SELECT COUNT(*)
+    FROM logs
+    WHERE acao = 'GEROU TERMO'
+    AND date(data_hora)=date('now')
+    """)
+    termos_hoje = cursor.fetchone()[0]
+
+    cursor.execute("PRAGMA table_info(logs)")
+    print(cursor.fetchall())
 
     # =========================
     # BASE SQL (COMISSÕES)
@@ -679,9 +958,29 @@ def admin():
     total_comissoes = cursor.fetchone()[0]
     total_paginas = ceil(total_comissoes / por_pagina) if total_comissoes > 0 else 1
 
+
+    # =========================
+    # statuss
+    # =========================
+    cursor.execute("SELECT * FROM logs ORDER BY id DESC LIMIT 50")
+    logs = cursor.fetchall()
+    cursor.execute("SELECT COUNT(*) FROM vendas WHERE date(data)=date('now')")
+    vendas_hoje = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM usuarios")
+    total_usuarios = cursor.fetchone()[0]
+    cursor.execute("""
+    SELECT COUNT(*)
+    FROM logs
+    WHERE acao = 'GEROU TERMO'
+    """)
+    termos_hoje = cursor.fetchone()[0]
+    
+
+
     # =========================
     # LISTAS FILTRO (SELECTS)
     # =========================
+    
     cursor.execute("""
         SELECT DISTINCT banco
         FROM comissoes
@@ -748,6 +1047,10 @@ def admin():
         comissoes=comissoes,
         avisos=avisos,
         metas=metas,
+        logs=logs,
+        vendas_hoje=vendas_hoje,
+        termos_hoje=termos_hoje,
+        total_usuarios=total_usuarios,
         metas_usuarios=metas_usuarios,
         lista_bancos=lista_bancos,
         lista_produtos=lista_produtos,
@@ -978,7 +1281,7 @@ def deletar_aviso(id):
     conn.commit()
     conn.close()
 
-    return redirect("/admin")
+    return redirect("/admin?aba=avisos")
 
 @app.route("/admin/aviso/editar/<int:id>", methods=["POST"])
 @apenas_admin
@@ -1006,7 +1309,9 @@ def editar_aviso(id):
     return redirect("/admin")
 
 @app.route("/termos", methods=["GET", "POST"])
-def gerar_termo():
+def termos():
+
+   
     if request.method == "POST":
         # 1. Captura de dados do formulário
         cliente = request.form.get("cliente", "").strip()
@@ -1018,6 +1323,7 @@ def gerar_termo():
         complemento = request.form.get("complemento", "").strip()
         cidade = request.form.get("cidade", "Paraguaçu Paulista").strip()
         estado = request.form.get("estado", "SP").strip()
+        parcelas = request.form.getlist("parcela[]")
 
         # Captura das listas dinâmicas
         bancos = request.form.getlist("banco[]")
@@ -1025,32 +1331,115 @@ def gerar_termo():
         datas_contratacao = request.form.getlist("data_contratacao[]")
         saldos = request.form.getlist("saldo[]")
 
-        # 2. Processamento dos contratos
-        lista_contratos_texto = ""
+        # 2. Processamento dos contratos em tabela
+        linhas_tabela = ""
         valor_total = 0.0
-        
-        # Filtra bancos únicos para as cláusulas que pedem a lista de bancos
-        bancos_unicos = sorted(list(set([b for b in bancos if b])))
+        total_parcelas = 0.0
+
+        bancos_unicos = sorted(
+            list(
+                set([b for b in bancos if b])
+            )
+        )
+
+        def moeda(valor):
+            return f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
         for i in range(len(bancos)):
-            if not bancos[i]: continue
-            
-            # Limpeza do valor monetário para cálculo
-            s = saldos[i].replace("R$", "").replace(".", "").replace(",", ".").strip()
+
+            if not bancos[i]:
+                continue
+
+            parcela_txt = parcelas[i].replace("R$", "").replace(".", "").replace(",", ".").strip()
+            saldo_txt = saldos[i].replace("R$", "").replace(".", "").replace(",", ".").strip()
+
             try:
-                val = float(s)
-                valor_total += val
-                val_fmt = f"R$ {val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+                parcela_float = float(parcela_txt)
             except:
-                val_fmt = saldos[i]
+                parcela_float = 0.0
 
-            lista_contratos_texto += f"{bancos[i]}, contrato nº {contratos[i]} (data: {datas_contratacao[i]}, saldo: {val_fmt}); "
+            try:
+                saldo_float = float(saldo_txt)
+            except:
+                saldo_float = 0.0
 
-        contratos_clausula_realce = f'<span class="realce">{lista_contratos_texto}</span>'
-        
-        # Formatação final
-        valor_formatado = f"{valor_total:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-        valor_extenso = valor_por_extenso(valor_total) # Certifique-se que esta função esteja acessível
+            total_parcelas += parcela_float
+            valor_total += saldo_float
+
+            linhas_tabela += f"""
+<tr>
+    <td style="border:1px solid #000;background:#fff;color:#000;padding:6px;text-align:center;">
+        {contratos[i]}
+    </td>
+
+    <td style="border:1px solid #000;background:#fff;color:#000;padding:6px;text-align:center;">
+        {bancos[i]}
+    </td>
+
+    <td style="border:1px solid #000;background:#fff;color:#000;padding:6px;text-align:center;">
+        R$ {moeda(parcela_float)}
+    </td>
+
+    <td style="border:1px solid #000;background:#fff;color:#000;padding:6px;text-align:center;">
+        R$ {moeda(saldo_float)}
+    </td>
+</tr>
+"""
+        tabela_contratos = f"""
+<table class="tabela-contratos-termo" style="
+width:100%;
+margin:16px auto 20px auto;
+border-collapse:collapse;
+table-layout:fixed;
+font-size:10pt;
+background:#fff;
+border:1px solid #000;
+">
+    <thead>
+    <tr>
+        <th style="border:1px solid #000;background:#fff;color:#000;padding:6px;text-align:center;font-weight:bold;">
+            Nº Contrato
+        </th>
+
+        <th style="border:1px solid #000;background:#fff;color:#000;padding:6px;text-align:center;font-weight:bold;">
+            Banco
+        </th>
+
+        <th style="border:1px solid #000;background:#fff;color:#000;padding:6px;text-align:center;font-weight:bold;">
+            Parcela
+        </th>
+
+        <th style="border:1px solid #000;background:#fff;color:#000;padding:6px;text-align:center;font-weight:bold;">
+            Valor
+        </th>
+    </tr>
+</thead>
+
+    <tbody>
+        {linhas_tabela}
+
+       <tr>
+    <td colspan="2"
+        style="border:1px solid #000;background:#fff;color:#000;padding:6px;text-align:center;font-weight:bold;">
+        TOTAL
+    </td>
+
+    <td
+        style="border:1px solid #000;background:#fff;color:#000;padding:6px;text-align:center;font-weight:bold;">
+        R$ {moeda(total_parcelas)}
+    </td>
+
+    <td
+        style="border:1px solid #000;background:#fff;color:#000;padding:6px;text-align:center;font-weight:bold;">
+        R$ {moeda(valor_total)}
+    </td>
+</tr>
+    </tbody>
+</table>
+"""
+
+        valor_formatado = moeda(valor_total)
+        valor_extenso = valor_por_extenso(valor_total)
 
         # 3. Data atual corrigida
         data_atual = datetime.now()
@@ -1064,18 +1453,55 @@ def gerar_termo():
         # 4. Compilação do HTML nativo interno do termo
         print("data_vencimento:", data_vencimento)
         
+        registrar_log(
+            session["usuario"],
+            "GEROU TERMO",
+            cliente)
+        
         texto_termo = f"""
-        <div class="conteudo-word">
+    <div class="conteudo-word">
+
+    <style>
+    .tabela-contratos-termo{{
+        width:88% !important;
+        margin:16px auto 24px auto !important;
+        border-collapse:collapse !important;
+        table-layout:auto !important;
+        background:#fff !important;
+    }}
+
+    .tabela-contratos-termo th,
+    .tabela-contratos-termo td{{
+        border:1px solid #000 !important;
+        background:#fff !important;
+        color:#000 !important;
+        padding:5px 8px !important;
+        font-size:9pt !important;
+        line-height:1.2 !important;
+        text-align:center !important;
+        vertical-align:middle !important;
+    }}
+
+    .tabela-contratos-termo th{{
+        font-weight:bold !important;
+    }}
+
+    .tabela-contratos-termo .total{{
+        font-weight:bold !important;
+    }}
+    </style>
+
             <h2 style="text-align:center; font-size: 14pt; margin-bottom: 24px; font-weight: bold;">INSTRUMENTO PARTICULAR DE CONFISSÃO DE DÍVIDA</h2>
 
-            <p><i>Pelo presente instrumento particular e na melhor forma de direito, confessam e assumam como líquida e certa a obrigação a seguir descrita:</i></p>
+            <p><i>Pelo presente instrumento particular e na melhor forma de direito, confessam e assumem como líquida e certa a obrigação a seguir descrita:</i></p>
 
             <p><b>CREDOR:</b> HIPERCRED INFORMAÇÕES CADASTRAIS LDTA, empresa de direito privado, inscrita no CNPJ: 21.589.560/0001-01, situada na rua Pedro de Toledo, nº 48, CEP: 19.700-045, Paraguaçu Paulista - São Paulo;</p>
 
-            <p><b>DEVEDOR:</b> {cliente}, {profissao}, portador(a) da cédula de identidade RG.{rg} e inscrito(a) CPF {cpf}, residente e domiciliado(a) na {endereco} n {numero}, {complemento}, {cidade}, {estado}.</p>
+            <p><b>DEVEDOR:</b> {cliente}, {profissao}, portador(a) da cédula de identidade RG {rg} e inscrito(a) CPF {cpf}, residente e domiciliado(a) na {endereco} n {numero}, {complemento}, {cidade}, {estado}.</p>
 
             <h3 style="font-size: 12pt; font-weight: bold; margin-top: 18px; margin-bottom: 6px;">CLÁUSULA PRIMEIRA - DA DÍVIDA:</h3>
-            <p>O DEVEDOR possui uma dívida decorrente das obrigações financeiras relacionadas a contratos anteriormente firmados junto ao {contratos_clausula_realce}</p>
+        <p>O DEVEDOR possui uma dívida decorrente das obrigações financeiras relacionadas a contratos anteriormente firmados, conforme tabela abaixo constando nome do banco, número do contrato, data de averbação, valor de parcela e saldo devedor de cada contrato</p>
+{tabela_contratos}
 
             <h3 style="font-size: 12pt; font-weight: bold; margin-top: 18px; margin-bottom: 6px;">CLÁUSULA SEGUNDA - DA FINALIDADE:</h3>
             <p>A presente operação tem por finalidade a QUITAÇÃO pelo CREDOR, dos créditos originalmente devidos pelo DEVEDOR ao {", ".join(bancos_unicos)}, conforme descritos na clausula primeira.</p>
@@ -1109,7 +1535,12 @@ def gerar_termo():
             <p>Para dirimir qualquer dúvida oriunda deste instrumento fica eleito o Foro de Paraguaçu Paulista, estado do São Paulo, com exclusão de qualquer outro que seja.</p>
 
             <h3 style="font-size: 12pt; font-weight: bold; margin-top: 18px; margin-bottom: 6px;">CLÁUSULA DÉCIMA - DA DECLARAÇÃO DAS TESTEMUNHAS:</h3>
-            <p>CLÁUSULA SEXTA As testemunhas abaixo assinadas declaram, sob as penas da lei, que presenciaram a leitura e a assinatura do presente instrumento pelas partes, atestando que o mesmo foi celebrado de forma livre, consciente e sem qualquer indício de coação, fraude ou simulação.</p>
+            <p>
+As testemunhas abaixo assinadas declaram, sob as penas da lei,
+que presenciaram a leitura e a assinatura do presente instrumento
+pelas partes, atestando que o mesmo foi celebrado de forma livre,
+consciente e sem qualquer indício de coação, fraude ou simulação.
+</p>
 
             <p><b>PARAGRAFO PRIMEIRO:</b> As testemunhas afirmam, ainda, que têm pleno conhecimento do conteúdo do presente contrato e que poderão ser chamadas a confirmar sua autenticidade e veracidade, se necessário, em eventual processo judicial.</p>
 
@@ -1119,82 +1550,186 @@ def gerar_termo():
             <p>Paraguaçu Paulista, {data_extenso_hoje}.</p>
             <br>
 
-            <table style="width:100%; border: none; font-size: 12pt; margin-top: 40px;">
-                <tr>
-                    <td style="width:50%; vertical-align:top;">
-                        _____________________________________<br>
-                        <b>CREDORA</b><br>
-                        HIPERCRED INFORMAÇÕES CADASTRAIS LTDA
-                    </td>
-                    <td style="width:50%; vertical-align:top;">
-                        _____________________________________<br>
-                        <b>DEVEDOR(A)</b><br>
-                        {cliente}
-                    </td>
-                </tr>
-            </table>
+           <table style="width:100%; border:none; font-size:12pt; margin-top:60px;">
+    <tr>
+        <td style="width:45%; text-align:center; vertical-align:top;">
+            _____________________________________<br><br>
+            <b>CREDORA</b><br>
+            HIPERCRED INFORMAÇÕES<br>
+            CADASTRAIS LTDA
+        </td>
+
+        <td style="width:10%;"></td>
+
+        <td style="width:45%; text-align:center; vertical-align:top;">
+            _____________________________________<br><br>
+            <b>DEVEDOR(A)</b><br>
+            {cliente}
+        </td>
+    </tr>
+
+    <tr>
+        <td colspan="3" style="height:120px;"></td>
+    </tr>
+
+    <tr>
+        <td style="width:45%; text-align:left; padding-left:40px;">
+            _____________________________________<br><br>
+            <b>TESTEMUNHA 1</b><br>
+            Nome: ______________________________<br>
+            
+            CPF: _______________________________
+        </td>
+
+        <td style="width:10%;"></td>
+
+        <td style="width:45%; text-align:left; padding-left:40px;">
+            _____________________________________<br><br>
+            <b>TESTEMUNHA 2</b><br>
+            Nome: ______________________________<br>
+            CPF: _______________________________
+        </td>
+    </tr>
+</table>
 
             <div class="quebra-pagina"></div>
 
-           <table class="tabela-promissoria">
+          <table class="tabela-promissoria">
+    <tr>
+        <td class="promissoria-conteudo">
+
+            <h2 style="
+                text-align:left;
+                margin-top:0;
+                margin-bottom:28px;
+                font-weight:bold;
+                font-size:15pt;
+                color:#000 !important;">
+                NOTA PROMISSÓRIA
+            </h2>
+
+            <table style="width:100%; border:none; margin-bottom:15px; font-size:10pt;">
                 <tr>
-                    <td class="promissoria-conteudo">
-                        
-                        <h2 style="text-align:center; margin-top: 0; margin-bottom: 25px; font-weight: bold; font-size: 14pt; color: #000000 !important;">NOTA PROMISSÓRIA</h2>
+                    <td style="width:45%; color:#000;">
+                        <b>Nº</b> 01
+                    </td>
 
-                        <table style="width:100%; border: none; margin-bottom: 25px; font-size: 12pt;">
-                            <tr>
-                                <td><b style="color: #000;">N°:</b> 01</td>
-                                <td style="text-align:right;"><b style="color: #000;">Vencimento:</b><span style="color:#000;">{data_vencimento}</span>
-                            </tr>
-                            <tr>
-                               <td colspan="2" class="valor-promissoria">
-                            </tr>
-                        </table>
+                    <td style="width:55%; text-align:right; color:#000;">
+                        <b>Vencimento:</b> {data_vencimento}
+                    </td>
+                </tr>
 
-                        <p style="margin-top: 20px; line-height: 1.4; text-align: justify;">
-                            No dia {data_vencimento}, eu {cliente}, pagarei por esta única via de NOTA PROMISSÓRIA na praça de Paraguaçu Paulista – Estado de São Paulo a: HIPERCRED INFORMAÇÕES CADASTRAIS LTDA, Inscrita no CNPJ N°: 21.589.560/0001-01, à sua ordem a quantia R$ {valor_formatado} ({valor_extenso}), em moeda corrente deste país.</span>
-                        </p>
+                <tr>
+                    <td></td>
 
-                        <p style="margin-top: 25px; color: #000;">Emitida em: {data_extenso_hoje}</p>
-
-                        <br>
-                        <p style="margin-bottom: 5px; color: #000;"><b>EMITENTE</b></p>
-                        <br>
-                        <p style="margin-bottom: 2px; color: #000;">_____________________________________________</p>
-                        <p style="margin-bottom: 2px; color: #000;">{cliente}</p>
-                        <p style="margin-bottom: 0; color: #000;">CPF: {cpf}</p>
+                    <td style="
+                        text-align:right;
+                        padding-top:5px;
+                        font-size:14pt;
+                        font-weight:bold;
+                        color:#000;">
+                        R$ {valor_formatado}
                     </td>
                 </tr>
             </table>
-        </div>
+
+            <p style="margin-top:10px; line-height:1.45; text-align:justify; color:#000;">
+                No dia {data_vencimento}, eu <b>{cliente}</b>, pagarei por esta única via de
+                <b>NOTA PROMISSÓRIA</b> na praça de Paraguaçu Paulista – Estado de São Paulo a:
+                <b>HIPERCRED INFORMAÇÕES CADASTRAIS LTDA</b>, Inscrita no CNPJ N°:
+                21.589.560/0001-01, à sua ordem a quantia
+                <b>R$ {valor_formatado}</b> ({valor_extenso}) em moeda corrente deste país.
+            </p>
+
+            <p style="margin-top:10px; color:#000;">
+                Emitida em: {data_extenso_hoje}
+            </p>
+
+            <p style="
+                text-align:center;
+                font-weight:bold;
+                margin-top:25px;
+                margin-bottom:25px;
+                color:#000;">
+                EMITENTE
+            </p>
+
+            <div style="text-align:center; color:#000; margin-top:10px;">
+                ______________________________________________
+
+                <br><br>
+
+                <b>{cliente}</b>
+
+                <br><br>
+
+                <b>CPF:</b> {cpf}
+            </div>
+
+        </td>
+    </tr>
+</table>
         """
-        return render_template("termos.html", texto_termo=texto_termo)
+        conn = conectar()
+        cursor = conn.cursor()
+        cursor.execute("""
+INSERT INTO termos (
+cliente,
+cpf,
+rg,
+profissao,
+endereco,
+numero,
+complemento,
+cidade,
+estado,
+valor_total,
+valor_extenso,
+usuario_nome,
+usuario_id,
+texto_final
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+""", (
+cliente,
+cpf,
+rg,
+profissao,
+endereco,
+numero,
+complemento,
+cidade,
+estado,
+valor_total,
+valor_extenso,
 
-    return render_template("termos.html", texto_termo=None)
+session["usuario"],      # usuario_nome
+session["usuario_id"],   # usuario_id
+
+texto_termo
+
+))
+    
+        print(session["usuario"])
+        print(session["usuario_id"])
+        print(session["tipo"])
+        
+        conn.commit()
+
+        conn.close()
 
 
-@app.route("/termos/historico")
-def historico_termos():
+        registrar_auditoria(
+            "GERAR_TERMO",
+            f"Cliente: {cliente} | CPF: {cpf} | Valor: R$ {valor_total}"
+        )
+        return redirect("/termos/historico")
 
-    if session.get("tipo") not in ["master", "adm"]:
-        return redirect("/")
-
-    conn = sqlite3.connect("banco.db")
-    conn.row_factory = sqlite3.Row
-
-    termos = conn.execute("""
-        SELECT *
-        FROM termos
-        ORDER BY id DESC
-    """).fetchall()
-
-    conn.close()
-
+  # GET
     return render_template(
-        "historico_termos.html",
-        termos=termos,
-        tipo=session["tipo"]
+        "termos.html",
+        texto_termo=None,
+        tipo=session.get("tipo")
     )
 
 # =========================
@@ -1244,18 +1779,18 @@ def criar_comissao():
 
     return redirect("/admin")
 
-
 @app.route("/admin/comissao/editar/<int:id>", methods=["POST"])
 @apenas_master
 def editar_comissao(id):
+
     print("EDITANDO ID:", id)
-    print(request.form)
+    print("FORM RECEBIDO:", request.form)
 
     banco = request.form.get("banco")
     tabela_nome = request.form.get("tabela_nome")
     produto = request.form.get("produto")
     comissao = request.form.get("comissao")
-    prazo = request.form.get("prazo", "")
+    prazo = request.form.get("prazo")
     promotora = request.form.get("promotora")
 
     conn = conectar()
@@ -1284,8 +1819,34 @@ def editar_comissao(id):
     conn.commit()
     conn.close()
 
-    return redirect("/admin")
+    return redirect(request.referrer or "/admin")
 
+
+@app.route("/auditoria")
+def auditoria():
+
+    if session.get("tipo") not in ["master", "admin", "adm"]:
+        return redirect("/home")
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM auditoria
+        ORDER BY id DESC
+        LIMIT 500
+    """)
+
+    registros = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "auditoria.html",
+        registros=registros,
+        tipo=session.get("tipo")
+    )
 
 @app.route("/admin/comissao/deletar/<int:id>", methods=["POST"])
 @apenas_master
@@ -1492,62 +2053,139 @@ def importar_excel_painel():
 
     return f"✔ Importação concluída! Novos: {total_novos} | Atualizados: {total_atualizados}"
 
-@app.route("/historico")
+@app.route("/termos/historico")
 def historico():
+
+    if "usuario_id" not in session:
+        return redirect("/")
+
+    pagina = request.args.get("pagina", 1, type=int)
+    busca = request.args.get("busca", "").strip()
+    busca_limpa = "".join(filter(str.isdigit, busca))
+
+    por_pagina = 20
+    offset = (pagina - 1) * por_pagina
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    filtros = []
+    params = []
+
+    if session.get("tipo") not in ["master", "adm", "admin"]:
+        filtros.append("usuario_id = ?")
+        params.append(session["usuario_id"])
+
+    if busca:
+        filtros.append("""
+            (
+                cliente LIKE ?
+                OR cpf LIKE ?
+                OR REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') LIKE ?
+            )
+        """)
+        params.extend([
+            f"%{busca}%",
+            f"%{busca}%",
+            f"%{busca_limpa}%"
+        ])
+
+    where_sql = ""
+
+    if filtros:
+        where_sql = "WHERE " + " AND ".join(filtros)
+
+    cursor.execute(f"""
+        SELECT COUNT(*)
+        FROM termos
+        {where_sql}
+    """, params)
+
+    total = cursor.fetchone()[0]
+
+    cursor.execute(f"""
+        SELECT *
+        FROM termos
+        {where_sql}
+        ORDER BY id DESC
+        LIMIT ? OFFSET ?
+    """, params + [por_pagina, offset])
+
+    historico = cursor.fetchall()
+
+    conn.close()
+
+    total_paginas = ceil(total / por_pagina)
+
+    return render_template(
+        "historico.html",
+        historico=historico,
+        pagina=pagina,
+        total_paginas=total_paginas,
+        total=total,
+        busca=busca,
+        tipo=session.get("tipo")
+    )
+
+@app.route("/termos/excluir/<int:id>", methods=["POST"])
+def excluir_termo(id):
+
     if session.get("tipo") != "master":
         return redirect("/home")
-    conn = sqlite3.connect("banco.db")
-    conn.row_factory = sqlite3.Row
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM termos WHERE id = ?",
+        (id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    # 🔥 AUDITORIA AQUI
+    registrar_auditoria(
+        "EXCLUIR_TERMO",
+        f"Termo ID {id} excluído"
+    )
+
+    return redirect("/termos/historico")
+
+@app.route("/termos/ver/<int:id>")
+def visualizar_termo(id):
+
+    if "usuario_id" not in session:
+        return redirect("/")
+
+    conn = conectar()
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT * FROM comissoes
-        ORDER BY id DESC
-    """)
+        SELECT *
+        FROM termos
+        WHERE id = ?
+    """, (id,))
 
-    dados = cursor.fetchall()
+    termo = cursor.fetchone()
+
     conn.close()
 
-    return render_template("historico.html", historico=dados)
-def aplicar_filtro(bancos, q):
+    if not termo:
+        return "Termo não encontrado"
 
-    if not q:
-        return bancos
+    return render_template(
+        "visualizar_termo.html",
+        termo=termo
+    )
 
-    q = q.lower().strip()
+@app.route("/backup")
+def backup():
 
-    bancos_filtrados = []
+    usuario = session.get("usuario", "sistema")
+    arquivo = fazer_backup(usuario)
 
-    for banco in bancos:
-
-        tabelas_filtradas = []
-
-        for t in banco["tabelas"]:
-
-            banco_nome = banco["nome"] or ""
-            promotora = t.get("promotora") or ""
-            tabela_nome = t.get("tabela_nome") or ""
-            comissao = str(t.get("comissao", ""))
-            prazo = str(t.get("prazo", ""))
-
-            if (
-                q in banco_nome.lower()
-                or q in promotora.lower()
-                or q in tabela_nome.lower()
-                or q in comissao.lower()
-                or q in prazo.lower()
-            ):
-                tabelas_filtradas.append(t)
-
-        if tabelas_filtradas:
-            bancos_filtrados.append({
-                "nome": banco["nome"],
-                "tabelas": tabelas_filtradas
-            })
-
-    return bancos_filtrados
-
-
+    return f"✔ Backup criado com sucesso: {arquivo}"
 
 @app.route("/bancos")
 def bancos():
@@ -1674,6 +2312,11 @@ def deletar_acesso_banco(id):
     conn.commit()
     conn.close()
 
+    registrar_auditoria(
+        "DELETAR_ACESSO_BANCO",
+        f"Acesso id {id} excluído"
+    )
+
     return redirect("/bancos")
 # =========================
 # START
@@ -1689,12 +2332,15 @@ def salvar_venda():
     venda_id = request.form["id"]
     pago = request.form["pago"]
     projecao = request.form["projecao"]
+    
 
     db.execute("""
         UPDATE meta_usuario_produto
         SET pago = ?, projecao = ?
         WHERE id = ?
     """, (pago, projecao, venda_id))
+
+    
 
     db.commit()
 
@@ -1707,6 +2353,7 @@ def add_venda():
     usuario_id = session["usuario_id"]
     produto = request.form["produto"]
     valor = request.form["valor"]
+    cliente = request.form.get("cliente", "")
 
     db.execute("""
         INSERT INTO vendas (usuario_id, produto, valor)
@@ -1715,8 +2362,22 @@ def add_venda():
 
     db.commit()
 
-    return redirect("/vendas")
+    detalhes = f"{produto} - R$ {valor}"
 
+    if cliente:
+        detalhes = f"{cliente} | {produto} - R$ {valor}"
+
+    registrar_log(
+        session["usuario"],
+        "LANÇOU VENDA",
+        detalhes
+    )
+    registrar_auditoria(
+    "LANCOU_VENDA",
+    f"{produto} | R$ {valor}"
+    )
+
+    return redirect("/vendas")
 
 # =========================
 # ADICIONAR META
@@ -1824,12 +2485,13 @@ def minhas_vendas():
     # =========================
     meta_total = sum(float(m["meta"] or 0) for m in metas)
     pago_total = sum(vendas_dict.values())
-
+    falta_meta = max(0, meta_total - pago_total)
     # =========================
     # % GERAL
     # =========================
     percentual_meta = round((pago_total / meta_total) * 100, 1) if meta_total > 0 else 0
-
+    percentual_barra = min(percentual_meta, 100)
+    
     # =========================
     # PROGRESSO POR PRODUTO
     # =========================
@@ -1869,10 +2531,11 @@ def minhas_vendas():
         metas=metas,
         vendas=vendas_dict,
         historico=historico,
+        falta_meta=falta_meta,
 
         percentual_meta=percentual_meta,
         progresso_produtos=progresso_produtos,
-
+        percentual_barra=percentual_barra,
         meta=meta_total,
         pago=pago_total,
         projecao=projecao,
@@ -1886,6 +2549,25 @@ def minhas_vendas():
         tipo=session["tipo"],
         usuario=session["usuario"]
     )
+
+@app.route("/admin/comissoes/limpar-promotora", methods=["POST"])
+@apenas_master
+def limpar_comissoes_promotora():
+
+    promotora = request.form.get("promotora", "").strip()
+
+    if not promotora:
+        return redirect("/admin?aba=comissoes")
+
+    removidas = limpar_promotora(promotora)
+
+    registrar_auditoria(
+        "LIMPAR_PROMOTORA",
+        f"Promotora: {promotora} | Registros removidos: {removidas}"
+    )
+
+    return redirect("/admin?aba=comissoes")
+
 @app.route("/excluir-venda/<int:id>")
 def excluir_venda(id):
 
@@ -1907,7 +2589,18 @@ def excluir_venda(id):
     conn.commit()
     conn.close()
 
+    registrar_log(
+        session["usuario"],
+        "EXCLUIU VENDA",
+        f"Venda ID {id}"
+    )
+    registrar_auditoria(
+    "EXCLUIU_VENDA",
+    f"Venda ID {id}"
+    )
+
     return redirect("/vendas")
+
 
 @app.route("/editar-venda/<int:id>")
 def editar_venda(id):
@@ -1935,10 +2628,18 @@ def editar_venda(id):
     if not venda:
         return redirect("/vendas")
 
+    registrar_log(
+        session["usuario"],
+        "ABRIU_EDICAO_VENDA",
+        f"Venda ID {id}"
+    )
+
     return render_template(
         "editar_venda.html",
         venda=venda
     )
+
+
 @app.route("/editar-venda/<int:id>", methods=["POST"])
 def salvar_edicao_venda(id):
 
@@ -1963,6 +2664,16 @@ def salvar_edicao_venda(id):
 
     conn.commit()
     conn.close()
+
+    registrar_log(
+        session["usuario"],
+        "SALVOU_EDICAO_VENDA",
+        f"Venda ID {id} | Novo valor R$ {valor}"
+    )
+    registrar_auditoria(
+    "EDITOU_VENDA",
+    f"Venda ID {id} | Novo valor R$ {valor}"
+    )
 
     return redirect("/vendas")
 
@@ -2002,6 +2713,38 @@ def estrutura_vendas():
     conn.close()
 
     return str([dict(x) for x in dados])
+
+@app.route("/admin/comissoes/exportar")
+@apenas_master
+def exportar_comissoes():
+
+    conn = conectar()
+
+    df = pd.read_sql_query("""
+        SELECT
+            banco AS Banco,
+            tabela_nome AS Tabela,
+            produto AS Produto,
+            prazo AS Prazo,
+            comissao AS Comissão,
+            promotora AS Promotora,
+            ativo AS Ativo,
+            data_importacao AS Atualização
+        FROM comissoes
+        ORDER BY produto, banco, CAST(REPLACE(comissao, ',', '.') AS REAL) DESC
+    """, conn)
+
+    conn.close()
+
+    caminho = "comissoes_exportadas.xlsx"
+    df.to_excel(caminho, index=False)
+
+    return send_file(
+        caminho,
+        as_attachment=True,
+        download_name="comissoes_exportadas.xlsx"
+    )
+
 @app.route("/ver-vendas")
 def ver_vendas():
 
@@ -2017,13 +2760,14 @@ def ver_vendas():
 
     vendas = cursor.fetchall()
 
+    
+
     conn.close()
+
+
+   
 
     return str([dict(v) for v in vendas])
 if __name__ == "__main__":
-
-
-
     print("🔥 FLASK INICIANDO...")
-
-    app.run(debug=True)
+    app.run(host="192.168.0.63", port=5000, debug=True)

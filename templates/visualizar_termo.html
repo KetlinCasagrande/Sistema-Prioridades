@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Visualizar Termo</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+    font-family:'Poppins',sans-serif;
+    background:#111827;
+    margin:0;
+    padding:30px;
+}
+
+.container{
+    max-width:1400px;
+    margin:auto;
+}
+
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+}
+
+.botoes{
+    display:flex;
+    gap:10px;
+}
+
+.btn{
+    padding:10px 16px;
+    border:none;
+    border-radius:10px;
+    text-decoration:none;
+    cursor:pointer;
+    font-weight:600;
+    background:#6d28d9;
+    color:white;
+    transition:.2s;
+}
+
+.btn:hover{
+    background:#5b21b6;
+}
+
+.btn-voltar{
+    background:#374151;
+}
+
+.btn-voltar:hover{
+    background:#1f2937;
+}
+
+/* PAINEL DO TERMO */
+
+.painel-termo{
+    background:rgba(255,255,255,.05);
+    border-radius:16px;
+    padding:30px;
+    box-shadow:0 10px 20px rgba(109,40,217,.25);
+}
+
+/* FOLHA */
+
+.documento-oficial{
+    background:#fff;
+    color:#000;
+    max-width:900px;
+    margin:auto;
+    padding:60px;
+    border-radius:6px;
+    box-shadow:0 15px 35px rgba(0,0,0,.35);
+}
+
+/* TEXTO */
+
+.conteudo-word{
+    font-family:'Century Gothic',sans-serif;
+    font-size:12pt;
+    line-height:1.4;
+    text-align:justify;
+    color:#000;
+}
+
+.conteudo-word p{
+    margin-bottom:14px;
+}
+
+/* TABELAS */
+
+.documento-oficial table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+/* NOTA PROMISSÓRIA */
+
+.documento-oficial .tabela-promissoria{
+    border:1px solid #000;
+    outline:4px double #000;
+    outline-offset:-3px;
+    width:98%;
+    margin:120px auto 40px auto;
+    page-break-before:always;
+    position:relative;
+}
+
+.documento-oficial .tabela-promissoria td{
+    padding:20px;
+}
+
+/* ===========================
+   NOTA PROMISSÓRIA
+=========================== */
+
+.tabela-promissoria{
+    width:88% !important;
+    margin:30px auto 20px auto !important;
+    border:1px solid #000 !important;
+    outline:4px double #000 !important;
+    outline-offset:-3px !important;
+    background:#fff !important;
+    border-collapse:collapse !important;
+    page-break-before:always !important;
+    break-before:page !important;
+    position:relative !important;
+}
+
+.tabela-promissoria td{
+    padding:20px !important;
+    color:#000 !important;
+    background:#fff !important;
+}
+
+.tabela-promissoria tr{
+    background:#fff !important;
+}
+
+/* TARJA LATERAL */
+
+.tabela-promissoria::before{
+    content:"REPÚBLICA FEDERATIVA DO BRASIL" !important;
+
+    position:absolute !important;
+    left:-34px !important;
+    top:50% !important;
+
+    transform:translateY(-50%) rotate(180deg) !important;
+    writing-mode:vertical-rl !important;
+
+    background:#fff !important;
+    border:1px solid #b0b0b0 !important;
+    color:#000 !important;
+
+    font-family:Arial, sans-serif !important;
+    font-size:10px !important;
+    font-weight:bold !important;
+    letter-spacing:2px !important;
+
+    padding:18px 6px !important;
+    white-space:nowrap !important;
+
+    z-index:9999 !important;
+}
+
+/* IMPRESSÃO */
+
+@media print{
+
+    @page{
+        size:A4;
+        margin:1.5cm;
+    }
+
+    body{
+        background:white;
+        padding:0;
+        margin:0;
+    }
+
+    .topbar{
+        display:none;
+    }
+
+    .container{
+        max-width:100%;
+    }
+
+    .painel-termo{
+        background:white;
+        padding:0;
+        box-shadow:none;
+    }
+
+    
+
+    .documento-oficial{
+        box-shadow:none;
+        border:none;
+        max-width:100%;
+        padding:0;
+        margin:0;
+    }
+
+    .tabela-promissoria{
+    width:90% !important;
+    margin-top:1cm !important;
+
+    page-break-before:always !important;
+    break-before:page !important;
+
+    display:table !important;
+}
+
+.tabela-promissoria::before{
+    display:block !important;
+}
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="topbar">
+
+        <a href="/termos/historico" class="btn btn-voltar">
+            ⬅ Voltar
+        </a>
+
+        <div class="botoes">
+
+            <button onclick="window.print()" class="btn">
+                🖨️ Imprimir
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="painel-termo">
+
+        <div class="documento-oficial">
+
+            {{ termo["texto_final"] | safe }}
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

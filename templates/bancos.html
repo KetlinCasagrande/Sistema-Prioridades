@@ -6,6 +6,8 @@
 <meta charset="UTF-8">
 <title>Bancos</title>
 
+
+
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -34,10 +36,36 @@ function toggleBanco(id){
 }
 
 </script>
+<script>
+function filtrarBancos() {
 
+    let termo = document
+        .getElementById("buscarBanco")
+        .value
+        .toLowerCase();
+
+    let cards = document.querySelectorAll(".banco-card");
+
+    cards.forEach(card => {
+
+        let nome = card
+            .querySelector(".banco-titulo")
+            .innerText
+            .toLowerCase();
+
+        card.style.display =
+            nome.includes(termo)
+            ? "block"
+            : "none";
+    });
+}
+</script>
 </head>
 
 <body>
+
+
+
 <!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
 
@@ -58,6 +86,11 @@ function toggleBanco(id){
     <a href="/termos">
     <span class="icon">📄</span>
     <span class="text">Gerar Termo</span>
+    </a>
+
+    <a href="/termos/historico">
+    <span class="icon">📚</span>
+    <span class="text">Termos Gerados</span>
     </a>
 
     <a href="/bancos" class="{% if titulo == 'Bancos' %}active{% endif %}">
@@ -114,6 +147,15 @@ function toggleBanco(id){
 
     </div>
 
+
+    <div class="busca-bancos">
+    <input
+        type="text"
+        id="buscarBanco"
+        placeholder="🔍 Buscar banco..."
+        onkeyup="filtrarBancos()">
+        </div>
+
     <!-- GRID -->
     <div class="grid-home">
 
@@ -129,7 +171,9 @@ function toggleBanco(id){
 
                 <div>
 
-                    <h3>🏦 {{ banco.nome }}</h3>
+                    <h3 class="banco-titulo">
+                    🏦 {{ banco.nome }}
+                    </h3>
 
                     {% if banco.observacao %}
                     <p class="subtexto">
@@ -146,19 +190,11 @@ function toggleBanco(id){
             </div>
 
             <!-- BOTÃO -->
-            <a
-                href="{{ banco.link }}"
-                target="_blank"
-                class="btn btn-verde"
-                style="
-                    margin-top:15px;
-                    display:block;
-                    text-align:center;
-                    text-decoration:none;
-                "
-            >
-                🚀 Abrir Sistema
-            </a>
+            <a href="{{ banco.link }}"
+             target="_blank"
+              class="btn-sistema"
+              >🚀 Abrir Sistema
+              </a>
 
             <!-- EXPANSÍVEL -->
             <div
@@ -175,65 +211,56 @@ function toggleBanco(id){
 
                        {% if tipo|lower|trim in ["master","adm","admin"] %}
 
-                        <!-- MASTER -->
-                        <form
-                            method="POST"
-                            action="/bancos/acesso/editar/{{ acesso.id }}"
-                        >
+                       <!-- MASTER -->
+<form method="POST" action="/bancos/acesso/editar/{{ acesso.id }}">
 
-                            <input
-                                name="descricao"
-                                value="{{ acesso.descricao }}"
-                                placeholder="Descrição"
-                                style="margin-bottom:10px;"
-                            >
+    <input
+        name="descricao"
+        value="{{ acesso.descricao }}"
+        placeholder="Descrição"
+        style="margin-bottom:10px;"
+    >
 
-                            <input
-                                name="login"
-                                value="{{ acesso.login }}"
-                                placeholder="Login"
-                                style="margin-bottom:10px;"
-                            >
+    <input
+        name="login"
+        value="{{ acesso.login }}"
+        placeholder="Login"
+        style="margin-bottom:10px;"
+    >
 
-                            <div style="
-                                display:flex;
-                                gap:10px;
-                                margin-bottom:10px;
-                            ">
+    <div class="senha-box">
 
-                                <input
-                                    type="password"
-                                    name="senha"
-                                    value="{{ acesso.senha }}"
-                                    placeholder="Senha"
-                                >
+    <input
+        type="password"
+        name="senha"
+        value="{{ acesso.senha }}"
+        placeholder="Senha"
+    >
 
-                                <button
-                                    type="button"
-                                    class="btn btn-roxo"
-                                    onclick="copiarTexto('{{ acesso.senha|escape }}')"
-                                >
-                                    Copiar
-                                </button>
+    <button
+        type="button"
+        class="btn-copiar"
+        onclick="copiarTexto('{{ acesso.senha|escape }}')">
+        📋
+    </button>
 
-                            </div>
+</div>
 
-                            <div class="acoes-banco">
+    <div class="acoes-banco">
 
-                                <button class="btn btn-verde">
-                                    Salvar
-                                </button>
+        <button class="btn btn-verde">
+            Salvar
+        </button>
 
-                                <a
-                                    href="/bancos/acesso/deletar/{{ acesso.id }}"
-                                    class="btn btn-vermelho"
-                                >
-                                    Excluir
-                                </a>
+        <a
+            href="/bancos/acesso/deletar/{{ acesso.id }}"
+            class="btn btn-vermelho">
+            Excluir
+        </a>
 
-                            </div>
+    </div>
 
-                        </form>
+</form>
 
                         {% else %}
 
@@ -253,27 +280,23 @@ function toggleBanco(id){
                                 value="{{ acesso.login }}"
                                 readonly
                             >
+                            <div class="senha-wrapper">
 
-                            <div style="
-                                display:flex;
-                                gap:10px;
-                            ">
+    <input
+        type="password"
+        name="senha"
+        value="{{ acesso.senha }}"
+        placeholder="Senha"
+    >
 
-                                <input
-                                    type="password"
-                                    value="{{ acesso.senha }}"
-                                    readonly
-                                >
+    <button
+        type="button"
+        class="btn-copiar"
+        onclick="copiarTexto('{{ acesso.senha|escape }}')">
+        📋
+    </button>
 
-                                <button
-                                    type="button"
-                                    class="btn btn-roxo"
-                                    onclick="copiarTexto('{{ acesso.senha|escape }}')"
-                                >
-                                    Copiar
-                                </button>
-
-                            </div>
+</div>
 
                         </div>
 
@@ -287,45 +310,40 @@ function toggleBanco(id){
 
                 <!-- NOVO ACESSO -->
                 {% if tipo|lower|trim in ["master","adm","admin"] %}
+<div class="novo-acesso">
 
-                <div class="novo-acesso">
+    <button type="button"
+            class="btn-novo-acesso"
+            onclick="toggleNovoAcesso('novo{{ banco.id }}')">
+        ➕ Novo acesso
+    </button>
 
-                    <form method="POST" action="/bancos/acesso/criar">
+    <div id="novo{{ banco.id }}" class="novo-acesso-form">
 
-                        <input
-                            type="hidden"
-                            name="banco_id"
-                            value="{{ banco.id }}"
-                        >
+        <form method="POST" action="/bancos/acesso/criar">
 
-                        <input
-                            name="descricao"
-                            placeholder="Descrição"
-                            style="margin-bottom:10px;"
-                        >
+            <input type="hidden"
+                   name="banco_id"
+                   value="{{ banco.id }}">
 
-                        <input
-                            name="login"
-                            placeholder="Login"
-                            style="margin-bottom:10px;"
-                        >
+            <input name="descricao"
+                   placeholder="Descrição">
 
-                        <input
-                            name="senha"
-                            placeholder="Senha"
-                            style="margin-bottom:10px;"
-                        >
+            <input name="login"
+                   placeholder="Login">
 
-                        <button
-                            class="btn btn-roxo"
-                            style="width:100%;"
-                        >
-                            ➕ Adicionar acesso
-                        </button>
+            <input name="senha"
+                   placeholder="Senha">
 
-                    </form>
+            <button class="btn btn-roxo" style="width:100%;">
+                Salvar novo acesso
+            </button>
 
-                </div>
+        </form>
+
+    </div>
+
+</div>
 
                 {% endif %}
 
@@ -381,6 +399,20 @@ window.addEventListener("load", () => {
         btn.innerHTML = "▶";
     }
 });
+</script>
+
+
+<script>
+function toggleNovoAcesso(id){
+
+    const box = document.getElementById(id);
+
+    if(box.style.display === "block"){
+        box.style.display = "none";
+    } else {
+        box.style.display = "block";
+    }
+}
 </script>
 </body>
 </html>

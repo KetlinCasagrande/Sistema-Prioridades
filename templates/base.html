@@ -11,27 +11,103 @@
 
 <body>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
+<script>
+/* =========================
+ONLOAD (UNIFICADO - ESSENCIAL)
+========================= */
+window.addEventListener("load", function () {
 
-    <h2 class="text">Sistema</h2>
+    let aba = localStorage.getItem("abaAtiva") || "usuarios";
+    abrir(aba);
 
-    <a href="/clt">💼 CLT</a>
-    <a href="/inss">👴 INSS</a>
-    <a href="/fgts">🏠 FGTS</a>
-    <a href="/compra-divida">💳 Compra</a>
-    <a href="/termos">📄 Gerar Termo</a>
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
 
-    {% if tipo == "master" %}
-    <a href="/admin">⚙️ Painel Admin</a>
-    {% endif %}
+    if (localStorage.getItem("sidebarFechada") === "true") {
+        sidebar.classList.add("closed");
 
-    {% if tipo in ["master", "adm"] %}
-    <a href="/usuarios">👥 Usuários</a>
-    <a href="/termos/historico">📚 Histórico</a>
-    {% endif %}
+        if (conteudo) conteudo.classList.add("sidebar-fechada");
 
-    <a href="/logout">🚪 Sair</a>
+        if (btn) btn.innerHTML = "▶";
+    }
+});
+
+function toggleSidebar() {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    sidebar.classList.toggle("closed");
+
+    if (conteudo) {
+        conteudo.classList.toggle("sidebar-fechada");
+    }
+
+    localStorage.setItem(
+        "sidebarFechada",
+        sidebar.classList.contains("closed")
+    );
+
+    btn.innerHTML =
+        sidebar.classList.contains("closed")
+        ? "▶"
+        : "◀";
+}
+
+</script>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="sidebar" id="sidebar">
+
+<button class="toggle-btn" onclick="toggleSidebar()">◀</button>
+
+<a href="/home">
+    <span class="icon">🏠</span>
+    <span class="text">Home</span>
+</a>
+
+
+{% if tipo|lower|trim in ["master","adm","admin"] %}
+
+<a href="#" class="menu-admin active" data-menu="usuarios" onclick="abrir('usuarios')">
+    <span class="icon">👤</span>
+    <span class="text">Usuários</span>
+</a>
+
+{% if tipo in ["master", "adm"] %}
+<a href="/termos/historico">
+    <span class="icon">📚</span>
+    <span class="text">Histórico de Termos</span>
+</a>
+{% endif %}
+
+<a href="#" class="menu-admin" data-menu="comissoes" onclick="abrir('comissoes')">
+    <span class="icon">💰</span>
+    <span class="text">Comissões</span>
+</a>
+
+<a href="#" class="menu-admin" data-menu="avisos" onclick="abrir('avisos')">
+    <span class="icon">📢</span>
+    <span class="text">Avisos</span>
+</a>
+
+<a href="#" class="menu-admin" data-menu="metas" onclick="abrir('metas')">
+    <span class="icon">⚙️</span>
+    <span class="text">Metas</span>
+</a>
+
+{% endif %}
+
+<a href="/logout">
+    <span class="icon">🚪</span>
+    <span class="text">Sair</span>
+</a>
 
 </div>
 
@@ -46,6 +122,7 @@
             <div class="alert-success">{{ message }}</div>
         {% endfor %}
     {% endif %}
+
     {% endwith %}
 
 </div>
