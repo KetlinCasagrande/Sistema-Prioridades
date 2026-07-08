@@ -1,13 +1,11 @@
 import sqlite3
 
 conn = sqlite3.connect("banco.db")
-conn.row_factory = sqlite3.Row
-
 cursor = conn.cursor()
 
-cursor.execute("PRAGMA table_info(clientes_compra)")
+cursor.execute("PRAGMA table_info(comissoes)")
 
 for coluna in cursor.fetchall():
-    print(tuple(coluna))
+    print(coluna)
 
 conn.close()

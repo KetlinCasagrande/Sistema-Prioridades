@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-theme="{{ tema }}">
+<head>
+<meta charset="UTF-8">
+<title>Ficha Compra de Dívida</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}">
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+
+    <button class="toggle-btn sidebar-toggle" onclick="toggleSidebar()" title="Recolher menu">
+    <i data-lucide="panel-left-close"></i>
+    </button>
+
+<a href="/home">
+    <i data-lucide="home"></i>
+    <span class="text">Home</span>
+</a>
+
+{% if tipo == "user" %}
+<a href="/vendas">
+    <i data-lucide="circle-dollar-sign"></i>
+    <span class="text">Produção</span>
+</a>
+{% endif %}
+<a href="/compra-divida/clientes" class="active">
+    <i data-lucide="calculator"></i>
+    <span class="text">Compras</span>
+</a>
+
+<a href="/termos">
+    <i data-lucide="file-text"></i>
+    <span class="text">Gerar Termo</span>
+</a>
+
+<a href="/termos/historico">
+    <i data-lucide="files"></i>
+    <span class="text">Termos</span>
+</a>
+
+<a href="/bancos">
+    <i data-lucide="building-2"></i>
+    <span class="text">Bancos</span>
+</a>
+
+<a href="/clt">
+    <i data-lucide="briefcase-business"></i>
+    <span class="text">CLT</span>
+</a>
+
+<a href="/inss">
+    <i data-lucide="badge-dollar-sign"></i>
+    <span class="text">INSS</span>
+</a>
+
+<a href="/fgts">
+    <i data-lucide="lock-keyhole"></i>
+    <span class="text">FGTS</span>
+</a>
+
+<a href="/compra-divida">
+    <i data-lucide="landmark"></i>
+    <span class="text">Compra</span>
+</a>
+
+{% if tipo in ["master", "adm"] %}
+<a href="/admin">
+    <i data-lucide="settings"></i>
+    <span class="text">Admin</span>
+</a>
+{% endif %}
+
+<a href="/logout">
+    <i data-lucide="log-out"></i>
+    <span class="text">Sair</span>
+</a>
+
+</div>
+
+<div class="conteudo">
+<div class="page">
+
+    <!-- TOPO -->
+<div class="cliente-ficha-header">
+
+    <div class="cliente-ficha-info">
+
+        <div class="cliente-ficha-avatar">
+            {{ cliente["nome"][0]|upper }}
+        </div>
+
+        <div>
+            <h1>{{ cliente["nome"] }}</h1>
+            <span>CPF {{ cliente["cpf"] or "Não informado" }}</span>
+        </div>
+
+    </div>
+
+    <form method="POST"
+          action="/compra-divida/cliente/editar/{{ cliente['id'] }}"
+          class="cliente-ficha-form">
+
+        <input
+            name="nome"
+            value="{{ cliente['nome'] }}"
+            placeholder="Nome">
+
+        <input
+            name="cpf"
+            value="{{ cliente['cpf'] }}"
+            placeholder="CPF">
+
+        <select name="status">
+            <option value="EM ANDAMENTO" {% if cliente["status"] == "EM ANDAMENTO" %}selected{% endif %}>Em andamento</option>
+            <option value="AGUARDANDO BOLETOS" {% if cliente["status"] == "AGUARDANDO BOLETOS" %}selected{% endif %}>Aguardando boletos</option>
+            <option value="AGUARDANDO MARGEM" {% if cliente["status"] == "AGUARDANDO MARGEM" %}selected{% endif %}>Aguardando margem</option>
+            <option value="CONCLUÍDO" {% if cliente["status"] == "CONCLUÍDO" %}selected{% endif %}>Concluído</option>
+            <option value="CANCELADO" {% if cliente["status"] == "CANCELADO" %}selected{% endif %}>Cancelado</option>
+        </select>
+
+        <button class="btn btn-roxo">
+            <i data-lucide="save"></i>
+            Salvar
+        </button>
+
+        <a href="/compra-divida/cliente/excluir/{{ cliente['id'] }}"
+           class="btn btn-vermelho"
+           onclick="return confirm('Deseja excluir este cliente?')">
+            Excluir
+        </a>
+
+    </form>
+
+</div>
+
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% if mensagens %}
+        {% for categoria, mensagem in mensagens %}
+            <div class="toast-msg {{ categoria }}">
+                {{ mensagem }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+<!-- RESUMO -->
+<div class="grid-resumo-compra">
+
+    <div class="resumo-compra-card">
+        <span>Total parcelas</span>
+        <strong>R$ {{ "{:,.2f}".format(total_parcelas).replace(",", "X").replace(".", ",").replace("X", ".") }}</strong>
+    </div>
+
+    <div class="resumo-compra-card">
+        <span>Total dívida</span>
+        <strong>R$ {{ "{:,.2f}".format(total_dividas).replace(",", "X").replace(".", ",").replace("X", ".") }}</strong>
+    </div>
+
+    <div class="resumo-compra-card">
+        <span>Valor liberado</span>
+        <strong>R$ {{ "{:,.2f}".format(valor_liberado or 0).replace(",", "X").replace(".", ",").replace("X", ".") }}</strong>
+    </div>
+
+    <div class="resumo-compra-card {% if sobra >= 0 %}positivo{% else %}negativo{% endif %}">
+        <span>{% if sobra >= 0 %}Sobra{% else %}Falta{% endif %}</span>
+        <strong>R$ {{ "{:,.2f}".format(sobra or 0).replace(",", "X").replace(".", ",").replace("X", ".") }}</strong>
+    </div>
+
+</div>
+<div class="compra-accordions">
+
+<!-- SIMULAÇÕES -->
+<div class="compra-accordion open">
+    <button type="button" class="compra-accordion-header" onclick="toggleCompraAccordion('simulacoes')">
+        <span><i data-lucide="calculator"></i> Simulações</span>
+        <i data-lucide="chevron-down"></i>
+    </button>
+
+    <div class="compra-accordion-content open" id="acc-simulacoes">
+
+        <div class="box-compra compra-subbox">
+            <h2><i data-lucide="plus-circle"></i> Nova Simulação</h2>
+
+            <form method="POST"
+                  action="/compra-divida/cliente/{{ cliente['id'] }}/simulacao"
+                  class="form-compra-cliente">
+
+                <input name="parcela" placeholder="Parcela nova">
+                <input name="coeficiente" placeholder="Coeficiente">
+
+                <button class="btn btn-roxo">
+                    Calcular
+                </button>
+            </form>
+        </div>
+
+        <div class="box-compra compra-subbox">
+            <h2><i data-lucide="history"></i> Histórico de Simulações</h2>
+
+            {% if simulacoes|length == 0 %}
+                <div class="sem-metas">
+                    Nenhuma simulação cadastrada.
+                </div>
+            {% endif %}
+
+            {% for s in simulacoes %}
+            <div class="simulacao-consulta-card">
+
+                <div class="simulacao-consulta-topo">
+                    <div>
+                        <strong>
+                            <i data-lucide="calculator"></i>
+                            Simulação #{{ loop.revindex }}
+                        </strong>
+                        <span>
+                        {{ s["data_criacao"] or s["data"] or "Sem data" }}
+                        </span>
+                    </div>
+
+                    <div class="simulacao-consulta-valor">
+                        R$ {{ "%.2f"|format(s["valor_liberado"] or 0) }}
+                    </div>
+                </div>
+
+                <div class="simulacao-consulta-grid">
+                    <div>
+                        <span>Parcela</span>
+                        <strong>R$ {{ "%.2f"|format(s["parcela"] or 0) }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Coeficiente</span>
+                        <strong>{{ s["coeficiente"] or "—" }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Valor liberado</span>
+                        <strong>R$ {{ "%.2f"|format(s["valor_liberado"] or 0) }}</strong>
+                    </div>
+                </div>
+
+                <div class="simulacao-consulta-acoes">
+                    <a href="/compra-divida/simulacao/excluir/{{ s['id'] }}"
+                       class="btn-sim-mini excluir"
+                       onclick="return confirm('Excluir simulação?')">
+                        <i data-lucide="trash-2"></i>
+                    </a>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+
+<!-- DÍVIDAS -->
+    <div class="compra-accordion">
+        <button type="button" class="compra-accordion-header" onclick="toggleCompraAccordion('dividas')">
+            <span><i data-lucide="credit-card"></i> Dívidas</span>
+            <i data-lucide="chevron-down"></i>
+        </button>
+
+        <div class="compra-accordion-content" id="acc-dividas">
+
+            <div class="box-compra compra-subbox">
+                <h2><i data-lucide="plus-circle"></i> Adicionar Dívida</h2>
+
+                <form method="POST"
+                      action="/compra-divida/cliente/{{ cliente['id'] }}/divida"
+                      class="form-divida-compra">
+
+                    <input name="banco" placeholder="Banco">
+                    <input name="contrato" placeholder="Contrato">
+                    <input name="data_contratacao" placeholder="Data contratação">
+                    <input name="parcela" placeholder="Parcela">
+                    <input name="saldo" placeholder="Saldo">
+
+                    <select name="status_boleto">
+                        <option value="AGUARDANDO">Aguardando</option>
+                        <option value="RECEBIDO">Recebido</option>
+                        <option value="PAGO">Pago</option>
+                        <option value="CANCELADO">Cancelado</option>
+                    </select>
+
+                    <input name="observacao" placeholder="Observação">
+
+                    <button class="btn btn-roxo">Adicionar</button>
+                </form>
+            </div>
+
+            <div class="box-compra compra-subbox">
+                <h2><i data-lucide="list"></i> Dívidas cadastradas</h2>
+
+                {% if dividas|length == 0 %}
+                <div class="sem-metas">Nenhuma dívida cadastrada ainda.</div>
+                {% endif %}
+
+                <div class="table-wrapper">
+                    <table class="tabela-metas tabela-metas-moderna tabela-dividas-compra">
+                        <thead>
+                            <tr>
+                                <th>Banco</th>
+                                <th>Contrato</th>
+                                <th>Data</th>
+                                <th>Parcela</th>
+                                <th>Saldo</th>
+                                <th>Status</th>
+                                <th>Obs.</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for d in dividas %}
+                            <tr>
+                                <form method="POST"
+                                      action="/compra-divida/divida/editar/{{ d['id'] }}">
+
+                                    <td><input name="banco" value="{{ d['banco'] or '' }}" placeholder="Banco"></td>
+                                    <td><input name="contrato" value="{{ d['contrato'] or '' }}" placeholder="Contrato"></td>
+                                    <td><input name="data_contratacao" value="{{ d['data_contratacao'] or '' }}" placeholder="Data"></td>
+                                    <td><input name="parcela" value="{{ '%.2f'|format(d['parcela'] or 0) }}" placeholder="Parcela"></td>
+                                    <td><input name="saldo" value="{{ '%.2f'|format(d['saldo'] or 0) }}" placeholder="Saldo"></td>
+
+                                    <td>
+                                        <select name="status_boleto">
+                                            <option value="AGUARDANDO" {% if d["status_boleto"] == "AGUARDANDO" %}selected{% endif %}>Aguardando</option>
+                                            <option value="RECEBIDO" {% if d["status_boleto"] == "RECEBIDO" %}selected{% endif %}>Recebido</option>
+                                            <option value="PAGO" {% if d["status_boleto"] == "PAGO" %}selected{% endif %}>Pago</option>
+                                            <option value="CANCELADO" {% if d["status_boleto"] == "CANCELADO" %}selected{% endif %}>Cancelado</option>
+                                        </select>
+                                    </td>
+
+                                    <td><input name="observacao" value="{{ d['observacao'] or '' }}" placeholder="Observação"></td>
+
+                                    <td class="acoes-meta">
+                                        <button class="btn btn-verde btn-acao-mini" title="Salvar">💾</button>
+
+                                        <a href="/compra-divida/divida/excluir/{{ d['id'] }}"
+                                           class="btn btn-vermelho btn-acao-mini"
+                                           onclick="return confirm('Excluir esta dívida?')">🗑</a>
+                                    </td>
+                                </form>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- TERMO -->
+    <div class="compra-accordion">
+        <button type="button" class="compra-accordion-header" onclick="toggleCompraAccordion('termo')">
+            <span><i data-lucide="file-text"></i> Termo</span>
+            <i data-lucide="chevron-down"></i>
+        </button>
+
+        <div class="compra-accordion-content" id="acc-termo">
+            <div class="box-compra compra-subbox">
+                <h2><i data-lucide="file-text"></i> Gerar Termo</h2>
+
+                <p style="color:#94a3b8; margin-bottom:15px;">
+                    Envie os dados do cliente e das dívidas direto para o termo.
+                </p>
+
+                <a href="/termos?compra_id={{ cliente['id'] }}" class="btn btn-roxo">
+                    Gerar termo com esses dados
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function toggleSidebar() {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    sidebar.classList.toggle("closed");
+
+    if (conteudo) {
+        conteudo.classList.toggle("sidebar-fechada");
+    }
+
+    localStorage.setItem(
+        "sidebarFechada",
+        sidebar.classList.contains("closed")
+    );
+
+    btn.innerHTML =
+        sidebar.classList.contains("closed")
+        ? "▶"
+        : "◀";
+}
+
+window.addEventListener("load", () => {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    if(localStorage.getItem("sidebarFechada") === "true"){
+
+        sidebar.classList.add("closed");
+
+        if(conteudo){
+            conteudo.classList.add("sidebar-fechada");
+        }
+
+        btn.innerHTML = "▶";
+    }
+});
+
+function abrirAbaCompra(nome, botao){
+
+    document.querySelectorAll(".conteudo-aba-compra").forEach(aba => {
+        aba.classList.remove("active");
+    });
+
+    document.querySelectorAll(".aba-compra").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    document.getElementById("aba-" + nome).classList.add("active");
+    botao.classList.add("active");
+}
+
+window.addEventListener("load", () => {
+    const params = new URLSearchParams(window.location.search);
+    const aba = params.get("aba");
+
+    if (aba) {
+        const botao = document.querySelector(`.aba-compra[data-aba="${aba}"]`);
+        if (botao) {
+            abrirAbaCompra(aba, botao);
+        }
+    }
+});
+</script>
+
+
+<script>
+function toggleCompraAccordion(nome){
+
+    const content = document.getElementById("acc-" + nome);
+    const card = content.closest(".compra-accordion");
+
+    if(!content || !card) return;
+
+    const aberto = content.classList.contains("open");
+
+    document.querySelectorAll(".compra-accordion-content").forEach(item => {
+        item.classList.remove("open");
+    });
+
+    document.querySelectorAll(".compra-accordion").forEach(item => {
+        item.classList.remove("open");
+    });
+
+    if(!aberto){
+        content.classList.add("open");
+        card.classList.add("open");
+    }
+
+    lucide.createIcons();
+}
+</script>
+<script>
+lucide.createIcons();
+</script>
+</body>
+</html>

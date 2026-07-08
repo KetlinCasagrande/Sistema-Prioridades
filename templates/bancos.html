@@ -1,42 +1,90 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="{{ tema }}">
 
 <head>
 
 <meta charset="UTF-8">
-<title>Bancos</title>
 
 
 
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}">
+<script src="https://unpkg.com/lucide@latest"></script>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
 <script>
-
 function copiarTexto(texto){
 
-    navigator.clipboard.writeText(texto)
-    .then(() => {
+    const temp = document.createElement("textarea");
+    temp.value = texto;
+
+    temp.style.position = "fixed";
+    temp.style.left = "-9999px";
+    temp.style.top = "0";
+
+    document.body.appendChild(temp);
+    temp.focus();
+    temp.select();
+
+    try {
+        document.execCommand("copy");
         alert("Copiado!");
-    })
-    .catch(() => {
+    } catch (err) {
         alert("Erro ao copiar.");
-    });
+    }
+
+    document.body.removeChild(temp);
+}
+
+
+function toggleNovoBanco(){
+
+    const conteudo = document.getElementById("conteudoNovoBanco");
+    const icone = document.getElementById("iconeNovoBanco");
+
+    conteudo.classList.toggle("ativo");
+
+    icone.style.transform =
+        conteudo.classList.contains("ativo")
+        ? "rotate(180deg)"
+        : "rotate(0deg)";
+
+    lucide.createIcons();
+}
+
+
+function toggleSenha(id, botao){
+
+    const campo = document.getElementById(id);
+
+    if(!campo){
+        return;
+    }
+
+    if(campo.type === "password"){
+        campo.type = "text";
+        botao.innerHTML = '<i data-lucide="eye-off"></i>';
+    }else{
+        campo.type = "password";
+        botao.innerHTML = '<i data-lucide="eye"></i>';
+    }
+
+    lucide.createIcons();
 }
 
 function toggleBanco(id){
 
     const conteudo = document.getElementById(id);
 
-    if(conteudo.style.display === "block"){
-        conteudo.style.display = "none";
-    } else {
-        conteudo.style.display = "block";
+    if(!conteudo){
+        return;
     }
+
+    conteudo.style.display =
+        conteudo.style.display === "block"
+        ? "none"
+        : "block";
 }
 
-</script>
-<script>
 function filtrarBancos() {
 
     let termo = document
@@ -59,7 +107,22 @@ function filtrarBancos() {
             : "none";
     });
 }
+
+function toggleNovoAcesso(id){
+
+    const box = document.getElementById(id);
+
+    if(!box){
+        return;
+    }
+
+    box.style.display =
+        box.style.display === "block"
+        ? "none"
+        : "block";
+}
 </script>
+
 </head>
 
 <body>
@@ -69,67 +132,73 @@ function filtrarBancos() {
 <!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
 
-    <button class="toggle-btn" onclick="toggleSidebar()">
-        ◀
+    <button class="toggle-btn sidebar-toggle" onclick="toggleSidebar()" title="Recolher menu">
+    <i data-lucide="panel-left-close"></i>
     </button>
 
-    <a href="/home" class="{% if titulo == 'Home' %}active{% endif %}">
-        <span class="icon">🏠</span>
-        <span class="text">Home</span>
-    </a>
+<a href="/home">
+    <i data-lucide="home"></i>
+    <span class="text">Home</span>
+</a>
 
-    <a href="/vendas">
-        <span class="icon">💰</span>
-        <span class="text">Minhas Vendas</span>
-    </a>
+{% if tipo == "user" %}
+<a href="/vendas">
+    <i data-lucide="circle-dollar-sign"></i>
+    <span class="text">Produção</span>
+</a>
+{% endif %}
 
-    <a href="/termos">
-    <span class="icon">📄</span>
+<a href="/compra-divida/clientes">
+    <i data-lucide="calculator"></i>
+    <span class="text">Compras</span>
+</a>
+
+<a href="/termos">
+    <i data-lucide="file-text"></i>
     <span class="text">Gerar Termo</span>
-    </a>
+</a>
 
-    <a href="/termos/historico">
-    <span class="icon">📚</span>
-    <span class="text">Termos Gerados</span>
-    </a>
+<a href="/termos/historico">
+    <i data-lucide="files"></i>
+    <span class="text">Termos</span>
+</a>
 
-    <a href="/bancos" class="{% if titulo == 'Bancos' %}active{% endif %}">
-        <span class="icon">🏦</span>
-        <span class="text">Bancos</span>
-    </a>
+<a href="/bancos"class="active">
+    <i data-lucide="building-2"></i>
+    <span class="text">Bancos</span>
+</a>
 
-    <a href="/clt" class="{% if titulo == 'CLT' %}active{% endif %}">
-        <span class="icon">💼</span>
-        <span class="text">CLT</span>
-    </a>
+<a href="/clt">
+    <i data-lucide="briefcase-business"></i>
+    <span class="text">CLT</span>
+</a>
 
-    <a href="/inss" class="{% if titulo == 'INSS' %}active{% endif %}">
-        <span class="icon">👴</span>
-        <span class="text">INSS</span>
-    </a>
+<a href="/inss">
+    <i data-lucide="badge-dollar-sign"></i>
+    <span class="text">INSS</span>
+</a>
 
-    <a href="/fgts" class="{% if titulo == 'FGTS' %}active{% endif %}">
-        <span class="icon">🔐</span>
-        <span class="text">FGTS</span>
-    </a>
+<a href="/fgts">
+    <i data-lucide="lock-keyhole"></i>
+    <span class="text">FGTS</span>
+</a>
 
-    <a href="/compra-divida"
-       class="{% if 'COMPRA' in titulo|upper %}active{% endif %}">
-        <span class="icon">💲</span>
-        <span class="text">Compra</span>
-    </a>
+<a href="/compra-divida">
+    <i data-lucide="landmark"></i>
+    <span class="text">Compra</span>
+</a>
 
-    {% if tipo|lower|trim in ["master", "admin", "adm"] %}
-    <a href="/admin">
-        <span class="icon">⚙️</span>
-        <span class="text">Admin</span>
-    </a>
-    {% endif %}
+{% if tipo in ["master", "adm"] %}
+<a href="/admin">
+    <i data-lucide="settings"></i>
+    <span class="text">Admin</span>
+</a>
+{% endif %}
 
-    <a href="/logout">
-        <span class="icon">🚪</span>
-        <span class="text">Sair</span>
-    </a>
+<a href="/logout">
+    <i data-lucide="log-out"></i>
+    <span class="text">Sair</span>
+</a>
 
 </div>
 <!-- CONTEÚDO -->
@@ -138,14 +207,7 @@ function filtrarBancos() {
 <div class="page">
 
     <!-- TOPO -->
-    <div class="topo">
-
-        <div>
-            <h1>🏦 Bancos</h1>
-            <span>Links e acessos internos</span>
-        </div>
-
-    </div>
+    <h1><i data-lucide="building-2"></i> Bancos</h1>
 
 
     <div class="busca-bancos">
@@ -156,6 +218,54 @@ function filtrarBancos() {
         onkeyup="filtrarBancos()">
         </div>
 
+ <div class="card-novo-banco">
+
+    <div class="card-novo-header" onclick="toggleNovoBanco()">
+
+        <div class="titulo-card">
+            <i data-lucide="plus-circle"></i>
+            <span>Novo Banco</span>
+        </div>
+
+        <i id="iconeNovoBanco" data-lucide="chevron-down"></i>
+
+    </div>
+
+    <div id="conteudoNovoBanco" class="card-novo-conteudo">
+
+        <form action="/bancos/criar" method="POST" class="novo-banco-form">
+
+            <input
+                type="text"
+                name="nome"
+                placeholder="Nome do banco"
+                required
+            >
+
+            <input
+                type="url"
+                name="link"
+                placeholder="Link do banco"
+            >
+
+            <input
+                type="text"
+                name="observacao"
+                placeholder="Observação"
+            >
+
+            <button type="submit">
+                <i data-lucide="plus"></i>
+                Cadastrar Banco
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</form>
     <!-- GRID -->
     <div class="grid-home">
 
@@ -164,37 +274,54 @@ function filtrarBancos() {
         <div class="card-home banco-card">
 
             <!-- TOPO -->
-            <div
-                class="banco-topo"
-                onclick="toggleBanco('banco{{ banco.id }}')"
-            >
+          <div class="banco-topo">
 
-                <div>
+            <div class="banco-info"
+                onclick="toggleBanco('banco{{ banco.id }}')">
 
-                    <h3 class="banco-titulo">
-                    🏦 {{ banco.nome }}
-                    </h3>
+                <h3 class="banco-titulo">
+                    <i data-lucide="landmark"></i>
+                    {{ banco.nome }}
+                </h3>
 
-                    {% if banco.observacao %}
-                    <p class="subtexto">
-                        {{ banco.observacao }}
-                    </p>
-                    {% endif %}
-
-                </div>
-
-                <div class="seta">
-                    ▼
-                </div>
+                {% if banco.observacao %}
+                <p class="subtexto">
+                    {{ banco.observacao }}
+                </p>
+                {% endif %}
 
             </div>
 
+            <div class="acoes-topo-banco">
+
+                {% if tipo|lower in ["master","admin","adm"] %}
+                <a
+                    href="/bancos/excluir/{{ banco.id }}"
+                    class="btn-excluir-banco"
+                    onclick="return confirm('Deseja realmente excluir o banco {{ banco.nome }}? Todos os acessos cadastrados também serão excluídos.')"
+                >
+                    <i data-lucide="trash-2"></i>
+                </a>
+                {% endif %}
+
+                <div class="seta"
+                    onclick="toggleBanco('banco{{ banco.id }}')">
+                    ▼
+                </div>
+
+    </div>
+
+</div>
+   
+
             <!-- BOTÃO -->
-            <a href="{{ banco.link }}"
-             target="_blank"
-              class="btn-sistema"
-              >🚀 Abrir Sistema
-              </a>
+            <a href="{{ banco.link }}" target="_blank" class="btn-sistema">
+            <i data-lucide="external-link"></i>
+            Abrir Sistema
+            </a>
+
+          
+
 
             <!-- EXPANSÍVEL -->
             <div
@@ -228,24 +355,32 @@ function filtrarBancos() {
         style="margin-bottom:10px;"
     >
 
-    <div class="senha-box">
+ <div class="senha-box senha-box-inline">
 
     <input
+        id="senha-view{{ acesso.id }}"
         type="password"
-        name="senha"
         value="{{ acesso.senha }}"
-        placeholder="Senha"
+        readonly
     >
 
-    <button
-        type="button"
-        class="btn-copiar"
-        onclick="copiarTexto('{{ acesso.senha|escape }}')">
-        📋
-    </button>
+    <div class="senha-acoes">
+        <button
+            type="button"
+            class="btn-icone"
+            onclick="toggleSenha('senha-view{{ acesso.id }}', this)">
+            <i data-lucide="eye"></i>
+        </button>
+
+        <button
+            type="button"
+            class="btn-icone"
+            onclick='copiarTexto({{ acesso.senha|tojson }})'>
+            <i data-lucide="copy"></i>
+        </button>
+    </div>
 
 </div>
-
     <div class="acoes-banco">
 
         <button class="btn btn-verde">
@@ -260,9 +395,11 @@ function filtrarBancos() {
 
     </div>
 
+    
+
 </form>
 
-                        {% else %}
+                 {% else %}
 
                         <!-- VISUALIZAÇÃO -->
                         <div style="
@@ -280,21 +417,26 @@ function filtrarBancos() {
                                 value="{{ acesso.login }}"
                                 readonly
                             >
-                            <div class="senha-wrapper">
+                           <div class="senha-wrapper">
 
-    <input
-        type="password"
-        name="senha"
-        value="{{ acesso.senha }}"
-        placeholder="Senha"
-    >
+                            <input
+                                id="senha-view{{ acesso.id }}"
+                                type="password"
+                                value="{{ acesso.senha }}"
+                                readonly
+                            >
 
-    <button
-        type="button"
-        class="btn-copiar"
-        onclick="copiarTexto('{{ acesso.senha|escape }}')">
-        📋
-    </button>
+                            <div class="senha-acoes">
+                                <button type="button" class="btn-icone"
+                                    onclick="toggleSenha('senha-view{{ acesso.id }}', this)">
+                                    <i data-lucide="eye"></i>
+                                </button>
+
+                                <button type="button" class="btn-icone"
+                                    onclick='copiarTexto({{ acesso.senha|tojson }})'>
+                                    <i data-lucide="copy"></i>
+                                </button>
+                            </div>
 
 </div>
 
@@ -413,6 +555,9 @@ function toggleNovoAcesso(id){
         box.style.display = "block";
     }
 }
+</script>
+<script>
+lucide.createIcons();
 </script>
 </body>
 </html>

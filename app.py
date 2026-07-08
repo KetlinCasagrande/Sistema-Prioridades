@@ -1,4 +1,4 @@
-from flask import Flask, flash, render_template, request, redirect, session, g
+from flask import Flask, flash, render_template, url_for, request, redirect, session, g
 import sqlite3
 import bcrypt
 from functools import wraps
@@ -9,19 +9,69 @@ import calendar
 from datetime import date
 from math import ceil
 from num2words import num2words
-from datetime import datetime, timedelta
 from flask import send_file
+import os
+import resend
+from datetime import datetime, timedelta
+import random
+from dotenv import load_dotenv
+import secrets
 
 
+
+load_dotenv()
+resend.api_key = os.environ.get("RESEND_API_KEY") 
 
 app = Flask(__name__)
 app.secret_key = "123"
-
+resend.api_key = os.getenv("RESEND_API_KEY")
 def db():
     conn = sqlite3.connect("banco.db")
     conn.row_factory = sqlite3.Row
     return conn
 
+def tema_usuario():
+    if "usuario_id" not in session:
+        return "rose"
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT tema
+        FROM usuarios
+        WHERE id = ?
+    """, (session["usuario_id"],))
+
+    user = cursor.fetchone()
+    conn.close()
+
+    return user["tema"] if user and user["tema"] else "rose"
+
+def converter_valor_brasileiro(valor):
+
+    if valor is None:
+        return 0.0
+
+    if isinstance(valor, (int, float)):
+        return float(valor)
+
+    valor = str(valor).strip()
+
+    if not valor:
+        return 0.0
+
+    valor = valor.replace("R$", "").replace(" ", "")
+
+    # Formato brasileiro: 1.234,56 ou 31,40
+    if "," in valor:
+        valor = valor.replace(".", "")
+        valor = valor.replace(",", ".")
+
+    try:
+        return float(valor)
+    except:
+        return 0.0
 
 def fazer_backup(usuario="sistema"):
     os.makedirs("backups", exist_ok=True)
@@ -44,6 +94,250 @@ def fazer_backup(usuario="sistema"):
     conn.close()
 
     return destino
+
+def garantir_coluna_competencia_metas():
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("PRAGMA table_info(meta_usuario_produto)")
+    colunas = [col[1] for col in cursor.fetchall()]
+
+    if "competencia" not in colunas:
+
+        cursor.execute("""
+            ALTER TABLE meta_usuario_produto
+            ADD COLUMN competencia TEXT
+        """)
+
+        print("✅ Coluna competencia criada.")
+
+    conn.commit()
+    conn.close()
+def criar_tabelas_compra_divida():
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS clientes_compra (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            usuario_nome TEXT,
+
+            nome TEXT NOT NULL,
+            cpf TEXT,
+            telefone TEXT,
+
+            parcela_nova REAL DEFAULT 0,
+            coeficiente REAL DEFAULT 0,
+            valor_liberado REAL DEFAULT 0,
+
+            status TEXT DEFAULT 'EM ANDAMENTO',
+            data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS clientes_compra_dividas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cliente_id INTEGER NOT NULL,
+
+            banco TEXT,
+            contrato TEXT,
+            data_contratacao TEXT,
+
+            parcela REAL DEFAULT 0,
+            saldo REAL DEFAULT 0,
+
+            status_boleto TEXT DEFAULT 'AGUARDANDO',
+            observacao TEXT,
+
+            data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+            FOREIGN KEY (cliente_id)
+            REFERENCES clientes_compra(id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS simulacoes_compra (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cliente_id INTEGER NOT NULL,
+
+            parcela REAL DEFAULT 0,
+            coeficiente REAL DEFAULT 0,
+            valor_liberado REAL DEFAULT 0,
+
+            ativo INTEGER DEFAULT 1,
+            data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+            FOREIGN KEY (cliente_id)
+            REFERENCES clientes_compra(id)
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+    print("✔ Tabelas de compra de dívida criadas.")
+
+
+def mascarar_email(email):
+    if not email or "@" not in email:
+        return ""
+
+    nome, dominio = email.split("@", 1)
+
+    if len(nome) <= 2:
+        nome_mascarado = nome[0] + "***"
+    else:
+        nome_mascarado = nome[:2] + "***"
+
+    return nome_mascarado + "@" + dominio
+def enviar_email_recuperacao(destino, nome, link):
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <body style="
+        margin:0;
+        background:#f4f6fb;
+        font-family:Arial,Helvetica,sans-serif;
+    ">
+
+    <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td align="center" style="padding:40px;">
+
+                <table width="600" cellpadding="0" cellspacing="0"
+                       style="
+                            background:#ffffff;
+                            border-radius:18px;
+                            overflow:hidden;
+                            box-shadow:0 10px 30px rgba(0,0,0,.08);
+                       ">
+
+                    <tr>
+                        <td align="center"
+                            style="
+                                background:#151b2d;
+                                padding:35px;
+                            ">
+
+                            <img
+                                src="https://i.imgur.com/5SMiY2D.png"
+                                width="180">
+
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:40px;">
+
+                            <h2 style="margin-top:0;color:#1f2937;">
+                                Recuperação de senha
+                            </h2>
+
+                            <p style="font-size:16px;color:#475569;">
+                                Olá,
+                                <strong>{nome}</strong>.
+                            </p>
+
+                            <p style="font-size:16px;color:#475569;line-height:1.8;">
+                                Recebemos uma solicitação para redefinir sua senha.
+                            </p>
+
+                            <div style="text-align:center;margin:35px 0;">
+
+                                <a href="{link}"
+                                   style="
+                                    display:inline-block;
+                                    background:#7C3AED;
+                                    color:white;
+                                    padding:15px 30px;
+                                    border-radius:12px;
+                                    text-decoration:none;
+                                    font-weight:bold;
+                                    font-size:16px;
+                                   ">
+
+                                   Redefinir minha senha
+
+                                </a>
+
+                            </div>
+
+                            <p style="color:#64748b;">
+                                Este link expira em
+                                <strong>10 minutos</strong>.
+                            </p>
+
+                            <hr style="margin:35px 0;border:none;border-top:1px solid #e5e7eb;">
+
+                            <p style="font-size:13px;color:#94a3b8;">
+                                Caso você não tenha solicitado esta alteração,
+                                basta ignorar este e-mail.
+                            </p>
+
+                        </td>
+                    </tr>
+
+                    <tr>
+
+                        <td align="center"
+                            style="
+                                background:#f8fafc;
+                                padding:18px;
+                                color:#64748b;
+                                font-size:13px;
+                            ">
+
+                            © Grupo Hipercred • Sistema Interno
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+            </td>
+        </tr>
+    </table>
+
+    </body>
+    </html>
+    """
+
+    params = {
+        "from": "Hipercred <onboarding@resend.dev>",
+        "to": [destino],
+        "subject": "Redefinição de senha - Grupo Hipercred",
+        "html": html
+    }
+
+    return resend.Emails.send(params)
+
+
+def criar_tabela_recuperacao_senha():
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS recuperacao_senha (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER NOT NULL,
+            codigo TEXT NOT NULL,
+            expira_em TEXT NOT NULL,
+            utilizado INTEGER DEFAULT 0,
+            criado_em TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+
 
 
 
@@ -209,6 +503,13 @@ def buscar_ranking():
     conn.close()
 
     return ranking
+
+@app.context_processor
+def variaveis_globais():
+    return {
+        "tema": tema_usuario()
+    }
+
 
 @app.teardown_appcontext
 def close_db(exception):
@@ -386,8 +687,10 @@ def login():
 
     if request.method == "POST":
 
-        usuario = request.form["usuario"]
-        senha = request.form["senha"]
+        cpf = request.form.get("cpf", "").strip()
+        senha = request.form.get("senha", "").strip()
+
+        cpf_limpo = "".join(filter(str.isdigit, cpf))
 
         conn = conectar()
         cursor = conn.cursor()
@@ -395,32 +698,81 @@ def login():
         cursor.execute("""
             SELECT *
             FROM usuarios
-            WHERE usuario = ?
-        """, (usuario,))
+            WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ?
+        """, (cpf_limpo,))
 
         user = cursor.fetchone()
 
-        conn.close()
+        if user and user["ativo"] == 0:
+            conn.close()
+            erro = "Usuário inativo. Procure o administrador."
 
-        # LOGIN CORRETO
-        if user and bcrypt.checkpw(
+        elif user and bcrypt.checkpw(
             senha.encode(),
             user["senha"].encode()
         ):
 
+            agora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            cursor.execute("""
+                UPDATE usuarios
+                SET ultimo_login = ?
+                WHERE id = ?
+            """, (agora, user["id"]))
+
+            conn.commit()
+            conn.close()
+
             session["usuario"] = user["usuario"]
             session["tipo"] = user["tipo"]
             session["usuario_id"] = user["id"]
+            session["tema"] = user["tema"] if "tema" in user.keys() and user["tema"] else "rose"
 
             return redirect("/home")
 
         else:
-            erro = "Login inválido"
+            conn.close()
+            erro = "CPF ou senha inválidos"
 
     return render_template(
-        "login.html",
-        erro=erro
-    )
+    "login.html",
+    erro=erro,
+    recuperacao=request.args.get("recuperacao")
+)
+
+@app.route("/salvar-tema", methods=["POST"])
+def salvar_tema():
+
+    if not verificar_login() or "usuario_id" not in session:
+        return {"ok": False}, 401
+
+    tema = request.form.get("tema", "rose")
+
+    temas_validos = [
+        "rose", "ruby", "ice", "graphite", "coffee",
+        "midnight", "sage", "lavender", "amber",
+        "ocean", "emerald", "purple", "gold"
+    ]
+
+    if tema not in temas_validos:
+        return {"ok": False}, 400
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE usuarios
+        SET tema = ?
+        WHERE id = ?
+    """, (tema, session["usuario_id"]))
+
+    conn.commit()
+    conn.close()
+
+    session["tema"] = tema
+
+    return {"ok": True, "tema": tema}
+
 @app.route("/meta-teste")
 def meta_teste():
     hoje = date.today()
@@ -449,12 +801,180 @@ def meta_teste():
 # =========================
 # HOME
 # =========================
+def home_vendas():
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    usuario_id = session["usuario_id"]
+    competencia_atual = date.today().strftime("%Y-%m")
+
+    # =========================
+    # TEMA DO USUÁRIO
+    # =========================
+    cursor.execute("""
+        SELECT tema
+        FROM usuarios
+        WHERE id = ?
+    """, (usuario_id,))
+
+    usuario_tema = cursor.fetchone()
+    tema = usuario_tema["tema"] if usuario_tema and usuario_tema["tema"] else "rose"
+
+    session["tema"] = tema
+
+    # =========================
+    # AVISOS
+    # =========================
+    cursor.execute("""
+        SELECT *
+        FROM avisos
+        ORDER BY id DESC
+        LIMIT 5
+    """)
+    avisos = cursor.fetchall()
+
+    # =========================
+    # METAS DO MÊS
+    # =========================
+    cursor.execute("""
+        SELECT *
+        FROM meta_usuario_produto
+        WHERE usuario_id = ?
+        AND competencia = ?
+        ORDER BY produto
+    """, (usuario_id, competencia_atual))
+    metas = cursor.fetchall()
+
+    # =========================
+    # VENDAS DO MÊS
+    # =========================
+    cursor.execute("""
+        SELECT
+            UPPER(produto) AS produto,
+            SUM(valor) AS total
+        FROM vendas
+        WHERE usuario_id = ?
+        AND strftime('%Y-%m', data) = ?
+        GROUP BY UPPER(produto)
+    """, (usuario_id, competencia_atual))
+    vendas_mes = cursor.fetchall()
+
+    vendas_dict = {
+        v["produto"]: float(v["total"] or 0)
+        for v in vendas_mes
+    }
+
+    meta_total = sum(float(m["meta"] or 0) for m in metas)
+    vendido_total = sum(vendas_dict.values())
+    falta_total = max(0, meta_total - vendido_total)
+
+    percentual = round((vendido_total / meta_total) * 100, 1) if meta_total > 0 else 0
+    percentual_barra = min(percentual, 100)
+
+    progresso_produtos = []
+
+    for m in metas:
+        produto = m["produto"]
+        meta = float(m["meta"] or 0)
+        vendido = float(vendas_dict.get(produto.upper(), 0))
+        perc = round((vendido / meta) * 100, 1) if meta > 0 else 0
+
+        progresso_produtos.append({
+            "produto": produto,
+            "meta": meta,
+            "vendido": vendido,
+            "falta": max(0, meta - vendido),
+            "percentual": perc,
+            "percentual_barra": min(perc, 100)
+        })
+
+    # =========================
+    # CLIENTES COMPRA EM ANDAMENTO
+    # =========================
+    cursor.execute("""
+        SELECT *
+        FROM clientes_compra
+        WHERE usuario_id = ?
+        AND status NOT IN ('CONCLUÍDO', 'CANCELADO')
+        ORDER BY id DESC
+        LIMIT 6
+    """, (usuario_id,))
+    clientes_compra = cursor.fetchall()
+
+    # =========================
+    # RANKING VENDEDORAS
+    # =========================
+    cursor.execute("""
+        SELECT
+            u.id,
+            u.usuario,
+            COALESCE(SUM(v.valor), 0) AS total
+        FROM usuarios u
+        LEFT JOIN vendas v
+            ON v.usuario_id = u.id
+            AND strftime('%Y-%m', v.data) = ?
+        WHERE LOWER(TRIM(u.tipo)) NOT IN ('master', 'adm', 'admin')
+        GROUP BY u.id, u.usuario
+        ORDER BY total DESC
+    """, (competencia_atual,))
+
+    ranking_vendedoras = cursor.fetchall()
+
+    # =========================
+    # MISSÃO DO DIA
+    # =========================
+    cursor.execute("""
+        SELECT status, COUNT(*) as total
+        FROM clientes_compra
+        WHERE usuario_id = ?
+        AND status NOT IN ('CONCLUÍDO', 'CANCELADO')
+        GROUP BY status
+    """, (usuario_id,))
+    status_clientes = cursor.fetchall()
+
+    missao_status = {
+        s["status"]: s["total"]
+        for s in status_clientes
+    }
+
+    dias_uteis = dias_uteis_mes(date.today().year, date.today().month)
+    dias_passados = dias_uteis_passados()
+    necessario = necessario_por_dia(meta_total, vendido_total, dias_uteis, dias_passados)
+
+    conn.close()
+
+    return render_template(
+        "home_vendas.html",
+        usuario=session["usuario"],
+        tipo=session["tipo"],
+        tema=tema,
+        avisos=avisos,
+        competencia_atual=competencia_atual,
+        meta_total=meta_total,
+        vendido_total=vendido_total,
+        falta_total=falta_total,
+        percentual=percentual,
+        percentual_barra=percentual_barra,
+        progresso_produtos=progresso_produtos,
+        ranking_vendedoras=ranking_vendedoras,
+        missao_status=missao_status,
+        necessario=necessario,
+        clientes_compra=clientes_compra
+    )
+
 @app.route("/home")
 def home():
 
     if not verificar_login():
         return redirect("/")
 
+    tipo_usuario = session.get("tipo", "").lower().strip()
+
+    if tipo_usuario not in ["master", "adm", "admin"]:
+        return home_vendas()
+
+   
     conn = conectar()
     cursor = conn.cursor()
 
@@ -544,6 +1064,30 @@ def home():
     """)
     termos_hoje = cursor.fetchone()["total"]
 
+
+
+
+
+
+    competencia_atual = date.today().strftime("%Y-%m")
+
+    cursor.execute("""
+        SELECT
+            u.id,
+            u.usuario,
+            COALESCE(SUM(v.valor), 0) AS total
+        FROM usuarios u
+        LEFT JOIN vendas v
+            ON v.usuario_id = u.id
+            AND strftime('%Y-%m', v.data) = ?
+        WHERE LOWER(TRIM(u.tipo)) NOT IN ('master', 'adm', 'admin')
+        GROUP BY u.id, u.usuario
+        ORDER BY total DESC
+    """, (competencia_atual,))
+
+    ranking_vendedoras = cursor.fetchall()
+
+
 # USUÁRIOS
 
     cursor.execute("""
@@ -579,6 +1123,7 @@ def home():
         producao_mes=producao_mes,
         logs=logs,
         termos_hoje=termos_hoje,
+        ranking_vendedoras=ranking_vendedoras,
         usuarios_ativos=usuarios_ativos,
         usuario=session["usuario"]
     )
@@ -672,14 +1217,22 @@ def buscar_prioridades(produto):
 
             if t["ativo"] == 0:
                 status = "PAUSADA"
+
+            elif tabela_dict.get("liberada", 0) == 1:
+                status = "LIBERADA"
+
             elif produto == "CLT":
                 status = "LIBERADA" if comissao >= 3.5 else "PRECISA_LIBERACAO"
+
             elif produto == "INSS":
                 status = "LIBERADA" if comissao >= 7 else "PRECISA_LIBERACAO"
+
             elif produto == "FGTS":
                 status = "LIBERADA" if comissao >= 10 else "PRECISA_LIBERACAO"
+
             elif produto == "COMPRA_DIVIDA":
-                status = "LIBERADA" if comissao >= 9 else "PRECISA_LIBERACAO"
+                status = "LIBERADA" if comissao >= 7 else "PRECISA_LIBERACAO"
+
             else:
                 status = "PAUSADA"
 
@@ -735,7 +1288,23 @@ def aplicar_filtro(bancos, q):
 
     return bancos_filtrados
 
+@app.route("/liberar-tabela/<int:id>")
+@apenas_admin
+def liberar_tabela(id):
 
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE comissoes
+        SET liberada = 1
+        WHERE id = ?
+    """, (id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(request.referrer or "/admin")
 
 # =========================
 # PRODUTOS
@@ -752,11 +1321,12 @@ def clt():
     bancos = aplicar_filtro(bancos, q)
 
     return render_template(
-        "produto.html",
-        bancos=bancos,
-        titulo="CLT",
-        avisos=buscar_avisos(),
-        tipo=session["tipo"]
+    "produto.html",
+    pagina_ativa="clt",
+    bancos=bancos,
+    titulo="clt",
+    avisos=buscar_avisos(),
+    tipo=session["tipo"]
     )
 
 
@@ -772,11 +1342,12 @@ def inss():
     bancos = aplicar_filtro(bancos, q)
 
     return render_template(
-        "produto.html",
-        bancos=bancos,
-        titulo="INSS",
-        avisos=buscar_avisos(),
-        tipo=session["tipo"]
+    "produto.html",
+    pagina_ativa="inss",
+    bancos=bancos,
+    titulo="INSS",
+    avisos=buscar_avisos(),
+    tipo=session["tipo"]
     )
 
 
@@ -793,6 +1364,7 @@ def fgts():
 
     return render_template(
         "produto.html",
+        pagina_ativa="fgts",
         bancos=bancos,
         titulo="FGTS",
         avisos=buscar_avisos(),
@@ -813,6 +1385,7 @@ def compra_divida():
 
     return render_template(
         "produto.html",
+        pagina_ativa="compra",
         bancos=bancos,
         titulo="Compra Dívida",
         avisos=buscar_avisos(),
@@ -825,6 +1398,7 @@ def admin():
 
     conn = conectar()
     cursor = conn.cursor()
+    aba = request.args.get("aba", "usuarios")
 
     # =========================
     # PAGINAÇÃO
@@ -833,12 +1407,16 @@ def admin():
     por_pagina = 50
     offset = (pagina - 1) * por_pagina
 
-    # =========================
-    # FILTROS
-    # =========================
+# =========================
+# FILTROS
+# =========================
     q = request.args.get("q", "").strip()
     banco = request.args.get("banco", "").strip()
     produto = request.args.get("produto", "").strip()
+
+# Filtros das metas
+    competencia_filtro = request.args.get("competencia", "").strip()
+    usuario_filtro = request.args.get("usuario_id", "").strip()
 
     # =========================
     # ORDENAÇÃO
@@ -1019,6 +1597,8 @@ def admin():
             print("PRIMEIRO ID:", comissoes[0]["id"])
             print("ULTIMO ID:", comissoes[-1]["id"])
 
+
+
     # =========================
     # METAS
     # =========================
@@ -1028,15 +1608,34 @@ def admin():
     """)
     metas = cursor.fetchall()
 
-    cursor.execute("""
-        SELECT
-            meta_usuario_produto.*,
-            usuarios.usuario
-        FROM meta_usuario_produto
-        JOIN usuarios
-            ON usuarios.id = meta_usuario_produto.usuario_id
-        ORDER BY usuarios.usuario
-    """)
+    sql_metas = """
+    SELECT
+        meta_usuario_produto.*,
+        usuarios.usuario
+    FROM meta_usuario_produto
+    JOIN usuarios
+        ON usuarios.id = meta_usuario_produto.usuario_id
+    WHERE 1=1
+"""
+
+    params_metas = []
+
+    if competencia_filtro:
+        sql_metas += " AND meta_usuario_produto.competencia = ? "
+        params_metas.append(competencia_filtro)
+
+    if usuario_filtro:
+        sql_metas += " AND meta_usuario_produto.usuario_id = ? "
+        params_metas.append(usuario_filtro)
+
+    sql_metas += """
+        ORDER BY
+            meta_usuario_produto.competencia DESC,
+            usuarios.usuario ASC,
+            meta_usuario_produto.produto ASC
+    """
+
+    cursor.execute(sql_metas, params_metas)
     metas_usuarios = cursor.fetchall()
 
     conn.close()
@@ -1058,6 +1657,9 @@ def admin():
         total_paginas=total_paginas,
         ordenar=ordenar,
         direcao=direcao,
+        pagina_ativa=aba,
+        competencia_filtro=competencia_filtro,
+        usuario_filtro=usuario_filtro,
         tipo=session["tipo"]
     )
 
@@ -1131,13 +1733,16 @@ def ver_usuarios():
 
     return str([dict(u) for u in usuarios])
 @app.route("/admin/salvar-meta-vendedora", methods=["POST"])
+@apenas_master
 def salvar_meta_vendedora():
 
     conn = conectar()
     cursor = conn.cursor()
 
-    id_meta = request.form["id"]
-    meta = request.form["meta"]
+    id_meta = request.form.get("id")
+    meta = request.form.get("meta", "0").replace(".", "").replace(",", ".")
+    competencia = request.form.get("competencia", "")
+    usuario_id = request.form.get("usuario_id", "")
 
     cursor.execute("""
         UPDATE meta_usuario_produto
@@ -1148,7 +1753,7 @@ def salvar_meta_vendedora():
     conn.commit()
     conn.close()
 
-    return redirect("/admin")
+    return redirect(f"/admin?aba=metas&competencia={competencia}&usuario_id={usuario_id}")
 
 
 # =========================
@@ -1159,9 +1764,14 @@ def salvar_meta_vendedora():
 def criar_usuario():
 
     try:
-        usuario = request.form["usuario"]
-        senha = request.form["senha"]
-        tipo = request.form["tipo"]
+        usuario = request.form.get("usuario", "").strip()
+        cpf = request.form.get("cpf", "").strip()
+        email = request.form.get("email", "").strip()
+        senha = request.form.get("senha", "").strip()
+        tipo = request.form.get("tipo", "user").strip()
+
+        if session.get("tipo") != "master":
+                tipo = "user"
 
         senha_hash = bcrypt.hashpw(
             senha.encode(),
@@ -1173,51 +1783,63 @@ def criar_usuario():
 
         cursor.execute("""
             INSERT INTO usuarios
-            (usuario, senha, tipo)
-            VALUES (?, ?, ?)
+            (usuario, cpf, email, senha, tipo, ativo)
+            VALUES (?, ?, ?, ?, ?, ?)
         """, (
             usuario,
+            cpf,
+            email,
             senha_hash,
-            tipo
+            tipo,
+            1
         ))
 
         conn.commit()
-        
         conn.close()
 
         print("✔ USUÁRIO CRIADO:", usuario)
 
-        return redirect("/admin")
+        return redirect("/admin?aba=usuarios")
 
     except Exception as e:
         print("❌ ERRO AO CRIAR USUÁRIO:", e)
-        return redirect("/admin")
+        return redirect("/admin?aba=usuarios")
 
 
 @app.route("/admin/usuario/editar/<int:id>", methods=["POST"])
 @apenas_admin
 def editar_usuario(id):
 
-    usuario = request.form["usuario"]
-    tipo = request.form["tipo"]
+    usuario = request.form.get("usuario", "").strip()
+    cpf = request.form.get("cpf", "").strip()
+    email = request.form.get("email", "").strip()
+    tipo = request.form.get("tipo", "user").strip()
+    ativo = request.form.get("ativo", "1")
+
+    if session.get("tipo") != "master":
+        tipo = "user"
+
 
     conn = conectar()
     cursor = conn.cursor()
 
     cursor.execute("""
         UPDATE usuarios
-        SET usuario = ?, tipo = ?
+        SET usuario = ?, cpf = ?, email = ?, tipo = ?, ativo = ?
         WHERE id = ?
     """, (
         usuario,
+        cpf,
+        email,
         tipo,
+        ativo,
         id
     ))
 
     conn.commit()
     conn.close()
 
-    return redirect("/admin")
+    return redirect("/admin?aba=usuarios")
 
 
 @app.route("/admin/usuario/deletar/<int:id>")
@@ -1235,9 +1857,7 @@ def deletar_usuario(id):
     conn.commit()
     conn.close()
 
-    return redirect("/admin")
-
-
+    return redirect("/admin?aba=usuarios")
 # =========================
 # AVISOS
 # =========================
@@ -1350,18 +1970,8 @@ def termos():
             if not bancos[i]:
                 continue
 
-            parcela_txt = parcelas[i].replace("R$", "").replace(".", "").replace(",", ".").strip()
-            saldo_txt = saldos[i].replace("R$", "").replace(".", "").replace(",", ".").strip()
-
-            try:
-                parcela_float = float(parcela_txt)
-            except:
-                parcela_float = 0.0
-
-            try:
-                saldo_float = float(saldo_txt)
-            except:
-                saldo_float = 0.0
+            parcela_float = converter_valor_brasileiro(parcelas[i])
+            saldo_float = converter_valor_brasileiro(saldos[i])
 
             total_parcelas += parcela_float
             valor_total += saldo_float
@@ -1724,13 +2334,45 @@ texto_termo
             f"Cliente: {cliente} | CPF: {cpf} | Valor: R$ {valor_total}"
         )
         return redirect("/termos/historico")
+    # GET
+    compra_id = request.args.get("compra_id")
 
-  # GET
+    dados_compra = None
+    contratos_compra = []
+
+    if compra_id:
+        conn = conectar()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT *
+            FROM clientes_compra
+            WHERE id = ?
+        """, (compra_id,))
+
+        dados_compra = cursor.fetchone()
+
+        cursor.execute("""
+            SELECT *
+            FROM clientes_compra_dividas
+            WHERE cliente_id = ?
+            ORDER BY id
+        """, (compra_id,))
+
+        contratos_compra = cursor.fetchall()
+
+        conn.close()
+
     return render_template(
         "termos.html",
         texto_termo=None,
-        tipo=session.get("tipo")
+        tipo=session.get("tipo"),
+        dados_compra=dados_compra,
+        contratos_compra=contratos_compra
     )
+
+
+
 
 # =========================
 # COMISSÕES
@@ -1844,8 +2486,10 @@ def auditoria():
 
     return render_template(
         "auditoria.html",
+        pagina_ativa="auditoria",
         registros=registros,
         tipo=session.get("tipo")
+        
     )
 
 @app.route("/admin/comissao/deletar/<int:id>", methods=["POST"])
@@ -1942,13 +2586,23 @@ def deletar_selecionadas():
     conn.close()
 
     return redirect(request.referrer or "/admin")
-
 @app.route("/admin/meta/deletar/<int:id>")
 @apenas_master
 def deletar_meta(id):
 
     conn = conectar()
     cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT usuario_id, competencia
+        FROM meta_usuario_produto
+        WHERE id = ?
+    """, (id,))
+
+    meta = cursor.fetchone()
+
+    usuario_id = meta["usuario_id"] if meta else ""
+    competencia = meta["competencia"] if meta else ""
 
     cursor.execute("""
         DELETE FROM meta_usuario_produto
@@ -1958,8 +2612,7 @@ def deletar_meta(id):
     conn.commit()
     conn.close()
 
-    return redirect(request.referrer or "/admin")
-
+    return redirect(f"/admin?aba=metas&competencia={competencia}&usuario_id={usuario_id}")
 
 # =========================
 # IMPORTAR EXCEL
@@ -2111,9 +2764,34 @@ def historico():
         LIMIT ? OFFSET ?
     """, params + [por_pagina, offset])
 
-    historico = cursor.fetchall()
+    historico_raw = cursor.fetchall()
 
     conn.close()
+
+    historico = []
+
+    for item in historico_raw:
+        item = dict(item)
+
+        try:
+            item["valor_formatado"] = (
+                f'{float(item["valor_total"]):,.2f}'
+                .replace(",", "X")
+                .replace(".", ",")
+                .replace("X", ".")
+            )
+        except:
+            item["valor_formatado"] = item["valor_total"]
+
+        try:
+            dt = datetime.strptime(item["data_criacao"], "%Y-%m-%d %H:%M:%S")
+            item["data_formatada"] = dt.strftime("%d/%m/%Y")
+            item["hora_formatada"] = dt.strftime("%H:%M")
+        except:
+            item["data_formatada"] = item["data_criacao"]
+            item["hora_formatada"] = ""
+
+        historico.append(item)
 
     total_paginas = ceil(total / por_pagina)
 
@@ -2291,7 +2969,148 @@ def editar_acesso_banco(id):
 
     return redirect("/bancos")
 
+@app.route("/esqueci-senha", methods=["POST"])
+def esqueci_senha():
 
+    cpf = request.form.get("cpf", "").strip()
+    cpf_limpo = "".join(filter(str.isdigit, cpf))
+
+    mensagem_padrao = "Se existir um usuário ativo com esse CPF, enviaremos um link de recuperação para o e-mail cadastrado."
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM usuarios
+        WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ?
+          AND ativo = 1
+    """, (cpf_limpo,))
+
+    user = cursor.fetchone()
+
+    if user and user["email"]:
+
+        token = secrets.token_urlsafe(48)
+
+        expira_em = (
+            datetime.now() + timedelta(minutes=10)
+        ).strftime("%Y-%m-%d %H:%M:%S")
+
+        cursor.execute("""
+            INSERT INTO recuperacao_senha
+            (usuario_id, codigo, expira_em, utilizado)
+            VALUES (?, ?, ?, 0)
+        """, (
+            user["id"],
+            token,
+            expira_em
+        ))
+
+        conn.commit()
+
+        link = url_for(
+            "redefinir_senha_token",
+            token=token,
+            _external=True
+        )
+
+        enviar_email_recuperacao(
+            user["email"],
+            user["usuario"],
+            link
+        )
+
+    conn.close()
+
+    return redirect("/?recuperacao=enviada")
+
+
+@app.route("/redefinir-senha/<token>", methods=["GET", "POST"])
+def redefinir_senha_token(token):
+
+    erro = ""
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT r.*, u.usuario
+        FROM recuperacao_senha r
+        JOIN usuarios u ON u.id = r.usuario_id
+        WHERE r.codigo = ?
+          AND r.utilizado = 0
+        ORDER BY r.id DESC
+        LIMIT 1
+    """, (token,))
+
+    registro = cursor.fetchone()
+
+    if not registro:
+        conn.close()
+        return redirect("/")
+
+    expira_em = datetime.strptime(
+        registro["expira_em"],
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+    if datetime.now() > expira_em:
+        conn.close()
+        return render_template(
+            "redefinir_senha.html",
+            erro="Link expirado. Solicite uma nova recuperação.",
+            token=token
+        )
+
+    if request.method == "POST":
+
+        senha = request.form.get("senha", "").strip()
+        confirmar = request.form.get("confirmar", "").strip()
+
+        if senha != confirmar:
+            erro = "As senhas não conferem."
+
+        elif len(senha) < 6:
+            erro = "A senha deve ter pelo menos 6 caracteres."
+
+        else:
+
+            senha_hash = bcrypt.hashpw(
+                senha.encode(),
+                bcrypt.gensalt()
+            ).decode()
+
+            cursor.execute("""
+                UPDATE usuarios
+                SET senha = ?
+                WHERE id = ?
+            """, (
+                senha_hash,
+                registro["usuario_id"]
+            ))
+
+            # Invalida TODOS os links de recuperação desse usuário
+            cursor.execute("""
+                UPDATE recuperacao_senha
+                SET utilizado = 1
+                WHERE usuario_id = ?
+            """, (
+                registro["usuario_id"],
+            ))
+
+            conn.commit()
+            conn.close()
+
+            return render_template("senha_alterada.html")
+
+    conn.close()
+
+    return render_template(
+        "redefinir_senha.html",
+        erro=erro,
+        token=token
+    )
 # =========================
 # DELETAR ACESSO
 # =========================
@@ -2318,6 +3137,90 @@ def deletar_acesso_banco(id):
     )
 
     return redirect("/bancos")
+
+# =========================
+# CRIAR BANCO
+# =========================
+@app.route("/bancos/criar", methods=["POST"])
+def criar_banco():
+
+    if "usuario" not in session:
+        return redirect("/")
+
+    nome = request.form.get("nome", "").strip().upper()
+    link = request.form.get("link", "").strip()
+    observacao = request.form.get("observacao", "").strip()
+
+    if not nome:
+        return redirect("/bancos")
+
+    conn = sqlite3.connect("banco.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO bancos (nome, link, observacao)
+        VALUES (?, ?, ?)
+    """, (nome, link, observacao))
+
+    conn.commit()
+    conn.close()
+
+    registrar_auditoria(
+        "CRIAR_BANCO",
+        f"Banco {nome} cadastrado"
+    )
+
+    return redirect("/bancos")
+
+@app.route("/bancos/excluir/<int:id>")
+def excluir_banco(id):
+
+    if "usuario" not in session:
+        return redirect("/")
+
+    if session.get("tipo", "").lower().strip() not in ["master", "admin", "adm"]:
+        return redirect("/bancos")
+
+    conn = sqlite3.connect("banco.db")
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    # Busca o nome do banco antes de excluir
+    cursor.execute("""
+        SELECT nome
+        FROM bancos
+        WHERE id = ?
+    """, (id,))
+
+    banco = cursor.fetchone()
+
+    if not banco:
+        conn.close()
+        return redirect("/bancos")
+
+    # Exclui os acessos vinculados
+    cursor.execute("""
+        DELETE FROM acessos_banco
+        WHERE banco_id = ?
+    """, (id,))
+
+    # Exclui o banco
+    cursor.execute("""
+        DELETE FROM bancos
+        WHERE id = ?
+    """, (id,))
+
+    conn.commit()
+    conn.close()
+
+    registrar_auditoria(
+        "EXCLUIR_BANCO",
+        f'Banco "{banco["nome"]}" excluído.'
+    )
+
+    return redirect("/bancos")
+
+
 # =========================
 # START
 # =========================
@@ -2404,25 +3307,30 @@ def ver_metas():
     return str([dict(m) for m in metas])
 
 @app.route("/admin/adicionar-meta", methods=["POST"])
+@apenas_master
 def adicionar_meta():
 
     conn = conectar()
     cursor = conn.cursor()
 
-    usuario_id = request.form["usuario_id"]
-    produto = request.form["produto"]
-    meta = request.form["meta"]
+    usuario_id = request.form.get("usuario_id")
+    produto = request.form.get("produto", "").strip().upper()
+    meta = request.form.get("meta", "0").replace(".", "").replace(",", ".")
+    competencia = request.form.get("competencia", "").strip()
+
+    if not competencia:
+        competencia = date.today().strftime("%Y-%m")
 
     cursor.execute("""
         INSERT INTO meta_usuario_produto
-        (usuario_id, produto, meta)
-        VALUES (?, ?, ?)
-    """, (usuario_id, produto, meta))
+        (usuario_id, produto, meta, competencia)
+        VALUES (?, ?, ?, ?)
+    """, (usuario_id, produto, meta, competencia))
 
     conn.commit()
     conn.close()
 
-    return redirect("/admin")
+    return redirect(f"/admin?aba=metas&competencia={competencia}&usuario_id={usuario_id}")
 # =========================
 # MINHAS VENDAS
 # =========================
@@ -2435,14 +3343,18 @@ def minhas_vendas():
     conn = conectar()
     cursor = conn.cursor()
 
+    # COMPETÊNCIA ATUAL
+    competencia_atual = date.today().strftime("%Y-%m")
+
     # =========================
-    # METAS DA VENDEDORA
+    # METAS DA VENDEDORA NO MÊS ATUAL
     # =========================
     cursor.execute("""
         SELECT *
         FROM meta_usuario_produto
         WHERE usuario_id = CAST(? AS INTEGER)
-    """, (session["usuario_id"],))
+        AND competencia = ?
+    """, (session["usuario_id"], competencia_atual))
 
     metas = cursor.fetchall()
 
@@ -2455,9 +3367,9 @@ def minhas_vendas():
             SUM(valor) as total
         FROM vendas
         WHERE usuario_id = ?
-        AND strftime('%Y-%m', data) = strftime('%Y-%m', 'now')
+        AND strftime('%Y-%m', data) = ?
         GROUP BY UPPER(produto)
-    """, (session["usuario_id"],))
+    """, (session["usuario_id"], competencia_atual))
 
     vendas_mes = cursor.fetchall()
 
@@ -2467,14 +3379,15 @@ def minhas_vendas():
     }
 
     # =========================
-    # HISTÓRICO
+    # HISTÓRICO DO MÊS ATUAL
     # =========================
     cursor.execute("""
         SELECT *
         FROM vendas
         WHERE usuario_id = ?
+        AND strftime('%Y-%m', data) = ?
         ORDER BY id DESC
-    """, (session["usuario_id"],))
+    """, (session["usuario_id"], competencia_atual))
 
     historico = cursor.fetchall()
 
@@ -2486,12 +3399,13 @@ def minhas_vendas():
     meta_total = sum(float(m["meta"] or 0) for m in metas)
     pago_total = sum(vendas_dict.values())
     falta_meta = max(0, meta_total - pago_total)
+
     # =========================
     # % GERAL
     # =========================
     percentual_meta = round((pago_total / meta_total) * 100, 1) if meta_total > 0 else 0
     percentual_barra = min(percentual_meta, 100)
-    
+
     # =========================
     # PROGRESSO POR PRODUTO
     # =========================
@@ -2501,17 +3415,18 @@ def minhas_vendas():
 
         produto = m["produto"].upper()
         meta = float(m["meta"] or 0)
-
         vendido = float(vendas_dict.get(produto, 0))
 
         percentual = round((vendido / meta) * 100, 1) if meta > 0 else 0
+        percentual_barra = min(percentual, 100)
 
         progresso_produtos.append({
             "produto": produto,
             "meta": meta,
             "vendido": vendido,
             "percentual": percentual,
-            "falta": meta - vendido
+            "percentual_barra": percentual_barra,
+            "falta": max(0, meta - vendido)
         })
 
     # =========================
@@ -2545,6 +3460,8 @@ def minhas_vendas():
         dias_uteis_mes=dias_uteis,
         dias_passados=dias_passados,
         dias_restantes=dias_uteis - dias_passados,
+
+        competencia_atual=competencia_atual,
 
         tipo=session["tipo"],
         usuario=session["usuario"]
@@ -2700,6 +3617,44 @@ def todas_vendas():
 
     return str([dict(x) for x in dados])
 
+@app.route("/compra-divida/cliente/editar/<int:id>", methods=["POST"])
+def editar_cliente_compra(id):
+
+    if not verificar_login():
+        return redirect("/")
+
+    nome = request.form.get("nome", "").strip()
+    cpf = request.form.get("cpf", "").strip()
+    telefone = request.form.get("telefone", "").strip()
+    status = request.form.get("status", "EM ANDAMENTO").strip()
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE clientes_compra
+        SET
+            nome = ?,
+            cpf = ?,
+            telefone = ?,
+            status = ?
+        WHERE id = ?
+    """, (
+        nome,
+        cpf,
+        telefone,
+        status,
+        id
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(f"/compra-divida/cliente/{id}")
+
+
+
+
 @app.route("/estrutura-vendas")
 def estrutura_vendas():
 
@@ -2745,6 +3700,559 @@ def exportar_comissoes():
         download_name="comissoes_exportadas.xlsx"
     )
 
+def moeda_para_float(valor):
+    if not valor:
+        return 0
+
+    valor = str(valor).strip()
+    valor = valor.replace("R$", "").replace(" ", "")
+    valor = valor.replace(".", "").replace(",", ".")
+
+    try:
+        return float(valor)
+    except:
+        return 0
+
+@app.route("/compra-divida/clientes")
+def compra_divida_clientes():
+
+    if not verificar_login():
+        return redirect("/")
+
+    conn = conectar()
+    cursor = conn.cursor()
+    status = request.args.get("status", "ativos")
+
+    base_sql = """
+    SELECT
+        c.*,
+
+        COALESCE((
+            SELECT SUM(d.saldo)
+            FROM clientes_compra_dividas d
+            WHERE d.cliente_id = c.id
+        ), 0) AS total_divida,
+
+        COALESCE((
+            SELECT s.valor_liberado
+            FROM simulacoes_compra s
+            WHERE s.cliente_id = c.id
+            ORDER BY s.id DESC
+            LIMIT 1
+        ), 0) AS valor_liberado,
+
+        (
+            COALESCE((
+                SELECT s.valor_liberado
+                FROM simulacoes_compra s
+                WHERE s.cliente_id = c.id
+                ORDER BY s.id DESC
+                LIMIT 1
+            ), 0)
+            -
+            COALESCE((
+                SELECT SUM(d.saldo)
+                FROM clientes_compra_dividas d
+                WHERE d.cliente_id = c.id
+            ), 0)
+        ) AS sobra
+
+    FROM clientes_compra c
+"""
+    where = []
+    params = []
+
+    if status == "ativos":
+        where.append("""
+            c.status IN (
+                'EM ANDAMENTO',
+                'AGUARDANDO BOLETOS',
+                'AGUARDANDO MARGEM',
+                'AGUARDANDO RETORNO DA MARGEM'
+            )
+        """)
+
+    elif status == "concluidos":
+        where.append("c.status = 'CONCLUÍDO'")
+
+    elif status == "cancelados":
+        where.append("c.status = 'CANCELADO'")
+
+# "todos" não adiciona filtro
+    admin = session.get("tipo", "").lower().strip() in ["master", "adm", "admin"]
+
+    if not admin:
+        where.append("c.usuario_id = ?")
+        params.append(session["usuario_id"])
+
+    if where:
+        base_sql += " WHERE " + " AND ".join(where)
+
+    base_sql += " ORDER BY c.id DESC"
+
+    cursor.execute(base_sql, params)
+
+    clientes = cursor.fetchall()
+    for c in clientes:
+        print(dict(c))
+
+
+
+    conn.close()
+
+    return render_template(
+        "compra_divida_clientes.html",
+        clientes=clientes,
+        tipo=session["tipo"],
+        status=status,
+        usuario=session["usuario"]
+    )
+
+
+@app.route("/compra-divida/clientes/criar", methods=["POST"])
+def criar_cliente_compra():
+
+    if not verificar_login():
+        return redirect("/")
+
+    nome = request.form.get("nome", "").strip()
+    cpf = request.form.get("cpf", "").strip()
+    telefone = request.form.get("telefone", "").strip()
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO clientes_compra (
+            usuario_id,
+            usuario_nome,
+            nome,
+            cpf,
+            telefone
+        )
+        VALUES (?, ?, ?, ?, ?)
+    """, (
+        session["usuario_id"],
+        session["usuario"],
+        nome,
+        cpf,
+        telefone
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/compra-divida/clientes")
+
+
+@app.route("/compra-divida/cliente/<int:id>")
+def abrir_cliente_compra(id):
+
+    if not verificar_login():
+        return redirect("/")
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM clientes_compra
+        WHERE id = ?
+    """, (id,))
+    cliente = cursor.fetchone()
+
+    if not cliente:
+        conn.close()
+        return redirect("/compra-divida/clientes")
+
+    if session.get("tipo", "").lower().strip() not in ["master", "admin", "adm"]:
+        if cliente["usuario_id"] != session["usuario_id"]:
+            conn.close()
+            return redirect("/compra-divida/clientes")
+
+    cursor.execute("""
+        SELECT *
+        FROM clientes_compra_dividas
+        WHERE cliente_id = ?
+        ORDER BY id DESC
+    """, (id,))
+    dividas = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT *
+        FROM simulacoes_compra
+        WHERE cliente_id = ?
+        ORDER BY id DESC
+    """, (id,))
+    simulacoes = cursor.fetchall()
+
+    conn.close()
+
+    total_parcelas = sum(float(d["parcela"] or 0) for d in dividas)
+    total_dividas = sum(float(d["saldo"] or 0) for d in dividas)
+
+    simulacao_principal = simulacoes[0] if simulacoes else None
+    valor_liberado = float(simulacao_principal["valor_liberado"] or 0) if simulacao_principal else 0
+
+    sobra = valor_liberado - total_dividas
+
+    return render_template(
+        "compra_divida_cliente.html",
+        cliente=cliente,
+        dividas=dividas,
+        simulacoes=simulacoes,
+        total_parcelas=total_parcelas,
+        total_dividas=total_dividas,
+        valor_liberado=valor_liberado,
+        sobra=sobra,
+        tipo=session["tipo"],
+        usuario=session["usuario"]
+    )
+
+
+@app.route("/compra-divida/cliente/excluir/<int:id>")
+def excluir_cliente_compra(id):
+
+    if not verificar_login():
+        return redirect("/")
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    if session.get("tipo", "").lower().strip() not in ["master", "admin", "adm"]:
+        cursor.execute("""
+            SELECT usuario_id
+            FROM clientes_compra
+            WHERE id = ?
+        """, (id,))
+        cliente = cursor.fetchone()
+
+        if not cliente or cliente["usuario_id"] != session["usuario_id"]:
+            conn.close()
+            return redirect("/compra-divida/clientes")
+
+    cursor.execute("DELETE FROM clientes_compra_dividas WHERE cliente_id = ?", (id,))
+    cursor.execute("DELETE FROM simulacoes_compra WHERE cliente_id = ?", (id,))
+    cursor.execute("DELETE FROM clientes_compra WHERE id = ?", (id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/compra-divida/clientes")
+
+
+@app.route("/compra-divida/cliente/<int:cliente_id>/simulacao", methods=["POST"])
+def adicionar_simulacao_compra(cliente_id):
+
+    if not verificar_login():
+        return redirect("/")
+
+    parcela = converter_valor_brasileiro(request.form.get("parcela"))
+    coeficiente = converter_valor_brasileiro(request.form.get("coeficiente"))
+
+    valor_liberado = parcela / coeficiente if coeficiente > 0 else 0
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO simulacoes_compra (
+            cliente_id,
+            parcela,
+            coeficiente,
+            valor_liberado
+        )
+        VALUES (?, ?, ?, ?)
+    """, (
+        cliente_id,
+        parcela,
+        coeficiente,
+        valor_liberado
+    ))
+
+    conn.commit()
+    flash("Simulação criada com sucesso!", "success")
+
+    print("SALVANDO SIMULAÇÃO", cliente_id, parcela, coeficiente, valor_liberado)
+    conn.close()
+
+    return redirect(f"/compra-divida/cliente/{cliente_id}")
+
+
+@app.route("/compra-divida/simulacao/editar/<int:id>", methods=["POST"])
+def editar_simulacao_compra(id):
+
+    if not verificar_login():
+        return redirect("/")
+
+    parcela = converter_valor_brasileiro(request.form.get("parcela"))
+    coeficiente = converter_valor_brasileiro(request.form.get("coeficiente"))
+
+    valor_liberado = parcela / coeficiente if coeficiente > 0 else 0
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT cliente_id
+        FROM simulacoes_compra
+        WHERE id = ?
+    """, (id,))
+    simulacao = cursor.fetchone()
+
+    if not simulacao:
+        conn.close()
+        return redirect("/compra-divida/clientes")
+
+    cliente_id = simulacao["cliente_id"]
+
+    cursor.execute("""
+        UPDATE simulacoes_compra
+        SET parcela = ?,
+            coeficiente = ?,
+            valor_liberado = ?
+        WHERE id = ?
+    """, (
+        parcela,
+        coeficiente,
+        valor_liberado,
+        id
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(f"/compra-divida/cliente/{cliente_id}")
+
+
+@app.route("/compra-divida/simulacao/excluir/<int:id>")
+def excluir_simulacao_compra(id):
+
+    if not verificar_login():
+        return redirect("/")
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT cliente_id
+        FROM simulacoes_compra
+        WHERE id = ?
+    """, (id,))
+    simulacao = cursor.fetchone()
+
+    if not simulacao:
+        conn.close()
+        return redirect("/compra-divida/clientes")
+
+    cliente_id = simulacao["cliente_id"]
+
+    cursor.execute("""
+        DELETE FROM simulacoes_compra
+        WHERE id = ?
+    """, (id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(f"/compra-divida/cliente/{cliente_id}")
+
+
+@app.route("/compra-divida/cliente/<int:id>/divida", methods=["POST"])
+def adicionar_divida_compra(id):
+
+    if not verificar_login():
+        return redirect("/")
+
+    banco = request.form.get("banco", "").strip()
+    contrato = request.form.get("contrato", "").strip()
+    data_contratacao = request.form.get("data_contratacao", "").strip()
+
+    parcela = converter_valor_brasileiro(request.form.get("parcela"))
+    saldo = converter_valor_brasileiro(request.form.get("saldo"))
+
+    status_boleto = request.form.get("status_boleto", "AGUARDANDO")
+    observacao = request.form.get("observacao", "").strip()
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO clientes_compra_dividas (
+            cliente_id,
+            banco,
+            contrato,
+            data_contratacao,
+            parcela,
+            saldo,
+            status_boleto,
+            observacao
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        id,
+        banco,
+        contrato,
+        data_contratacao,
+        parcela,
+        saldo,
+        status_boleto,
+        observacao
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(f"/compra-divida/cliente/{id}?aba=dividas")
+
+
+@app.route("/compra-divida/divida/editar/<int:id>", methods=["POST"])
+def editar_divida_compra(id):
+
+    if not verificar_login():
+        return redirect("/")
+
+    banco = request.form.get("banco", "").strip()
+    contrato = request.form.get("contrato", "").strip()
+    data_contratacao = request.form.get("data_contratacao", "").strip()
+
+    parcela = converter_valor_brasileiro(request.form.get("parcela"))
+    saldo = converter_valor_brasileiro(request.form.get("saldo"))
+
+    status_boleto = request.form.get("status_boleto", "AGUARDANDO")
+    observacao = request.form.get("observacao", "").strip()
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT cliente_id
+        FROM clientes_compra_dividas
+        WHERE id = ?
+    """, (id,))
+    divida = cursor.fetchone()
+
+    if not divida:
+        conn.close()
+        return redirect("/compra-divida/clientes")
+
+    cliente_id = divida["cliente_id"]
+
+    cursor.execute("""
+        UPDATE clientes_compra_dividas
+        SET banco = ?,
+            contrato = ?,
+            data_contratacao = ?,
+            parcela = ?,
+            saldo = ?,
+            status_boleto = ?,
+            observacao = ?
+        WHERE id = ?
+    """, (
+        banco,
+        contrato,
+        data_contratacao,
+        parcela,
+        saldo,
+        status_boleto,
+        observacao,
+        id
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(f"/compra-divida/cliente/{cliente_id}?aba=dividas")
+
+
+@app.route("/compra-divida/divida/excluir/<int:id>")
+def excluir_divida_compra(id):
+
+    if not verificar_login():
+        return redirect("/")
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT cliente_id
+        FROM clientes_compra_dividas
+        WHERE id = ?
+    """, (id,))
+    divida = cursor.fetchone()
+
+    if not divida:
+        conn.close()
+        return redirect("/compra-divida/clientes")
+
+    cliente_id = divida["cliente_id"]
+
+    cursor.execute("""
+        DELETE FROM clientes_compra_dividas
+        WHERE id = ?
+    """, (id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(f"/compra-divida/cliente/{cliente_id}?aba=dividas")
+
+@app.route("/admin/clonar-metas", methods=["POST"])
+@apenas_master
+def clonar_metas():
+
+    competencia_origem = request.form.get("competencia_origem", "").strip()
+    competencia_destino = request.form.get("competencia_destino", "").strip()
+
+    if not competencia_origem or not competencia_destino:
+        return redirect("/admin?aba=metas")
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT usuario_id, produto, meta
+        FROM meta_usuario_produto
+        WHERE competencia = ?
+    """, (competencia_origem,))
+
+    metas_origem = cursor.fetchall()
+
+    for m in metas_origem:
+        cursor.execute("""
+            SELECT id
+            FROM meta_usuario_produto
+            WHERE usuario_id = ?
+            AND produto = ?
+            AND competencia = ?
+        """, (m["usuario_id"], m["produto"], competencia_destino))
+
+        existente = cursor.fetchone()
+
+        if existente:
+            cursor.execute("""
+                UPDATE meta_usuario_produto
+                SET meta = ?
+                WHERE id = ?
+            """, (m["meta"], existente["id"]))
+        else:
+            cursor.execute("""
+                INSERT INTO meta_usuario_produto
+                (usuario_id, produto, meta, competencia)
+                VALUES (?, ?, ?, ?)
+            """, (
+                m["usuario_id"],
+                m["produto"],
+                m["meta"],
+                competencia_destino
+            ))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(f"/admin?aba=metas&competencia={competencia_destino}")
+
+
 @app.route("/ver-vendas")
 def ver_vendas():
 
@@ -2768,6 +4276,31 @@ def ver_vendas():
    
 
     return str([dict(v) for v in vendas])
+garantir_coluna_competencia_metas()
+criar_tabelas_compra_divida()
+def atualizar_tabela_usuarios():
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("PRAGMA table_info(usuarios)")
+    colunas = [coluna[1] for coluna in cursor.fetchall()]
+
+    if "cpf" not in colunas:
+        cursor.execute("ALTER TABLE usuarios ADD COLUMN cpf TEXT")
+
+    if "email" not in colunas:
+        cursor.execute("ALTER TABLE usuarios ADD COLUMN email TEXT")
+
+    if "ativo" not in colunas:
+        cursor.execute("ALTER TABLE usuarios ADD COLUMN ativo INTEGER DEFAULT 1")
+
+    if "ultimo_login" not in colunas:
+        cursor.execute("ALTER TABLE usuarios ADD COLUMN ultimo_login TEXT")
+
+    conn.commit()
+    conn.close()
 if __name__ == "__main__":
     print("🔥 FLASK INICIANDO...")
-    app.run(host="192.168.0.63", port=5000, debug=True)
+    atualizar_tabela_usuarios()
+    criar_tabela_recuperacao_senha()
+    app.run(host="192.168.0.66", port=5000, debug=True)

@@ -1,201 +1,384 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="{{ tema }}">
 
 <head>
 <meta charset="UTF-8">
 <title>Histórico</title>
-
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}">
+<script src="https://unpkg.com/lucide@latest"></script>
 <link rel="stylesheet" href="/static/style.css">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
-
-/* CONTEÚDO */
 .conteudo{
     flex:1;
     padding:25px;
 }
 
 .page{
+    width:100%;
     max-width:1400px;
+    margin:0 auto;
 }
 
 /* TOPO */
-.topo{
+.historico-topo{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-bottom:10px;
+    gap:25px;
+    margin-bottom:25px;
 }
 
 .topo h1{
     margin:0;
+    display:flex;
+    align-items:center;
+    gap:10px;
 }
 
-/* INFORMAÇÕES */
-.info-termos{
-    margin:15px 0 20px 0;
-    color:#cbd5e1;
+.topo h1 i{
+    color:var(--primary-2);
+}
+
+.topo span{
+    color:var(--muted);
     font-size:14px;
 }
 
-.info-termos strong{
-    color:#a855f7;
-}
-.busca-box{
+.historico-info{
     display:flex;
-    gap:12px;
     align-items:center;
-    margin:18px 0;
+    gap:18px;
 }
 
-.busca-box input{
+.historico-total{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 18px;
+    border-radius:14px;
+    background:rgba(255,255,255,.04);
+    border:1px solid var(--border);
+}
+
+.historico-total i{
+    color:var(--primary-2);
+    width:24px;
+    height:24px;
+}
+
+.historico-total small{
+    display:block;
+    color:var(--muted);
+    font-size:12px;
+}
+
+.historico-total strong{
+    color:var(--text);
+    font-size:18px;
+}
+
+/* BUSCA */
+.busca-box{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin:22px 0;
+}
+
+.campo-busca{
     flex:1;
-    height:52px;
-    border-radius:12px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    height:54px;
+    padding:0 16px;
+    border-radius:14px;
+    background:rgba(255,255,255,.04);
+    border:1px solid var(--border);
+}
+
+.campo-busca i{
+    color:var(--primary-2);
+}
+
+.campo-busca input{
+    flex:1;
+    border:none;
+    background:none;
+    color:var(--text);
+    outline:none;
+    font-size:15px;
+}
+
+.campo-busca input::placeholder{
+    color:var(--muted);
 }
 
 .btn-busca{
-    height:52px;
-    padding:0 24px;
+    height:54px;
+    padding:0 28px;
     border:none;
     border-radius:12px;
-    background:linear-gradient(135deg,#6d28d9,#7c3aed);
+    background:linear-gradient(135deg,var(--primary),var(--primary-2));
     color:white;
     font-weight:700;
     cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
 }
 
 .btn-limpar{
-    color:#94a3b8;
+    height:54px;
+    color:var(--muted);
     text-decoration:none;
     font-weight:600;
-    padding:0 8px;
+    padding:0 12px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
 }
 
 .btn-limpar:hover{
     color:#fff;
 }
-/* BOX DA TABELA */
+
+/* BOX */
 .box{
     margin-top:20px;
-    background:rgba(255,255,255,0.05);
-    border:1px solid rgba(255,255,255,0.08);
+    background:rgba(255,255,255,.04);
+    border:1px solid var(--border);
     border-radius:16px;
     overflow:hidden;
     backdrop-filter:blur(12px);
-    box-shadow:0 10px 20px rgba(109,40,217,0.25);
+    box-shadow:var(--shadow);
 }
 
 /* TABELA */
 table{
     width:100%;
     border-collapse:collapse;
+    table-layout:auto;
 }
 
 thead{
-    background:rgba(255,255,255,0.03);
+    background:rgba(15,23,42,.55);
 }
 
 th{
-    padding:14px;
+    padding:16px 14px;
     text-align:left;
-    color:#cbd5e1;
+    color:var(--text);
     font-size:13px;
-    font-weight:600;
+    font-weight:700;
     text-transform:uppercase;
     letter-spacing:.5px;
 }
 
 td{
     padding:14px;
-    color:#e5e7eb;
-    border-bottom:1px solid rgba(255,255,255,0.05);
+    color:var(--text);
+    border-bottom:1px solid rgba(255,255,255,.06);
     vertical-align:middle;
+    font-size:14px;
 }
 
-tbody tr{
-    transition:.2s;
+/* REMOVE HOVER FORTE HERDADO */
+.box tbody tr,
+.box tbody tr td{
+    background:transparent !important;
 }
 
-tbody tr:hover{
-    background:rgba(124,58,237,0.08);
+.box tbody tr:hover,
+.box tbody tr:hover td{
+    background:rgba(255,255,255,.035) !important;
+    color:var(--text) !important;
+}
+th:nth-child(6),
+td:nth-child(6){
+    min-width:230px;
+    text-align:center;
 }
 
-/* VALORES */
-.valor{
-    color:#22c55e;
-    font-weight:600;
+th:nth-child(5),
+td:nth-child(5){
+    min-width:120px;
+    text-align:center;
 }
 
-
-.btn-visualizar,
-.btn-excluir{
-    height:38px;
-    padding:0 14px;
-    border-radius:10px;
-
+/* BADGES */
+.valor-badge{
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    gap:6px;
+    padding:7px 12px;
+    border-radius:999px;
+    background:var(--green-soft);
+    color:var(--green);
+    font-weight:800;
+    white-space:nowrap;
+}
 
-    border:none;
-    outline:none;
+.box tbody tr:hover .valor-badge{
+    background:var(--green-soft) !important;
+    color:var(--green) !important;
+}
 
-    text-decoration:none;
-    font-family:'Poppins', sans-serif;
+.cpf-badge{
+    display:inline-block;
+    padding:6px 10px;
+    border-radius:999px;
+    background:rgba(255,255,255,.05);
+    border:1px solid var(--border);
     font-size:13px;
     font-weight:600;
+}
 
+/* CLIENTE / USUÁRIO / DATA */
+.cliente-coluna,
+.usuario-coluna{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.cliente-coluna i,
+.usuario-coluna i{
+    width:16px;
+    height:16px;
+    color:var(--primary-2);
+}
+
+.usuario-coluna{
+    justify-content:center;
+}
+
+.data-termo{
+    line-height:1.2;
+}
+
+.data-termo div{
+    font-weight:600;
+}
+
+.data-termo small{
+    color:var(--muted);
+}
+
+/* AÇÕES */
+.acoes-termo{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:px;
+}
+
+.form-excluir-termo{
+    display:inline-flex;
+}
+
+.btn-visualizar,
+.btn-excluir{
+    height:40px;
+    border:none;
+    border-radius:10px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font-family:'Poppins',sans-serif;
+    font-size:13px;
+    font-weight:700;
     cursor:pointer;
+    text-decoration:none;
     transition:.2s;
 }
 
 .btn-visualizar{
-    background:linear-gradient(135deg,#6d28d9,#7c3aed);
+    padding:0 16px;
+    background:linear-gradient(135deg,var(--primary),var(--primary-2));
     color:white;
 }
 
 .btn-excluir{
-    background:linear-gradient(135deg,#dc2626,#ef4444);
+    height:40px;
+    padding:0 14px;
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+
+    border:none;
+    border-radius:10px;
+
+    background:rgba(224, 224, 225, 0.1);
+    color:#ffffff;
+
+    font-family:'Poppins',sans-serif;
+    font-size:13px;
+    font-weight:700;
+
+    cursor:pointer;
+    transition:.25s ease;
+}
+
+.btn-visualizar:hover{
+    background:linear-gradient(135deg,var(--primary),var(--primary-2));
     color:white;
-}
-
-.btn-visualizar:hover,
-.btn-excluir:hover{
     transform:translateY(-2px);
+    box-shadow:0 6px 18px rgba(236,72,153,.22);
 }
 
-/* STATUS */
-.status{
-    padding:4px 8px;
-    border-radius:6px;
-    font-size:12px;
-    background:rgba(255,255,255,0.08);
+.btn-excluir:hover{
+    background:rgba(235, 15, 15, 0.18);
+    color:#ff5050;
+    transform:translateY(-2px);
+    box-shadow:0 6px 18px rgba(239,68,68,.15);
 }
 
-/* RESPONSIVO */
-@media(max-width:900px){
-
-    .busca-box{
-        flex-direction:column;
-    }
-
-    .btn-busca{
-        width:100%;
-    }
-
-    table{
-        font-size:13px;
-    }
+/* VAZIO */
+.sem-registro{
+    text-align:center;
+    padding:40px !important;
+    color:var(--muted);
 }
+
+.historico-vazio{
+    padding:45px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+}
+
+.historico-vazio i{
+    width:42px;
+    height:42px;
+    color:var(--primary-2);
+}
+
+.historico-vazio h3{
+    margin:0;
+    color:var(--text);
+}
+
+.historico-vazio p{
+    color:var(--muted);
+    margin:0;
+}
+
+/* PAGINAÇÃO */
 .paginacao{
     display:flex;
     justify-content:center;
     align-items:center;
     gap:8px;
-    margin:25px auto 0 auto;
+    margin:25px auto;
     flex-wrap:wrap;
 }
 
@@ -209,17 +392,20 @@ tbody tr:hover{
 }
 
 .paginacao a{
-    background:rgba(255,255,255,0.05);
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:rgba(255,255,255,.05);
     color:#fff;
-    border:1px solid rgba(255,255,255,0.1);
+    border:1px solid var(--border);
 }
 
 .paginacao a:hover{
-    background:#6d28d9;
+    background:var(--primary);
 }
 
 .paginacao .ativa{
-    background:#6d28d9;
+    background:linear-gradient(135deg,var(--primary),var(--primary-2));
     color:#fff;
 }
 
@@ -227,74 +413,102 @@ tbody tr:hover{
     opacity:.4;
     pointer-events:none;
 }
+
+/* RESPONSIVO */
+@media(max-width:900px){
+    .historico-topo,
+    .historico-info,
+    .busca-box{
+        flex-direction:column;
+        align-items:stretch;
+    }
+
+    .btn-busca{
+        width:100%;
+    }
+
+    .box{
+        overflow-x:auto;
+    }
+
+    table{
+        min-width:950px;
+    }
+}
 </style>
 </head>
 
 <body>
 
-
 <div class="sidebar" id="sidebar">
 
-    <button class="toggle-btn" onclick="toggleSidebar()">
-        ◀
+    <button class="toggle-btn sidebar-toggle" onclick="toggleSidebar()" title="Recolher menu">
+    <i data-lucide="panel-left-close"></i>
     </button>
 
-    <a href="/home">
-        <span class="icon">🏠</span>
-        <span class="text">Home</span>
-    </a>
+<a href="/home">
+    <i data-lucide="home"></i>
+    <span class="text">Home</span>
+</a>
 
-    <a href="/vendas">
-        <span class="icon">💰</span>
-        <span class="text">Minhas Vendas</span>
-        
-    </a>
-    <a href="/termos">
-    <span class="icon">📄</span>
+{% if tipo == "user" %}
+<a href="/vendas">
+    <i data-lucide="circle-dollar-sign"></i>
+    <span class="text">Produção</span>
+</a>
+{% endif %}
+
+<a href="/compra-divida/clientes">
+    <i data-lucide="calculator"></i>
+    <span class="text">Compras</span>
+</a>
+
+<a href="/termos">
+    <i data-lucide="file-text"></i>
     <span class="text">Gerar Termo</span>
-    </a>
+</a>
 
-    <a href="/termos/historico" class="active">
-    <span class="icon">📚</span>
-    <span class="text">Termos Gerados</span>
-    </a>
+<a href="/termos/historico"class="active">
+    <i data-lucide="files"></i>
+    <span class="text">Termos</span>
+</a>
 
-    <a href="/bancos">
-        <span class="icon">🏦</span>
-        <span class="text">Bancos</span>
-    </a>
+<a href="/bancos">
+    <i data-lucide="building-2"></i>
+    <span class="text">Bancos</span>
+</a>
 
-    <a href="/clt">
-        <span class="icon">💼</span>
-        <span class="text">CLT</span>
-    </a>
+<a href="/clt">
+    <i data-lucide="briefcase-business"></i>
+    <span class="text">CLT</span>
+</a>
 
-    <a href="/inss">
-        <span class="icon">👴</span>
-        <span class="text">INSS</span>
-    </a>
+<a href="/inss">
+    <i data-lucide="badge-dollar-sign"></i>
+    <span class="text">INSS</span>
+</a>
 
-    <a href="/fgts">
-        <span class="icon">🔐</span>
-        <span class="text">FGTS</span>
-    </a>
+<a href="/fgts">
+    <i data-lucide="lock-keyhole"></i>
+    <span class="text">FGTS</span>
+</a>
 
-    <a href="/compra-divida">
-        <span class="icon">💲</span>
-        <span class="text">Compra</span>
-    </a>
+<a href="/compra-divida">
+    <i data-lucide="landmark"></i>
+    <span class="text">Compra</span>
+</a>
 
-    {% if tipo|lower|trim in ["master", "admin", "adm"] %}
-    <a href="/admin">
-        <span class="icon">⚙️</span>
-        <span class="text">Admin</span>
-    </a>
-    {% endif %}
+{% if tipo in ["master", "adm"] %}
+<a href="/admin">
+    <i data-lucide="settings"></i>
+    <span class="text">Admin</span>
+</a>
+{% endif %}
 
-    <a href="/logout">
-        <span class="icon">🚪</span>
-        <span class="text">Sair</span>
-    </a>
+<a href="/logout">
+    <i data-lucide="log-out"></i>
+    <span class="text">Sair</span>
+</a>
 
 </div>
 <!-- CONTEÚDO -->
@@ -303,39 +517,64 @@ tbody tr:hover{
     <div class="page">
 
         <!-- TOPO -->
-        <div class="topo">
+       <div class="topo historico-topo">
+
+    <div>
+        <h1>
+            <i data-lucide="files"></i>
+            Termos Gerados
+        </h1>
+
+        <span>
+            Consulte, visualize e gerencie os termos cadastrados.
+        </span>
+    </div>
+
+    <div class="historico-info">
+
+        <div class="historico-total">
+
+            <i data-lucide="file-check-2"></i>
 
             <div>
-                <h1>📜 Termos Gerados</h1>
-                <span>Histórico de termos cadastrados no sistema</span>
-            </div>
 
-            <div class="info-termos">
-            📄 Total de termos encontrados:
-            <strong>{{ historico|length }}</strong>
-            </div>
+                <small>Total</small>
 
-           
+                <strong>{{ historico|length }}</strong>
 
-            <div class="tag tag-master">
-                {{ tipo|upper }}
             </div>
 
         </div>
-        
-      <form method="GET" action="/termos/historico" class="busca-box">
 
-    <input type="text"
-           name="busca"
-           value="{{ busca or '' }}"
-           placeholder="Buscar por cliente ou CPF">
+        <div class="tag tag-master">
+            {{ tipo|upper }}
+        </div>
+
+    </div>
+
+</div>
+        
+    <form method="GET" action="/termos/historico" class="busca-box">
+
+    <div class="campo-busca">
+
+        <i data-lucide="search"></i>
+
+        <input
+            type="text"
+            name="busca"
+            value="{{ busca or '' }}"
+            placeholder="Buscar por cliente ou CPF">
+
+    </div>
 
     <button type="submit" class="btn-busca">
-        🔍 Buscar
+        Buscar
     </button>
 
     {% if busca %}
     <a href="/termos/historico" class="btn-limpar">
+        <i data-lucide="x"></i>
         Limpar
     </a>
     {% endif %}
@@ -368,40 +607,48 @@ tbody tr:hover{
 
         <td>{{ item["cpf"] }}</td>
 
-        <td class="valor">
-            R$ {{ item["valor_total"] }}
+        <td>
+       <span class="valor-badge">
+         R$ {{ item["valor_formatado"] }}
+        </span>
         </td>
 
         <td>{{ item["usuario_nome"] }}</td>
 
-        <td>{{ item["data_criacao"] }}</td>
+       <td class="data-termo">
+        <div>{{ item["data_formatada"] }}</div>
+        <small>{{ item["hora_formatada"] }}</small>
+        </td>
 
-        <td>
+        <td class="acoes-termo">
 
     <a href="/termos/ver/{{ item['id'] }}"
        class="btn-visualizar">
-        👁 Visualizar
+        <i data-lucide="eye"></i>
+        Visualizar
     </a>
 
     {% if tipo == "master" %}
 
     <form action="/termos/excluir/{{ item['id'] }}"
           method="POST"
-          style="display:inline;">
+          class="form-excluir-termo">
 
         <button
-            type="submit"
-            class="btn-excluir"
-            onclick="return confirm('Deseja realmente excluir este termo?')">
+    type="submit"
+    class="btn-excluir"
+    onclick="return confirm('Deseja realmente excluir este termo?')">
 
-            🗑 Excluir
+    <i data-lucide="trash-2"></i>
+    Excluir
 
-        </button>
+</button>
 
     </form>
 
     {% endif %}
-    </td>
+
+</td>
 
         
     
@@ -413,8 +660,9 @@ tbody tr:hover{
 {% else %}
 
 <tr>
-    <td colspan="6" style="text-align:center;padding:30px;">
-        Nenhum termo encontrado.
+   <td colspan="6" class="sem-registro">
+    <i data-lucide="folder-x"></i>
+    Nenhum termo encontrado.
     </td>
 </tr>
 
@@ -493,6 +741,8 @@ window.addEventListener("load", () => {
     }
 });
 </script>
-
+<script>
+lucide.createIcons();
+</script>
 </body>
 </html>

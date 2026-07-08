@@ -1,81 +1,85 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="{{ tema }}">
 
 <head>
 <meta charset="UTF-8">
 <title>Minhas Vendas</title>
-
-<link rel="stylesheet"
-href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}">
+<script src="https://unpkg.com/lucide@latest"></script>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
 
-
 <div class="sidebar" id="sidebar">
 
-    <button class="toggle-btn" onclick="toggleSidebar()">
-        ◀
+    <button class="toggle-btn sidebar-toggle" onclick="toggleSidebar()" title="Recolher menu">
+    <i data-lucide="panel-left-close"></i>
     </button>
 
-    <a href="/home">
-        <span class="icon">🏠</span>
-        <span class="text">Home</span>
-    </a>
+<a href="/home">
+    <i data-lucide="home"></i>
+    <span class="text">Home</span>
+</a>
 
-    <a href="/vendas" class="active">
-        <span class="icon">💰</span>
-        <span class="text">Minhas Vendas</span>
-    </a>
+<a href="/vendas"class="active">
+    <i data-lucide="circle-dollar-sign"></i>
+    <span class="text">Produção</span>
+</a>
 
-    <a href="/termos">
-    <span class="icon">📄</span>
+<a href="/compra-divida/clientes">
+    <i data-lucide="calculator"></i>
+    <span class="text">Compras</span>
+</a>
+
+<a href="/termos">
+    <i data-lucide="file-text"></i>
     <span class="text">Gerar Termo</span>
-    </a>
+</a>
 
-    <a href="/termos/historico">
-    <span class="icon">📚</span>
-    <span class="text">Termos Gerados</span>
-    </a>
+<a href="/termos/historico">
+    <i data-lucide="files"></i>
+    <span class="text">Termos</span>
+</a>
 
-    <a href="/bancos">
-        <span class="icon">🏦</span>
-        <span class="text">Bancos</span>
-    </a>
+<a href="/bancos">
+    <i data-lucide="building-2"></i>
+    <span class="text">Bancos</span>
+</a>
 
-    <a href="/clt">
-        <span class="icon">💼</span>
-        <span class="text">CLT</span>
-    </a>
+<a href="/clt">
+    <i data-lucide="briefcase-business"></i>
+    <span class="text">CLT</span>
+</a>
 
-    <a href="/inss">
-        <span class="icon">👴</span>
-        <span class="text">INSS</span>
-    </a>
+<a href="/inss">
+    <i data-lucide="badge-dollar-sign"></i>
+    <span class="text">INSS</span>
+</a>
 
-    <a href="/fgts">
-        <span class="icon">🔐</span>
-        <span class="text">FGTS</span>
-    </a>
+<a href="/fgts">
+    <i data-lucide="lock-keyhole"></i>
+    <span class="text">FGTS</span>
+</a>
 
-    <a href="/compra-divida">
-        <span class="icon">💲</span>
-        <span class="text">Compra</span>
-    </a>
+<a href="/compra-divida">
+    <i data-lucide="landmark"></i>
+    <span class="text">Compra</span>
+</a>
 
-    {% if tipo|lower|trim in ["master", "admin", "adm"] %}
-    <a href="/admin">
-        <span class="icon">⚙️</span>
-        <span class="text">Admin</span>
-    </a>
-    {% endif %}
+{% if tipo in ["master", "adm"] %}
+<a href="/admin">
+    <i data-lucide="settings"></i>
+    <span class="text">Admin</span>
+</a>
+{% endif %}
 
-    <a href="/logout">
-        <span class="icon">🚪</span>
-        <span class="text">Sair</span>
-    </a>
+<a href="/logout">
+    <i data-lucide="log-out"></i>
+    <span class="text">Sair</span>
+</a>
 
 </div>
 <!-- CONTEÚDO -->
@@ -84,176 +88,145 @@ href="{{ url_for('static', filename='style.css') }}">
 <div class="page">
 
     <!-- HEADER -->
-    <div class="header-vendas">
-        <h1>💰 Minhas Vendas</h1>
-        <span>Atualize sua produção mensal</span>
+    <div class="topo vendas-topo">
+    <div>
+        <h1>
+            <i data-lucide="circle-dollar-sign"></i>
+            Produção
+        </h1>
+        <span>Acompanhe sua meta, projeção e vendas do mês.</span>
     </div>
+</div>
 
 
 <!-- KPIs DO TOPO -->
-<div class="kpi-grid">
+<div class="vendas-kpis">
 
-    <div class="kpi-card">
-        <span>🎯 Meta mensal</span>
+    <div class="vendas-kpi">
+        <span><i data-lucide="target"></i> Meta mensal</span>
         <strong>R$ {{ "%.2f"|format(meta) }}</strong>
     </div>
 
-    <div class="kpi-card destaque">
-    <span>📈 Atingido</span>
-    <strong>R$ {{ "%.2f"|format(pago) }}</strong>
+    <div class="vendas-kpi">
+        <span><i data-lucide="trending-up"></i> Atingido</span>
+        <strong>R$ {{ "%.2f"|format(pago) }}</strong>
+    </div>
 
-</div>
-
-    <div class="kpi-card alerta">
-        <span>📉 Falta</span>
+    <div class="vendas-kpi">
+        <span><i data-lucide="alert-circle"></i> Falta</span>
         <strong>R$ {{ "%.2f"|format(falta_meta) }}</strong>
     </div>
 
-    <div class="kpi-card">
-        <span>📅 Dias úteis</span>
+    <div class="vendas-kpi mini">
+        <span><i data-lucide="calendar-days"></i> Dias úteis</span>
         <strong>{{ dias_uteis_mes }}</strong>
     </div>
 
-    <div class="kpi-card">
-        <span>✅ Passados</span>
+    <div class="vendas-kpi mini">
+        <span><i data-lucide="check-circle"></i> Passados</span>
         <strong>{{ dias_passados }}</strong>
     </div>
 
-    <div class="kpi-card">
-        <span>⏳ Restantes</span>
+    <div class="vendas-kpi mini">
+        <span><i data-lucide="hourglass"></i> Restantes</span>
         <strong>{{ dias_restantes }}</strong>
     </div>
 
 </div>
 
-<div class="cards-vendas-grid">
 
-    <div class="card-vendas">
-        <h3>🔮 Projeção</h3>
-        <p>💰 Meta: R${{ "%.2f"|format(meta) }}</p>
-        <p>💵 Pago: R$ {{ "%.2f"|format(pago) }}</p>
-        <p>📈 Projeção: R$ {{ "%.2f"|format(projecao) }}</p>
-        <p>📉 Precisa/dia: R$ {{ "%.2f"|format(necessario) }}</p>
-        <p>{{ status }}</p>
+<div class="vendas-accordions">
+
+    <div class="accordion-card">
+        <button type="button" class="accordion-header" onclick="toggleAccordion()">
+            <span>
+                <i data-lucide="gem"></i>
+                Bonificações
+            </span>
+            <i data-lucide="chevron-down" class="accordion-chev"></i>
+        </button>
     </div>
 
-    <div class="card-vendas">
-        <h3>💎 Bonificações</h3>
-        <p><b>Meta geral:</b></p>
-        <p>0,30% + R$ 200</p>
-
-        <p><b>Todos produtos:</b></p>
-        <p>R$ 300</p>
-
-        <p><b>10% acima da meta:</b></p>
-        <p>R$ 200</p>
+    <div class="accordion-card">
+        <button type="button" class="accordion-header" onclick="toggleAccordion()">
+            <span>
+                <i data-lucide="badge-percent"></i>
+                Campanhas e Regras
+            </span>
+            <i data-lucide="chevron-down" class="accordion-chev"></i>
+        </button>
     </div>
 
-    <div class="card-vendas">
-        <h3>⭐ Campanha de Prospecção</h3>
-        <p><b>Novo acima de R$ 100.000,00</b></p>
-        <p>R$ 150</p>
-
-        <p><b>Port acima de R$ 100.000,00</b></p>
-        <p>R$ 80</p>
+    <div class="accordion-card">
+        <button type="button" class="accordion-header" onclick="toggleAccordion()">
+            <span>
+                <i data-lucide="table-2"></i>
+                Tabelas Especiais
+            </span>
+            <i data-lucide="chevron-down" class="accordion-chev"></i>
+        </button>
     </div>
 
-    <div class="card-vendas">
-        <h3>📌 Regras Importantes</h3>
-        <p>💳 Cartão inclui saque complementar</p>
-        <p>🚀 Port inclui refin e compra de dívida</p>
-        <p>🏛 Gov = Governo, Prefeitura e Siape</p>
-        <p>⁉️"Outros produtos" = FGTS, CP, Cartão e Saque.</p>
-        <p>🔎No Produto "CP", consideraremos todos os tipos de Crédito Pessoal.</p>
-        <p>💰 Campanhas só bonificam ao atingir a meta</p>
-    </div>
+    <div class="accordion-content accordion-geral" id="acc-geral">
+        <div class="accordion-geral-grid">
 
-</div>
-<div class="card-vendas card-full tabelas-compactas">
-    <h3>📊 Tabelas Especiais</h3>
-
-    <div class="tabelas-grid">
-
-        <div class="tabela-mini">
-            <strong>Portabilidades</strong>
-            <span>50% do saldo</span>
-            <span>50% do líquido do Refin</span>
-        </div>
-
-        <div class="tabela-mini">
-            <strong>Compra de dívida</strong>
-            <span> Até 71 anos</span>
-            <span>Consideirado 50% quando tirar parte da comissão</span>
-        </div>
-
-    </div>
-</div>
-
-<!-- GRID PRINCIPAL -->
-
-<div class="grid-vendas">
-
-<!-- ===================== -->
-<!-- PROGRESSO POR PRODUTO -->
-<!-- ===================== -->
-
-<div class="card-meta compact">
-
-    <h3>🚀Progresso por Produto</h3>
-
-    {% if progresso_produtos %}
-
-        {% for p in progresso_produtos %}
-
-        <div class="produto-card">
-
-            <div class="produto-topo">
-                <strong>{{ p.produto }}</strong>
-                <span>{{ p.percentual }}%</span>
+            <div>
+                <h4>Bonificações</h4>
+                <p><b>Meta geral:</b> 0,30% + R$200</p>
+                <p><b>Todos produtos:</b> R$300</p>
+                <p><b>10% acima:</b> R$200</p>
             </div>
 
-            <div class="barra-meta pequena">
-                <div
-                    class="barra-progresso"
-                    style="width: {{ p.percentual }}%;">
-                </div>
+            <div>
+                <h4>Campanhas</h4>
+                <p>Novo acima de R$100.000 → R$150</p>
+                <p>Portabilidade acima de R$100.000 → R$80</p>
             </div>
 
-            <small class="valor-produto">
-                R$ {{ "%.2f"|format(p.vendido) }}
-                /
-                R$ {{ "%.2f"|format(p.meta) }}
-            </small>
+            <div>
+                <h4>Tabelas Especiais</h4>
+                <p>Portabilidades: 50% saldo / 50% líquido Refin</p>
+                <p>Compra dívida: até 71 anos / 50% quando tirar parte da comissão</p>
+            </div>
 
         </div>
-
-        {% endfor %}
-
-    {% else %}
-
-        <p class="texto-vazio">
-            Nenhuma meta cadastrada para este usuário.
-        </p>
-
-    {% endif %}
+    </div>
 
 </div>
-
-
-<!-- ===================== -->
-<!-- ÁREA OPERACIONAL -->
-<!-- ===================== -->
-<div class="area-operacional">
 
     <!-- LANÇAR VENDA -->
-    <div class="card-meta">
+    <div class="vendas-box nova-venda-box">
 
-        <h3>➕ Lançar Venda</h3>
+        <h3>
+            <i data-lucide="plus-circle"></i>
+            Lançar Venda
+        </h3>
+            <div class="progresso-inline">
 
-        <form method="POST" action="/vendas/add" class="form-venda">
+        <div class="progresso-inline-topo">
+            <span>Progresso por produto</span>
+        </div>
+
+        {% if progresso_produtos %}
+    {% for p in progresso_produtos %}
+    <div class="progresso-inline-item">
+        <strong>{{ p.produto }}</strong>
+
+        <div class="progresso-inline-barra">
+            <div style="width: {{ p.percentual_barra }}%;"></div>
+</div>
+
+        <span>{{ "%.1f"|format(p.percentual) }}%</span>
+    </div>
+    {% endfor %}
+{% endif %}
+
+    </div>
+
+        <form method="POST" action="/vendas/add" class="form-venda nova-form-venda">
 
             <label>Produto</label>
-            <select name="produto" class="select-venda" required>
+            <select name="produto" required>
                 {% for m in metas %}
                 <option value="{{ m['produto'] }}">
                     {{ m["produto"] }}
@@ -268,64 +241,101 @@ href="{{ url_for('static', filename='style.css') }}">
                    placeholder="Digite o valor"
                    required>
 
-            <button type="submit" class="btn">
-                💾 Salvar Venda
+            <button type="submit" class="btn btn-roxo">
+                <i data-lucide="save"></i>
+                Salvar Venda
             </button>
 
         </form>
 
     </div>
 
+</div>
 
 <!-- HISTÓRICO -->
-<div class="card-meta">
+<div class="historico-wrapper">
 
-    <h3>📜 Histórico do Mês</h3>
+    <div class="vendas-box historico-box">
+    <div class="historico-topo">
+        <h3>
+            <i data-lucide="list-checks"></i>
+            Histórico do Mês
+        </h3>
 
-    <table class="tabela-metas">
+        <span class="historico-count">
+            {{ historico|length }} lançamentos
+        </span>
+    </div>
 
-        <tr>
-            <th>Data</th>
-            <th>Produto</th>
-            <th>Valor</th>
-            <th>Ações</th>
-        </tr>
+    <div class="vendas-table-wrap">
 
-        {% if historico %}
+        <table class="vendas-table">
 
-            {% for venda in historico %}
-            <tr>
-                <td>{{ venda["data"] }}</td>
-                <td>{{ venda["produto"] }}</td>
-                <td>R$ {{ "%.2f"|format(venda["valor"]) }}</td>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Produto</th>
+                    <th>Valor</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
 
-                <td>
-                    <a href="/editar-venda/{{ venda['id'] }}">
-                        ✏️ Editar
-                    </a>
+            <tbody>
 
-                    <a href="/excluir-venda/{{ venda['id'] }}"
-                       onclick="return confirm('Tem certeza que deseja excluir esta venda?')">
-                        🗑️ Excluir
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
+                {% if historico %}
 
-        {% else %}
+                    {% for venda in historico %}
+                    <tr>
+                        <td>{{ venda["data"] }}</td>
 
-            <tr>
-                <td colspan="4" class="texto-vazio">
-                    Nenhuma venda lançada este mês.
-                </td>
-            </tr>
+                        <td>
+                            <span class="produto-badge">
+                                {{ venda["produto"] }}
+                            </span>
+                        </td>
 
-        {% endif %}
+                        <td class="valor-venda">
+                            R$ {{ "%.2f"|format(venda["valor"]) }}
+                        </td>
 
-    </table>
+                        <td>
+                            <div class="vendas-acoes">
+                                <a href="/editar-venda/{{ venda['id'] }}" title="Editar">
+                                    <i data-lucide="pencil"></i>
+                                </a>
+
+                                <a href="/excluir-venda/{{ venda['id'] }}"
+                                   title="Excluir"
+                                   onclick="return confirm('Tem certeza que deseja excluir esta venda?')">
+                                    <i data-lucide="trash-2"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <i data-lucide="chart-no-axes-column"></i>
+                                <strong>Nenhuma venda lançada este mês.</strong>
+                                <span>As vendas cadastradas aparecerão aqui.</span>
+                            </div>
+                        </td>
+                    </tr>
+
+                {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
 
 </div>
-</div>
+
 
 </div>
 <script>
@@ -369,6 +379,96 @@ window.addEventListener("load", () => {
         btn.innerHTML = "▶";
     }
 });
+</script>
+
+
+<div class="vendas-accordions">
+
+<script>
+
+function toggleAccordion(id){
+
+
+
+    const area = document.getElementById("acc-geral");
+
+    const aberto = area.classList.contains("open");
+
+
+
+    if(aberto){
+
+        area.classList.remove("open");
+
+        document.querySelectorAll(".accordion-card").forEach(c => c.classList.remove("open"));
+
+    }else{
+
+        area.classList.add("open");
+
+        document.querySelectorAll(".accordion-card").forEach(c => c.classList.add("open"));
+
+    }
+
+    
+
+
+    lucide.createIcons();
+
+}
+
+
+</script>
+
+
+
+    <!-- seus 3 accordion-card aqui -->
+
+    <div class="accordion-content accordion-geral" id="acc-geral">
+        <div class="accordion-geral-grid">
+            <div>
+                <h4>Bonificações</h4>
+                <p><b>Meta geral:</b> 0,30% + R$200</p>
+                <p><b>Todos produtos:</b> R$300</p>
+                <p><b>10% acima:</b> R$200</p>
+            </div>
+
+            <div>
+                <h4>Campanhas</h4>
+                <p>Novo acima de R$100.000 → R$150</p>
+                <p>Portabilidade acima de R$100.000 → R$80</p>
+            </div>
+
+            <div>
+                <h4>Tabelas Especiais</h4>
+                <p>Portabilidades: 50% saldo / 50% líquido Refin</p>
+                <p>Compra dívida: até 71 anos / 50% quando tirar parte da comissão</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+function toggleAccordion(){
+
+    const area = document.getElementById("acc-geral");
+
+    if(!area) return;
+
+    area.classList.toggle("open");
+
+    document.querySelectorAll(".accordion-card").forEach(card => {
+        card.classList.toggle("open");
+    });
+
+    lucide.createIcons();
+}
+</script>
+
+<script>
+lucide.createIcons();
 </script>
 </body>
 </html>

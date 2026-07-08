@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="{{ tema }}">
 
 <head>
 <meta charset="UTF-8">
 <title>Auditoria</title>
-
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}">
+<script src="https://unpkg.com/lucide@latest"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -12,46 +13,58 @@
 <body>
 <div class="sidebar" id="sidebar">
 
-<button class="toggle-btn" onclick="toggleSidebar()">◀</button>
+    <button class="toggle-btn sidebar-toggle" onclick="toggleSidebar()" title="Recolher menu">
+        <i data-lucide="panel-left-close"></i>
+    </button>
 
-<a href="/home">
-    <span class="icon">🏠</span>
-    <span class="text">Home</span>
-</a>
+    <a href="/home"
+       class="{% if pagina_ativa == 'home' %}active{% endif %}">
+        <i data-lucide="home"></i>
+        <span class="text">Home</span>
+    </a>
 
-{% if tipo|lower|trim in ["master","adm","admin"] %}
-<a href="/admin?aba=usuarios">
-    <span class="icon">👤</span>
-    <span class="text">Usuários</span>
-</a>
-{% if tipo|lower|trim == "master" %}
-<a href="/admin?aba=comissoes">
-    <span class="icon">💰</span>
-    <span class="text">Comissões</span>
-</a>
-{% endif %}
+    {% if tipo|lower|trim in ["master","adm","admin"] %}
 
-<a href="/admin?aba=avisos">
-    <span class="icon">📢</span>
-    <span class="text">Avisos</span>
-</a>
+    <a href="/admin?aba=usuarios"
+       class="{% if pagina_ativa == 'usuarios' %}active{% endif %}">
+        <i data-lucide="users"></i>
+        <span class="text">Usuários</span>
+    </a>
 
-<a href="/admin?aba=metas">
-    <span class="icon">⚙️</span>
-    <span class="text">Metas</span>
-</a>
+    {% if tipo|lower|trim == "master" %}
+    <a href="/admin?aba=comissoes"
+       class="{% if pagina_ativa == 'comissoes' %}active{% endif %}">
+        <i data-lucide="badge-dollar-sign"></i>
+        <span class="text">Comissões</span>
+    </a>
+    {% endif %}
 
-<a href="/auditoria" class="active">
-    <span class="icon">📋</span>
-    <span class="text">Auditoria</span>
-</a>
+    <a href="/admin?aba=avisos"
+       class="{% if pagina_ativa == 'avisos' %}active{% endif %}">
+        <i data-lucide="megaphone"></i>
+        <span class="text">Avisos</span>
+    </a>
 
-{% endif %}
+    <a href="/admin?aba=metas"
+       class="{% if pagina_ativa == 'metas' %}active{% endif %}">
+        <i data-lucide="target"></i>
+        <span class="text">Metas</span>
+    </a>
 
-<a href="/logout">
-    <span class="icon">🚪</span>
-    <span class="text">Sair</span>
-</a>
+    <div class="sidebar-divider"></div>
+
+    <a href="/auditoria"
+       class="{% if pagina_ativa == 'auditoria' %}active{% endif %}">
+        <i data-lucide="clipboard-list"></i>
+        <span class="text">Auditoria</span>
+    </a>
+
+    {% endif %}
+
+    <a href="/logout">
+        <i data-lucide="log-out"></i>
+        <span class="text">Sair</span>
+    </a>
 
 </div>
 
@@ -175,6 +188,8 @@ function toggleSidebar() {
         : "◀";
 }
 </script>
-
+<script>
+lucide.createIcons();
+</script>
 </body>
 </html>

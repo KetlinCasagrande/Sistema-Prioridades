@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="{{ tema }}">
 
 <head>
 
 <meta charset="UTF-8">
 <title>Login</title>
-
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}">
+<script src="https://unpkg.com/lucide@latest"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -259,7 +260,7 @@ LOADING
     <!-- ESQUERDA -->
     <div class="login-left">
 
-        <h1>K+</h1>
+        <h1></h1>
 
         <h2>
            Seu centro de operações.
@@ -282,14 +283,61 @@ LOADING
             <form method="POST">
 
                 <div class="form-group">
-                    <label>Usuário</label>
-                    <input type="text" name="usuario" required>
+
+                <label>CPF</label>
+
+                <input
+                    type="text"
+                    name="cpf"
+                    id="cpf"
+                    maxlength="14"
+                    placeholder="000.000.000-00"
+                    required>
+
+            </div>
+              <div class="form-group">
+
+                <label>Senha</label>
+
+                <div class="senha-wrap">
+
+                    <input
+                        type="password"
+                        name="senha"
+                        id="senha"
+                        required>
+
+                    <button
+                        type="button"
+                        class="btn-olho"
+                        onclick="toggleSenha()">
+
+                        <i id="icone-senha" data-lucide="eye"></i>
+
+                    </button>
+
                 </div>
 
-                <div class="form-group">
-                    <label>Senha</label>
-                    <input type="password" name="senha" required>
-                </div>
+        </div>
+<div class="login-opcoes">
+
+    <label class="lembrar">
+
+        <input type="checkbox" id="lembrarCpf">
+
+        Lembrar CPF
+
+    </label>
+
+    <button type="button"
+        class="esqueci-senha"
+        onclick="abrirModalRecuperacao()">
+    Esqueci minha senha
+    </button>
+
+</div>
+
+
 
                 <button class="btn-login" type="submit">
                     Entrar
@@ -306,7 +354,49 @@ LOADING
     </div>
 
 </div>
+{% if recuperacao == "enviada" %}
+<div class="sucesso-recuperacao">
+    Se existir um cadastro ativo com esse CPF, enviaremos um link de recuperação para o e-mail cadastrado.
+</div>
+{% endif %}
 
+<div id="modal-recuperacao" class="modal-recuperacao">
+
+    <div class="modal-card">
+
+        <h3>Recuperar senha</h3>
+
+        <p>Informe seu CPF para receber um link de redefinição no e-mail cadastrado.</p>
+
+        <form method="POST" action="/esqueci-senha">
+
+            <div class="form-group">
+                <label>CPF</label>
+                <input type="text"
+                       name="cpf"
+                       id="cpf-recuperacao"
+                       maxlength="14"
+                       placeholder="000.000.000-00"
+                       required>
+            </div>
+
+            <div class="modal-acoes">
+                <button type="button"
+                        class="btn-cancelar-modal"
+                        onclick="fecharModalRecuperacao()">
+                    Cancelar
+                </button>
+
+                <button type="submit" class="btn-login">
+                    Enviar link
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
 <!-- LOADING -->
 <div id="loading-overlay">
     <div class="loader-card">
@@ -329,8 +419,73 @@ document.querySelector("form").addEventListener("submit", function(){
     document.body.style.opacity = "0.3";
     document.body.style.filter = "blur(6px)";
 });
-</script>
 
+// Mostrar senha
+function toggleSenha(){
+
+    const campo = document.getElementById("senha");
+    const icone = document.getElementById("icone-senha");
+
+    if(campo.type === "password"){
+        campo.type = "text";
+        icone.setAttribute("data-lucide","eye-off");
+    }else{
+        campo.type = "password";
+        icone.setAttribute("data-lucide","eye");
+    }
+
+    lucide.createIcons();
+}
+// Máscara CPF
+const cpf = document.getElementById("cpf");
+
+cpf.addEventListener("input",function(){
+
+    let v = this.value.replace(/\D/g,'');
+
+    v = v.replace(/(\d{3})(\d)/,"$1.$2");
+    v = v.replace(/(\d{3})(\d)/,"$1.$2");
+    v = v.replace(/(\d{3})(\d{1,2})$/,"$1-$2");
+
+    this.value = v;
+
+});
+
+
+function abrirModalRecuperacao(){
+    document.getElementById("modal-recuperacao").style.display = "flex";
+}
+
+function fecharModalRecuperacao(){
+    document.getElementById("modal-recuperacao").style.display = "none";
+}
+
+// Lembrar CPF
+const salvo = localStorage.getItem("cpfLogin");
+
+if(salvo){
+
+    cpf.value = salvo;
+
+    document.getElementById("lembrarCpf").checked = true;
+}
+
+document.querySelector("form").addEventListener("submit",function(){
+
+    if(document.getElementById("lembrarCpf").checked){
+
+        localStorage.setItem("cpfLogin",cpf.value);
+
+    }else{
+
+        localStorage.removeItem("cpfLogin");
+    }
+
+});
+</script>
+<script>
+lucide.createIcons();
+</script>
 </body>
 </html>
 </div>

@@ -27,7 +27,25 @@
   </tr>
   {% endfor %}
 </table>
+<div class="filtro-metas">
+    <select id="filtroVendedora" onchange="filtrarMetasPorVendedora()">
+        <option value="">👥 Todas as vendedoras</option>
 
+        {% for u in usuarios %}
+            {% if u["tipo"] == "vendedora" %}
+                <option value="{{ u['usuario']|lower }}">
+                    {{ u["usuario"] }}
+                </option>
+            {% endif %}
+        {% endfor %}
+    </select>
+
+    <button type="button"
+            class="btn btn-roxo"
+            onclick="limparFiltroMetas()">
+        Limpar
+    </button>
+</div>
 <h2>👩‍💼 Metas por Usuário</h2>
 
 <table border="1">

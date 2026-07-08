@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="{{ tema }}">
 <head>
     <meta charset="UTF-8">
 
     <title>{% block titulo %}{% endblock %}</title>
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
 </head>
@@ -62,50 +63,73 @@ function toggleSidebar() {
 </head>
 
 <body>
-
 <div class="sidebar" id="sidebar">
 
-<button class="toggle-btn" onclick="toggleSidebar()">◀</button>
+    <button class="toggle-btn sidebar-toggle" onclick="toggleSidebar()" title="Recolher menu">
+    <i data-lucide="panel-left-close"></i>
+    </button>
 
-<a href="/home">
-    <span class="icon">🏠</span>
+<a href="/home" >
+    <i data-lucide="home"></i>
     <span class="text">Home</span>
 </a>
 
+{% if tipo == "user" %}
+<a href="/vendas">
+    <i data-lucide="circle-dollar-sign"></i>
+    <span class="text">Produção</span>
+</a>
+{% endif %}
 
-{% if tipo|lower|trim in ["master","adm","admin"] %}
+<a href="/compra-divida/clientes">
+    <i data-lucide="calculator"></i>
+    <span class="text">Compras</span>
+</a>
 
-<a href="#" class="menu-admin active" data-menu="usuarios" onclick="abrir('usuarios')">
-    <span class="icon">👤</span>
-    <span class="text">Usuários</span>
+<a href="/termos">
+    <i data-lucide="file-text"></i>
+    <span class="text">Gerar Termo</span>
+</a>
+
+<a href="/termos/historico">
+    <i data-lucide="files"></i>
+    <span class="text">Termos</span>
+</a>
+
+<a href="/bancos">
+    <i data-lucide="building-2"></i>
+    <span class="text">Bancos</span>
+</a>
+
+<a href="/clt">
+    <i data-lucide="briefcase-business"></i>
+    <span class="text">CLT</span>
+</a>
+
+<a href="/inss">
+    <i data-lucide="badge-dollar-sign"></i>
+    <span class="text">INSS</span>
+</a>
+
+<a href="/fgts">
+    <i data-lucide="lock-keyhole"></i>
+    <span class="text">FGTS</span>
+</a>
+
+<a href="/compra-divida">
+    <i data-lucide="landmark"></i>
+    <span class="text">Compra</span>
 </a>
 
 {% if tipo in ["master", "adm"] %}
-<a href="/termos/historico">
-    <span class="icon">📚</span>
-    <span class="text">Histórico de Termos</span>
+<a href="/admin">
+    <i data-lucide="settings"></i>
+    <span class="text">Admin</span>
 </a>
-{% endif %}
-
-<a href="#" class="menu-admin" data-menu="comissoes" onclick="abrir('comissoes')">
-    <span class="icon">💰</span>
-    <span class="text">Comissões</span>
-</a>
-
-<a href="#" class="menu-admin" data-menu="avisos" onclick="abrir('avisos')">
-    <span class="icon">📢</span>
-    <span class="text">Avisos</span>
-</a>
-
-<a href="#" class="menu-admin" data-menu="metas" onclick="abrir('metas')">
-    <span class="icon">⚙️</span>
-    <span class="text">Metas</span>
-</a>
-
 {% endif %}
 
 <a href="/logout">
-    <span class="icon">🚪</span>
+    <i data-lucide="log-out"></i>
     <span class="text">Sair</span>
 </a>
 
@@ -126,6 +150,8 @@ function toggleSidebar() {
     {% endwith %}
 
 </div>
-
+<script>
+lucide.createIcons();
+</script>
 </body>
 </html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-theme="{{ tema }}">
+<head>
+<meta charset="UTF-8">
+<title>Home Vendas</title>
+
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+
+</head>
+
+<body>
+<div class="sidebar" id="sidebar">
+
+    <button class="toggle-btn sidebar-toggle" onclick="toggleSidebar()" title="Recolher menu">
+    <i data-lucide="panel-left-close"></i>
+    </button>
+
+<a href="/home" class="active">
+    <i data-lucide="home"></i>
+    <span class="text">Home</span>
+</a>
+
+{% if tipo == "user" %}
+<a href="/vendas">
+    <i data-lucide="circle-dollar-sign"></i>
+    <span class="text">Produção</span>
+</a>
+{% endif %}
+<a href="/compra-divida/clientes">
+    <i data-lucide="calculator"></i>
+    <span class="text">Compras</span>
+</a>
+
+<a href="/termos">
+    <i data-lucide="file-text"></i>
+    <span class="text">Gerar Termo</span>
+</a>
+
+<a href="/termos/historico">
+    <i data-lucide="files"></i>
+    <span class="text">Termos</span>
+</a>
+
+<a href="/bancos">
+    <i data-lucide="building-2"></i>
+    <span class="text">Bancos</span>
+</a>
+
+<a href="/clt">
+    <i data-lucide="briefcase-business"></i>
+    <span class="text">CLT</span>
+</a>
+
+<a href="/inss">
+    <i data-lucide="badge-dollar-sign"></i>
+    <span class="text">INSS</span>
+</a>
+
+<a href="/fgts">
+    <i data-lucide="lock-keyhole"></i>
+    <span class="text">FGTS</span>
+</a>
+
+<a href="/compra-divida">
+    <i data-lucide="landmark"></i>
+    <span class="text">Compra</span>
+</a>
+
+{% if tipo in ["master", "adm"] %}
+<a href="/admin">
+    <i data-lucide="settings"></i>
+    <span class="text">Admin</span>
+</a>
+{% endif %}
+
+<a href="/logout">
+    <i data-lucide="log-out"></i>
+    <span class="text">Sair</span>
+</a>
+
+</div>
+
+<div class="conteudo">
+<div class="page">
+
+    <div class="topo">
+        <div>
+            <h1>👋 Olá, {{ usuario }}!</h1>
+            <span>Seu painel de vendas do mês {{ competencia_atual }}</span>
+        </div>
+
+<div class="theme-picker">
+    <button type="button" class="theme-toggle" onclick="toggleThemePicker()"></button>
+
+<div class="theme-options" id="themeOptions">
+
+    <button class="theme-dot rose"
+            onclick="setTheme('rose')"
+            title="Rosé"></button>
+
+    <button class="theme-dot ruby"
+            onclick="setTheme('ruby')"
+            title="Ruby"></button>
+
+    <button class="theme-dot ice"
+            onclick="setTheme('ice')"
+            title="Ice"></button>
+
+    <button class="theme-dot graphite"
+            onclick="setTheme('graphite')"
+            title="Graphite"></button>
+
+    <button class="theme-dot coffee"
+            onclick="setTheme('coffee')"
+            title="Coffee"></button>
+
+    <button class="theme-dot midnight"
+            onclick="setTheme('midnight')"
+            title="Midnight"></button>
+
+    <button class="theme-dot sage"
+            onclick="setTheme('sage')"
+            title="Sage"></button>
+
+    <button class="theme-dot lavender"
+            onclick="setTheme('lavender')"
+            title="Lavender"></button>
+
+    <button class="theme-dot amber"
+            onclick="setTheme('amber')"
+            title="Amber"></button>
+
+</div>
+</div>
+
+    </div>
+
+    <!-- AVISOS -->
+    <div class="box-compra home-destaque">
+        <h2><i data-lucide="megaphone"></i>Avisos importantes</h2>
+
+        {% if avisos|length == 0 %}
+        <div class="sem-metas">Nenhum aviso no momento.</div>
+        {% endif %}
+
+        {% for aviso in avisos %}
+        <div class="aviso-home-vendas">
+            <strong>{{ aviso["titulo"] }}</strong>
+            <p>{{ aviso["mensagem"] }}</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    
+
+    <!-- ATALHOS -->
+    <div class="box-compra">
+        <h2><i data-lucide="zap"></i>Ações rápidas</h2>
+
+        <div class="atalhos-vendas">
+
+            <a href="/vendas" class="atalho-vendas-card">
+                
+                <strong>Lançar venda</strong>
+                <p>Registrar nova produção</p>
+            </a>
+
+            <a href="/compra-divida/clientes" class="atalho-vendas-card">
+                
+                <strong>Compra de dívida</strong>
+                <p>Acompanhar clientes</p>
+            </a>
+
+            <a href="/termos" class="atalho-vendas-card">
+                
+                <strong>Gerar termo</strong>
+                <p>Criar termo oficial</p>
+            </a>
+
+            <a href="/bancos" class="atalho-vendas-card">
+                
+                <strong>Bancos</strong>
+                <p>Acessos e links internos</p>
+            </a>
+
+        </div>
+    </div>
+
+    <!-- META MINI -->
+    <div class="meta-mini-home">
+
+        <div>
+            <span> Meta</span>
+            <strong>R$ {{ "%.2f"|format(meta_total or 0) }}</strong>
+        </div>
+
+        <div>
+            <span> Vendido</span>
+            <strong>R$ {{ "%.2f"|format(vendido_total or 0) }}</strong>
+        </div>
+
+        <div>
+            <span> Falta</span>
+            <strong>R$ {{ "%.2f"|format(falta_total or 0) }}</strong>
+        </div>
+
+    </div>
+
+    <div class="barra-meta-home">
+        <div style="width: {{ percentual_barra }}%;"></div>
+    </div>
+
+    <!-- GRID RANKING + CLIENTES -->
+<div class="grid-home-vendas">
+<div class="box-compra ranking-compacto">
+
+
+   <h2><i data-lucide="trophy"></i>Rank atual</h2>
+
+{% if ranking_vendedoras|length == 0 %}
+<div class="sem-metas">
+    Nenhuma venda lançada ainda.
+</div>
+{% endif %}
+
+{% for r in ranking_vendedoras[:3] %}
+<div class="ranking-limpo {% if r['usuario'] == usuario %}ranking-eu{% endif %}">
+
+    <div class="ranking-posicao">
+        {% if loop.index == 1 %}
+            🥇
+        {% elif loop.index == 2 %}
+            🥈
+        {% elif loop.index == 3 %}
+            🥉
+        {% endif %}
+    </div>
+
+    <div class="ranking-nome">
+        <strong>{{ r["usuario"] }}</strong>
+        {% if r["usuario"] == usuario %}
+            <span>Você</span>
+        {% endif %}
+    </div>
+
+</div>
+{% endfor %}
+
+</div>
+
+       <div class="box-compra compras-compactas">
+    <div class="home-vendas-section-topo">
+        <h2>
+    <i data-lucide="credit-card"></i>Compras em andamento</h2>
+
+        <a href="/compra-divida/clientes" class="btn btn-roxo btn-mini">
+            Ver todas
+        </a>
+    </div>
+   
+
+    {% if clientes_compra|length == 0 %}
+    <div class="sem-metas">Nenhuma compra em andamento.</div>
+    {% endif %}
+
+    <div class="lista-compras-compacta">
+        {% for c in clientes_compra %}
+        <div class="compra-compacta-item">
+            <span>👤 {{ c["nome"] }}</span>
+
+            <a href="/compra-divida/cliente/{{ c['id'] }}">
+                Abrir →
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+    
+
+<script>
+function toggleSidebar() {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    sidebar.classList.toggle("closed");
+
+    if (conteudo) {
+        conteudo.classList.toggle("sidebar-fechada");
+    }
+
+    localStorage.setItem(
+        "sidebarFechada",
+        sidebar.classList.contains("closed")
+    );
+
+    btn.innerHTML = sidebar.classList.contains("closed")
+    ? '<i data-lucide="panel-left-open"></i>'
+    : '<i data-lucide="panel-left-close"></i>';
+
+lucide.createIcons();
+}
+
+window.addEventListener("load", () => {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    if(localStorage.getItem("sidebarFechada") === "true"){
+
+        sidebar.classList.add("closed");
+
+        if(conteudo){
+            conteudo.classList.add("sidebar-fechada");
+        }
+
+        btn.innerHTML = '<i data-lucide="panel-left-open"></i>';
+        lucide.createIcons();
+    }
+});
+</script>
+<script>
+lucide.createIcons();
+</script>
+
+<script>
+function toggleThemePicker(){
+    document.getElementById("themeOptions").classList.toggle("open");
+}
+
+function setTheme(tema){
+
+    document.documentElement.setAttribute("data-theme", tema);
+
+    console.log(document.documentElement.outerHTML);
+
+    fetch("/salvar-tema",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/x-www-form-urlencoded"
+        },
+        body:"tema="+tema
+    });
+
+}
+print("Tema na sessão:", session.get("tema"))
+    document.getElementById("themeOptions").classList.remove("open");
+
+</script>
+
+<script>
+lucide.createIcons();
+</script>
+
+</body>
+</html>

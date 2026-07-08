@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="{{ tema }}">
 
 <head>
 <meta charset="UTF-8">
 <title>Painel ADM</title>
-
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}">
+<script src="https://unpkg.com/lucide@latest"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
 
@@ -149,58 +150,71 @@ function selecionarTodos(master) {
 
 <div class="sidebar" id="sidebar">
 
-<button class="toggle-btn" onclick="toggleSidebar()">◀</button>
+    <button class="toggle-btn sidebar-toggle" onclick="toggleSidebar()" title="Recolher menu">
+        <i data-lucide="panel-left-close"></i>
+    </button>
 
-<a href="/home">
-    <span class="icon">🏠</span>
-    <span class="text">Home</span>
-</a>
-
-
-{% if tipo|lower|trim in ["master","adm","admin"] %}
-
-<a href="#" class="menu-admin active" data-menu="usuarios" onclick="abrir('usuarios')">
-    <span class="icon">👤</span>
-    <span class="text">Usuários</span>
-</a>
-
-{% if tipo|lower|trim == "master" %}
-<a href="#" class="menu-admin" data-menu="comissoes" onclick="abrir('comissoes')">
-    <span class="icon">💰</span>
-    <span class="text">Comissões</span>
-</a>
-{% endif %}
-
-<a href="#" class="menu-admin" data-menu="avisos" onclick="abrir('avisos')">
-    <span class="icon">📢</span>
-    <span class="text">Avisos</span>
-</a>
-
-<a href="#" class="menu-admin" data-menu="metas" onclick="abrir('metas')">
-    <span class="icon">⚙️</span>
-    <span class="text">Metas</span>
-</a>
-
-{% endif %}
-
-<a href="/auditoria">
-    <span class="icon">📋</span>
-    <span class="text">Auditoria</span>
+    <a href="/home"
+       class="{% if pagina_ativa == 'home' %}active{% endif %}">
+        <i data-lucide="home"></i>
+        <span class="text">Home</span>
     </a>
 
-<a href="/logout">
-    <span class="icon">🚪</span>
-    <span class="text">Sair</span>
-</a>
+    {% if tipo|lower|trim in ["master","adm","admin"] %}
+
+    <a href="/admin?aba=usuarios"
+       class="{% if pagina_ativa == 'usuarios' %}active{% endif %}">
+        <i data-lucide="users"></i>
+        <span class="text">Usuários</span>
+    </a>
+
+    {% if tipo|lower|trim == "master" %}
+    <a href="/admin?aba=comissoes"
+       class="{% if pagina_ativa == 'comissoes' %}active{% endif %}">
+        <i data-lucide="badge-dollar-sign"></i>
+        <span class="text">Comissões</span>
+    </a>
+    {% endif %}
+
+    <a href="/admin?aba=avisos"
+       class="{% if pagina_ativa == 'avisos' %}active{% endif %}">
+        <i data-lucide="megaphone"></i>
+        <span class="text">Avisos</span>
+    </a>
+
+    <a href="/admin?aba=metas"
+       class="{% if pagina_ativa == 'metas' %}active{% endif %}">
+        <i data-lucide="target"></i>
+        <span class="text">Metas</span>
+    </a>
+
+    <div class="sidebar-divider"></div>
+
+    <a href="/auditoria"
+       class="{% if pagina_ativa == 'auditoria' %}active{% endif %}">
+        <i data-lucide="clipboard-list"></i>
+        <span class="text">Auditoria</span>
+    </a>
+
+    {% endif %}
+
+    <a href="/logout">
+        <i data-lucide="log-out"></i>
+        <span class="text">Sair</span>
+    </a>
 
 </div>
-
 <div class="conteudo">
 <div class="page">
 
-<div class="topo">
-    <h1>Painel Administrativo</h1>
-    <span>Sistema Interno Bancário</span>
+<div class="topo admin-topo">
+    <div>
+        <h1>
+            <i data-lucide="settings"></i>
+            Painel Administrativo
+        </h1>
+        <span>Gerencie usuários, metas, comissões e avisos do sistema.</span>
+    </div>
 </div>
 
 <!-- ========================= USUÁRIOS ========================= -->
@@ -208,56 +222,162 @@ function selecionarTodos(master) {
 
     <div class="box">
 
-        <h2>Usuários</h2>
+        <div class="admin-section-title">
+    <div>
+        <h2>
+            <i data-lucide="users"></i>
+            Gestão de Usuários
+        </h2>
+        <p>Cadastre, edite e organize os acessos do sistema.</p>
+    </div>
+</div>
 
-        <form method="POST" action="/admin/usuario/criar" class="top-form">
-            <input name="usuario" placeholder="Usuário">
-            <input type="password" name="senha" placeholder="Senha">
+<form method="POST" action="/admin/usuario/criar" class="admin-user-form admin-user-form-completo">
 
-            <select name="tipo">
-                <option value="user">user</option>
-                {% if tipo|lower|trim == "master" %}
-                <option value="adm">adm</option>
-                <option value="master">master</option>
-                {% endif %}
-            </select>
+    <div>
+        <label>Nome</label>
+        <input name="usuario" placeholder="Ex: Kétlin" required>
+    </div>
 
-            <button class="btn btn-roxo">Criar</button>
-        </form>
+    <div>
+        <label>CPF</label>
+        <input name="cpf" placeholder="000.000.000-00">
+    </div>
 
+    <div>
+        <label>E-mail</label>
+        <input type="email" name="email" placeholder="email@exemplo.com">
+    </div>
+
+    <div>
+        <label>Senha inicial</label>
+        <input type="password" name="senha" placeholder="Digite uma senha" required>
+    </div>
+
+    <div>
+        <label>Tipo</label>
+        <select name="tipo" required>
+        <option value="user">Vendedora</option>
+
+        {% if tipo|lower|trim == "master" %}
+        <option value="adm">Administrador</option>
+        <option value="master">Master</option>
+        {% endif %}
+    </select>
+    </div>
+
+    <div class="admin-user-action">
+        <button class="btn-criar-usuario">
+            <i data-lucide="user-plus"></i>
+            Criar
+        </button>
+    </div>
+
+</form>
         <div class="table-wrapper">
 
             <table>
                 <tr>
                     <th>Usuário</th>
+                    <th>CPF</th>
+                    <th>E-mail</th>
                     <th>Tipo</th>
+                    <th>Status</th>
                     <th>Ações</th>
                 </tr>
 
-                {% for u in usuarios %}
-                <tr>
-                    <td>{{ u["usuario"] }}</td>
-                    <td>{{ u["tipo"] }}</td>
+             {% for u in usuarios %}
 
-                    <td class="acoes">
+<tr id="linha-view-{{ u['id'] }}" class="linha-view-user">
 
-                        <form method="POST" action="/admin/usuario/editar/{{ u['id'] }}">
-                            <input name="usuario" value="{{ u['usuario'] }}">
-                            <select name="tipo">
-                                <option value="user">user</option>
-                                <option value="adm">adm</option>
-                                <option value="master">master</option>
-                            </select>
-                            <button class="btn btn-verde">Salvar</button>
-                        </form>
+    <td>{{ u["usuario"] }}</td>
 
-                        <a class="btn btn-vermelho" href="/admin/usuario/deletar/{{ u['id'] }}">
-                            Excluir
-                        </a>
+    <td>{{ u["cpf"] or "—" }}</td>
 
-                    </td>
-                </tr>
-                {% endfor %}
+    <td>{{ u["email"] or "—" }}</td>
+
+    <td>
+        <span class="badge-tipo">{{ u["tipo"] }}</span>
+    </td>
+
+    <td>
+        {% if u["ativo"] == 1 %}
+            <span class="badge-ativo">Ativo</span>
+        {% else %}
+            <span class="badge-inativo">Inativo</span>
+        {% endif %}
+    </td>
+
+    <td class="acoes">
+        <button type="button"
+                class="btn-editar-user"
+                onclick="editarUsuario('{{ u['id'] }}')">
+            <i data-lucide="pencil"></i>
+            Editar
+        </button>
+
+        <a class="btn-excluir-user"
+           href="/admin/usuario/deletar/{{ u['id'] }}"
+           onclick="return confirm('Deseja excluir este usuário?')">
+            <i data-lucide="trash-2"></i>
+            Excluir
+        </a>
+    </td>
+
+</tr>
+
+<tr id="linha-edit-{{ u['id'] }}" class="linha-edit-user" style="display:none;">
+
+    <form method="POST" action="/admin/usuario/editar/{{ u['id'] }}">
+
+        <td>
+            <input name="usuario" value="{{ u['usuario'] }}">
+        </td>
+
+        <td>
+            <input name="cpf" value="{{ u['cpf'] or '' }}" placeholder="CPF">
+        </td>
+
+        <td>
+            <input name="email" value="{{ u['email'] or '' }}" placeholder="E-mail">
+        </td>
+
+        <td>
+            <select name="tipo">
+                <option value="user" {% if u["tipo"] == "user" %}selected{% endif %}>Vendedora</option>
+
+                {% if tipo|lower|trim == "master" %}
+                <option value="adm" {% if u["tipo"] == "adm" %}selected{% endif %}>Administrador</option>
+                <option value="master" {% if u["tipo"] == "master" %}selected{% endif %}>Master</option>
+                {% endif %}
+            </select>
+        </td>
+
+        <td>
+            <select name="ativo">
+                <option value="1" {% if u["ativo"] == 1 %}selected{% endif %}>Ativo</option>
+                <option value="0" {% if u["ativo"] == 0 %}selected{% endif %}>Inativo</option>
+            </select>
+        </td>
+
+        <td class="acoes">
+            <button class="btn-salvar-user" type="submit">
+                <i data-lucide="save"></i>
+                Salvar
+            </button>
+
+            <button type="button"
+                    class="btn-cancelar-user"
+                    onclick="cancelarEditarUsuario('{{ u['id'] }}')">
+                Cancelar
+            </button>
+        </td>
+
+    </form>
+
+</tr>
+
+{% endfor %}
             </table>
 
         </div>
@@ -269,197 +389,517 @@ function selecionarTodos(master) {
 <!-- ========================= METAS ========================= -->
 <div id="metas" class="conteudo-admin" style="display:none;">
 
-    <h2>📊 Metas das Vendedoras</h2>
+    <div class="metas-header">
+        <div class="metas-icon">🎯</div>
+        <div>
+            <h2>Metas das Vendedoras</h2>
+            <p>Gerencie as metas mensais por vendedora e produto.</p>
+        </div>
+    </div>
 
-    <form method="POST" action="/admin/adicionar-meta" class="form-meta">
+    <!-- CARD FILTRO -->
+    <div class="metas-card">
+        <h3>🔎 Filtrar metas</h3>
 
-        <select name="usuario_id" required>
-            <option value="">Selecione a vendedora</option>
-            {% for u in usuarios %}
-            <option value="{{ u['id'] }}">{{ u["usuario"] }}</option>
-            {% endfor %}
-        </select>
+        <form method="GET" action="/admin" class="metas-grid-form">
 
-        <input type="text" name="produto" placeholder="Produto" required>
-        <input type="number" step="0.01" name="meta" placeholder="Meta" required>
-       <button type="submit" class="btn btn-roxo">
-    ➕ Adicionar
-</button>
+            <input type="hidden" name="aba" value="metas">
 
-    </form>
+            <div>
+                <label>Competência</label>
+                <input
+                    type="month"
+                    name="competencia"
+                    value="{{ competencia_filtro or competencia_atual }}">
+                </div>
 
-    <table class="tabela-metas tabela-metas-moderna">
-
-        <tr>
-            <th>Usuário</th>
-            <th>Produto</th>
-            <th>Meta</th>
-            <th>Ação</th>
-        </tr>
-
-        {% for m in metas_usuarios %}
-<tr>
-
-    <td>
-        <strong>{{ m["usuario"] }}</strong>
-    </td>
-
-    <td>
-        <span class="badge-produto-meta">
-            {{ m["produto"] }}
-        </span>
-    </td>
-
-    <td>
-        <form method="POST"
-              action="/admin/salvar-meta-vendedora"
-              class="form-meta-linha">
-
-            <input type="hidden" name="id" value="{{ m['id'] }}">
-
-            <div class="input-money-wrap">
-            <span>R$</span>
-
-            <input
-                type="text"
-                name="meta"
-                value="{{ '{:,.2f}'.format(m['meta']|float).replace(',', 'X').replace('.', ',').replace('X', '.') }}"
-                class="input-meta input-money">
+            <div>
+                <label>Vendedora</label>
+                <select name="usuario_id">
+                    <option value="">Todas as vendedoras</option>
+                    {% for u in usuarios %}
+                    <option value="{{ u['id'] }}"
+                        {% if usuario_filtro|string == u['id']|string %}selected{% endif %}>
+                        {{ u["usuario"] }}
+                    </option>
+                    {% endfor %}
+                </select>
             </div>
 
-            <button class="btn btn-verde btn-acao-mini" title="Salvar">
-                💾
-            </button>
+            <div class="metas-botoes">
+                <button type="submit" class="btn btn-roxo">
+                    🔍 Filtrar
+                </button>
+
+                <a href="/admin?aba=metas" class="btn btn-limpar">
+                    Limpar
+                </a>
+            </div>
 
         </form>
-    </td>
+    </div>
+    <!-- CARD ADICIONAR -->
+    <div class="metas-card">
+        <h3>➕ Adicionar nova meta</h3>
 
-    <td class="acoes-meta">
-        <a class="btn btn-vermelho btn-acao-mini"
-           title="Excluir"
-           href="/admin/meta/deletar/{{ m['id'] }}?next={{ request.full_path }}"
-           onclick="return confirm('Deseja excluir esta meta?')">
-            🗑
-        </a>
-    </td>
+        <form method="POST" action="/admin/adicionar-meta" class="metas-grid-form metas-grid-add">
+<div>
+    <label>Competência</label>
+    <input
+        type="month"
+        name="competencia"
+        value="{{ competencia_filtro or competencia_atual }}"
+        required>
 
-</tr>
-{% endfor %}
+           
+    <label>Vendedora</label>
 
-    </table>
+
+    <select name="usuario_id" required>
+        <option value="">Selecione a vendedora</option>
+
+        {% for u in usuarios %}
+            {% if u["tipo"] == "user" %}
+            <option value="{{ u['id'] }}"
+                {% if usuario_filtro|string == u['id']|string %}selected{% endif %}>
+                {{ u["usuario"] }}
+            </option>
+            {% endif %}
+        {% endfor %}
+    </select>
+</div>
+
+            <div>
+                <label>Produto</label>
+                <input type="text" name="produto" placeholder="Digite o produto" required>
+            </div>
+
+            <div>
+                <label>Meta (R$)</label>
+                <input type="number" step="0.01" name="meta" placeholder="0,00" required>
+            </div>
+
+            <div class="metas-botoes">
+                <button type="submit" class="btn btn-roxo">
+                    ➕ Adicionar
+                </button>
+            </div>
+
+        </form>
+
+        {% if not competencia_filtro %}
+        <p class="aviso-metas">
+            ⚠️ Selecione uma competência e uma vendedora no filtro antes de adicionar novas metas.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- CARD TABELA -->
+    <div class="metas-card metas-lista-card">
+
+        <div class="metas-lista-topo">
+            <h3>📊 Metas cadastradas</h3>
+
+            <div class="metas-tags">
+                <span>📅 {{ competencia_filtro or "Todas" }}</span>
+
+                {% if usuario_filtro %}
+                    {% for u in usuarios %}
+                        {% if usuario_filtro|string == u['id']|string %}
+                            <span>👩 {{ u["usuario"] }}</span>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <span>👥 Todas</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <table class="tabela-metas tabela-metas-moderna metas-table">
+
+            <thead>
+                <tr>
+                    {% if not usuario_filtro %}
+                    <th>Usuário</th>
+                    {% endif %}
+
+                    {% if not competencia_filtro %}
+                    <th>Competência</th>
+                    {% endif %}
+
+                    <th>Produto</th>
+                    <th>Meta</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for m in metas_usuarios %}
+                <tr>
+
+                    {% if not usuario_filtro %}
+                    <td>
+                        <strong>{{ m["usuario"] }}</strong>
+                    </td>
+                    {% endif %}
+
+                    {% if not competencia_filtro %}
+                    <td>
+                        <span class="badge-produto-meta">
+                            {{ m["competencia"] or "—" }}
+                        </span>
+                    </td>
+                    {% endif %}
+
+                    <td>
+                        <div class="produto-meta-cell">
+                            <span class="produto-bolinha">
+                                {{ m["produto"][0]|upper }}
+                            </span>
+
+                            <strong>{{ m["produto"] }}</strong>
+                        </div>
+                    </td>
+
+                    <td>
+                        <form method="POST"
+                              action="/admin/salvar-meta-vendedora"
+                              class="form-meta-linha">
+
+                            <input type="hidden" name="id" value="{{ m['id'] }}">
+                            <input type="hidden" name="competencia" value="{{ m['competencia'] }}">
+                            <input type="hidden" name="usuario_id" value="{{ m['usuario_id'] }}">
+
+                            <div class="input-money-wrap">
+                                <span>R$</span>
+
+                                <input
+                                    type="text"
+                                    name="meta"
+                                    value="{{ '{:,.2f}'.format(m['meta']|float).replace(',', 'X').replace('.', ',').replace('X', '.') }}"
+                                    class="input-meta input-money">
+                            </div>
+
+                            <button class="btn btn-verde btn-acao-mini" title="Salvar">
+                                💾
+                            </button>
+
+                        </form>
+                    </td>
+
+                    
+
+                    <td class="acoes-meta">
+                        <a class="btn btn-vermelho btn-acao-mini"
+                           title="Excluir"
+                           href="/admin/meta/deletar/{{ m['id'] }}"
+                           onclick="return confirm('Deseja excluir esta meta?')">
+                            🗑
+                        </a>
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+
+        {% if metas_usuarios|length == 0 %}
+        <div class="sem-metas">
+            Nenhuma meta encontrada para esse filtro.
+        </div>
+        {% endif %}
+
+<div class="metas-card">
+    <h3>📋 Clonar metas de outro mês</h3>
+
+    <form method="POST" action="/admin/clonar-metas" class="metas-grid-form">
+
+        <div>
+            <label>Copiar de</label>
+            <input type="month" name="competencia_origem" required>
+        </div>
+
+        <div>
+            <label>Copiar para</label>
+            <input
+                type="month"
+                name="competencia_destino"
+                value="{{ competencia_filtro or competencia_atual }}"
+                required>
+        </div>
+
+        <div class="metas-botoes">
+            <button type="submit" class="btn btn-roxo">
+                📋 Clonar metas
+            </button>
+        </div>
+
+    </form>
+</div>
+
+
+
+    </div>
 
 </div>
+
+
+
 <!-- ========================= COMISSÕES ========================= -->
 {% if tipo|lower|trim in ["master"] %}
 <div id="comissoes" class="admin-box" style="display:none;">
 
-    <div class="box">
+    <div class="box comissoes-page">
 
-        <h2>Comissões</h2>
+        <div class="comissoes-header">
+            <div>
+                <h2>
+                    <i data-lucide="badge-dollar-sign"></i>
+                    Gestão de Comissões
+                </h2>
 
-        <!-- IMPORTAÇÃO EXCEL -->
-    <form method="POST"
-    action="/admin/importar-excel"
-     enctype="multipart/form-data">
+                <p>
+                    Importe planilhas, gerencie tabelas e acompanhe todas as comissões do sistema.
+                </p>
+            </div>
 
-    <input type="file" name="arquivo" required>
+            <button type="button"
+                    class="btn-admin-primary"
+                    onclick="toggleNovaComissao()">
+                <i data-lucide="plus"></i>
+                Nova Comissão
+            </button>
+        </div>
 
-    <button type="submit" class="btn-importar">
-        📊 Importar Comissões
-    </button>
+        <!-- IMPORTAÇÃO / EXPORTAÇÃO -->
+        <div class="comissoes-toolbar">
 
-    <a href="/admin/comissoes/exportar" class="btn btn-verde">
-    📤 Exportar Comissões
-</a>
-    
-    </form>
+            <form method="POST"
+                  action="/admin/importar-excel"
+                  enctype="multipart/form-data"
+                  class="comissoes-import-form">
 
-        <!-- FILTROS -->
-        <form method="GET" class="filtros-comissoes">
+                <label class="file-upload-comissao">
+                    <i data-lucide="file-spreadsheet"></i>
+                    <span>Selecionar arquivo</span>
+                    <input type="file" name="arquivo" required>
+                </label>
 
-            <input type="text" name="q"
-                   placeholder="🔍 Buscar banco, produto, promotora..."
-                   value="{{ request.args.get('q', '') }}">
+                <button type="submit" class="btn-admin-primary">
+                    <i data-lucide="upload"></i>
+                    Importar
+                </button>
 
-            <select name="banco">
-                <option value="">🏦 Todos os bancos</option>
-                {% for b in lista_bancos %}
-                <option value="{{ b['banco'] }}"
-                    {% if request.args.get('banco') == b['banco'] %}selected{% endif %}>
-                    {{ b['banco'] }}
-                </option>
-                {% endfor %}
-            </select>
+            </form>
 
-            <select name="produto">
-                <option value="">💳 Todos os produtos</option>
-                {% for p in lista_produtos %}
-                <option value="{{ p['produto'] }}"
-                    {% if request.args.get('produto') == p['produto'] %}selected{% endif %}>
-                    {{ p['produto'] }}
-                </option>
-                {% endfor %}
-            </select>
-
-            <button type="submit" class="btn btn-roxo">Filtrar</button>
-            <a href="/admin" class="btn btn-vermelho">Limpar</a>
-
-        </form>
-
-        <!-- PAGINAÇÃO -->
-        <div class="paginacao">
-
-            {% if pagina > 1 %}
-            <a class="btn btn-roxo"
-               href="/admin?pagina={{ pagina - 1 }}&q={{ request.args.get('q','') }}&banco={{ request.args.get('banco','') }}&produto={{ request.args.get('produto','') }}">
-                ⬅ Anterior
+            <a href="/admin/comissoes/exportar" class="btn-admin-soft">
+                <i data-lucide="download"></i>
+                Exportar
             </a>
-            {% endif %}
-
-            <span>Página {{ pagina }} de {{ total_paginas }}</span>
-
-            {% if pagina < total_paginas %}
-            <a class="btn btn-roxo"
-               href="/admin?pagina={{ pagina + 1 }}&q={{ request.args.get('q','') }}&banco={{ request.args.get('banco','') }}&produto={{ request.args.get('produto','') }}">
-                Próxima ➡
-            </a>
-            {% endif %}
 
         </div>
 
+        <!-- FILTROS -->
+        <form method="GET" action="/admin" class="filtros-comissoes">
 
-<form method="POST"
-      action="/admin/comissoes/limpar-promotora"
-      onsubmit="return confirm('Tem certeza que deseja excluir todas as comissões dessa promotora?')"
-      style="display:flex; gap:10px; margin:15px 0; align-items:center;">
+            <input type="hidden" name="aba" value="comissoes">
 
-    <select name="promotora" required>
-        <option value="">🧹 Limpar por promotora</option>
-        <option value="Consiga">Consiga</option>
-        <option value="Credfranco">Credfranco</option>
-        <option value="Bevicred">Bevicred</option>
-        <option value="Conect">Conect</option>
-    </select>
+            <div class="campo-filtro-comissao campo-filtro-busca">
+                <i data-lucide="search"></i>
 
-    <button type="submit" class="btn btn-vermelho">
-        🧹 Limpar
-    </button>
-</form>
+                <input type="text"
+                       name="q"
+                       placeholder="Buscar banco, produto ou promotora..."
+                       value="{{ request.args.get('q', '') }}">
+            </div>
 
- <!-- TABELA + EXCLUSÃO EM MASSA -->
+            <div class="campo-filtro-comissao">
+                <i data-lucide="building-2"></i>
+
+                <select name="banco">
+                    <option value="">Todos os bancos</option>
+                    {% for b in lista_bancos %}
+                    <option value="{{ b['banco'] }}"
+                        {% if request.args.get('banco') == b['banco'] %}selected{% endif %}>
+                        {{ b['banco'] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="campo-filtro-comissao">
+                <i data-lucide="credit-card"></i>
+
+                <select name="produto">
+                    <option value="">Todos os produtos</option>
+                    {% for p in lista_produtos %}
+                    <option value="{{ p['produto'] }}"
+                        {% if request.args.get('produto') == p['produto'] %}selected{% endif %}>
+                        {{ p['produto'] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn-admin-primary">
+                <i data-lucide="filter"></i>
+                Filtrar
+            </button>
+
+            <a href="/admin?aba=comissoes" class="btn-admin-soft">
+                <i data-lucide="x"></i>
+                Limpar
+            </a>
+
+        </form>
+
+        <!-- NOVA COMISSÃO -->
+        <div id="formNovaComissao" class="form-nova-comissao" style="display:none;">
+
+            <h3>
+                <i data-lucide="plus-circle"></i>
+                Cadastrar Nova Comissão
+            </h3>
+
+            <form method="POST" action="{{ url_for('criar_comissao') }}">
+
+                <div class="grid-form-comissao">
+
+                    <div>
+                        <label>Banco *</label>
+                        <input type="text" name="banco" required placeholder="Ex: BRB 360">
+                    </div>
+
+                    <div>
+                        <label>Produto *</label>
+                        <select name="produto" required>
+                            <option value="">Selecione</option>
+                            <option value="CLT">CLT</option>
+                            <option value="INSS">INSS</option>
+                            <option value="FGTS">FGTS</option>
+                            <option value="COMPRA DÍVIDA">COMPRA DÍVIDA</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Tabela *</label>
+                        <input type="text" name="tabela_nome" required placeholder="Ex: NORMAL">
+                    </div>
+
+                    <div>
+                        <label>Comissão (%) *</label>
+                        <input type="number"
+                               name="comissao"
+                               step="0.01"
+                               min="0"
+                               required
+                               placeholder="Ex: 7.50">
+                    </div>
+
+                    <div>
+                        <label>Prazo</label>
+                        <input type="text" name="prazo" placeholder="Ex: 1x a 96x">
+                    </div>
+
+                    <div>
+                        <label>Promotora *</label>
+                        <input type="text" name="promotora" required placeholder="Ex: BRB 360">
+                    </div>
+
+                    <div>
+                        <label>Status</label>
+                        <select name="status">
+                            <option value="LIBERADA" selected>LIBERADA</option>
+                            <option value="APROVAÇÃO">APROVAÇÃO</option>
+                            <option value="BLOQUEADA">BLOQUEADA</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="acoes-nova-comissao">
+
+                    <button type="submit" class="btn-admin-primary">
+                        <i data-lucide="save"></i>
+                        Salvar Comissão
+                    </button>
+
+                    <button type="button"
+                            class="btn-admin-soft"
+                            onclick="toggleNovaComissao()">
+                        <i data-lucide="x"></i>
+                        Cancelar
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+<!-- CONTROLES DA LISTA -->
+<div class="comissoes-list-controls">
+
+    <div class="comissoes-paginacao">
+
+        {% if pagina > 1 %}
+        <a class="btn-admin-soft"
+           href="/admin?aba=comissoes&pagina={{ pagina - 1 }}&q={{ request.args.get('q','') }}&banco={{ request.args.get('banco','') }}&produto={{ request.args.get('produto','') }}">
+            <i data-lucide="chevron-left"></i>
+            Anterior
+        </a>
+        {% endif %}
+
+        <span>
+            Página {{ pagina }} de {{ total_paginas }}
+        </span>
+
+        {% if pagina < total_paginas %}
+        <a class="btn-admin-soft"
+           href="/admin?aba=comissoes&pagina={{ pagina + 1 }}&q={{ request.args.get('q','') }}&banco={{ request.args.get('banco','') }}&produto={{ request.args.get('produto','') }}">
+            Próxima
+            <i data-lucide="chevron-right"></i>
+        </a>
+        {% endif %}
+
+    </div>
+
+    <form method="POST"
+          action="/admin/comissoes/limpar-promotora"
+          class="limpar-promotora-form"
+          onsubmit="return confirm('Tem certeza que deseja excluir todas as comissões dessa promotora?')">
+
+        <select name="promotora" required>
+            <option value="">Limpar por promotora</option>
+            <option value="Consiga">Consiga</option>
+            <option value="Credfranco">Credfranco</option>
+            <option value="Bevicred">Bevicred</option>
+            <option value="Conect">Conect</option>
+        </select>
+
+        <button type="submit" class="btn-admin-danger">
+            <i data-lucide="trash-2"></i>
+            Limpar
+        </button>
+
+    </form>
+
+</div>
+
+
+<!-- TABELA + EXCLUSÃO EM MASSA -->
 
 <form id="form-excluir-selecionadas"
       method="POST"
       action="/admin/comissao/deletar/selecionadas">
 </form>
 
-<div class="table-wrapper">
+<div class="table-wrapper tabela-comissoes-moderna">
 
     <table>
         <thead>
             <tr>
-
-                <!-- CHECKBOX GERAL -->
                 <th>
                     <input
                         type="checkbox"
@@ -467,160 +907,305 @@ function selecionarTodos(master) {
                         onclick="selecionarTodos(this)">
                 </th>
 
-                <!-- BANCO -->
                 <th>
-                    <a href="/admin?pagina=1&q={{ request.args.get('q','') }}&banco={{ request.args.get('banco','') }}&produto={{ request.args.get('produto','') }}&ordenar=banco&direcao={% if ordenar == 'banco' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
-                        🏦 Banco
-                        {% if ordenar == "banco" %}
-                            {% if direcao == "asc" %} ↑ {% else %} ↓ {% endif %}
-                        {% endif %}
-                    </a>
-                </th>
 
+<a class="table-sort"
+href="/admin?aba=comissoes
+&pagina=1
+&q={{ request.args.get('q','') }}
+&banco={{ request.args.get('banco','') }}
+&produto={{ request.args.get('produto','') }}
+&ordenar=banco
+&direcao={% if ordenar=='banco' and direcao=='asc' %}desc{% else %}asc{% endif %}">
+
+Banco
+
+{% if ordenar=="banco" %}
+    {% if direcao=="asc" %}
+        ↑
+    {% else %}
+        ↓
+    {% endif %}
+{% endif %}
+
+</a>
+
+</th>
                 <th>Tabela</th>
+                <th>Produto</th>
+  <th>
 
-                <!-- PRODUTO -->
-                <th>
-                    <a href="/admin?pagina=1&q={{ request.args.get('q','') }}&banco={{ request.args.get('banco','') }}&produto={{ request.args.get('produto','') }}&ordenar=produto&direcao={% if ordenar == 'produto' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
-                        💳 Produto
-                        {% if ordenar == "produto" %}
-                            {% if direcao == "asc" %} ↑ {% else %} ↓ {% endif %}
-                        {% endif %}
-                    </a>
-                </th>
+<a class="table-sort"
+href="/admin?aba=comissoes
+&pagina=1
+&q={{ request.args.get('q','') }}
+&banco={{ request.args.get('banco','') }}
+&produto={{ request.args.get('produto','') }}
+&ordenar=comissao
+&direcao={% if ordenar=='comissao' and direcao=='asc' %}desc{% else %}asc{% endif %}">
 
-                <!-- COMISSÃO -->
-                <th>
-                    <a href="/admin?pagina=1&q={{ request.args.get('q','') }}&banco={{ request.args.get('banco','') }}&produto={{ request.args.get('produto','') }}&ordenar=comissao&direcao={% if ordenar == 'comissao' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
-                        💰 Comissão
-                        {% if ordenar == "comissao" %}
-                            {% if direcao == "asc" %} ↑ {% else %} ↓ {% endif %}
-                        {% endif %}
-                    </a>
-                </th>
+Comissão
 
+{% if ordenar=="comissao" %}
+    {% if direcao=="asc" %}
+        ↑
+    {% else %}
+        ↓
+    {% endif %}
+{% endif %}
+
+</a>
+
+</th>
                 <th>Prazo</th>
                 <th>Promotora</th>
                 <th>Ações</th>
-
             </tr>
         </thead>
-<tbody>
-{% for c in comissoes %}
-<tr>
 
-    <td>
-        <input
-            type="checkbox"
-            name="ids"
-            value="{{ c.id }}"
-            form="form-excluir-selecionadas">
-    </td>
+        <tbody>
+            {% for c in comissoes %}
+            <tr>
 
-    <td>
-        <input form="form-editar-{{ c.id }}" type="text" name="banco" value="{{ c.banco }}">
-    </td>
+                <td>
+                    <input
+                        type="checkbox"
+                        name="ids"
+                        value="{{ c.id }}"
+                        form="form-excluir-selecionadas">
+                </td>
 
-    <td>
-        <input form="form-editar-{{ c.id }}" name="tabela_nome" value="{{ c.tabela_nome }}">
-    </td>
+                <td>
+                    <div class="comissao-banco-cell">
+                        <span class="comissao-avatar">
+                            {{ c.banco[0]|upper if c.banco else "?" }}
+                        </span>
 
-    <td>
-        <input form="form-editar-{{ c.id }}" type="text" name="produto" value="{{ c.produto }}">
-    </td>
+                        <strong>{{ c.banco }}</strong>
+                    </div>
+                </td>
 
-    <td>
-        <input
-            form="form-editar-{{ c.id }}"
-            type="number"
-            step="0.01"
-            name="comissao"
-            value="{{ c.comissao }}"
-            class="input-comissao">
-    </td>
+                <td>
+                    <span class="comissao-tabela-texto">
+                        {{ c.tabela_nome }}
+                    </span>
+                </td>
 
-    <td>
-        <input form="form-editar-{{ c.id }}" name="prazo" value="{{ c.prazo }}" class="input-prazo">
-    </td>
+                <td>
+                    <span class="badge-produto-comissao">
+                        {{ c.produto }}
+                    </span>
+                </td>
 
-    <td>
-        <input form="form-editar-{{ c.id }}" name="promotora" value="{{ c.promotora }}" class="input-promotora">
-    </td>
+                <td>
+                    <span class="badge-comissao">
+                        {{ c.comissao }}%
+                    </span>
+                </td>
 
-    <td class="acoes-comissao">
+                <td>
+                    <span class="badge-prazo-comissao">
+                        {{ c.prazo }}
+                    </span>
+                </td>
 
-        <form
-            id="form-editar-{{ c.id }}"
-            method="POST"
-            action="/admin/comissao/editar/{{ c.id }}">
-        </form>
+                <td>
+                    <span class="badge-promotora-comissao">
+                        {{ c.promotora }}
+                    </span>
+                </td>
 
-        <button
-            form="form-editar-{{ c.id }}"
-            type="submit"
-            class="btn btn-verde btn-acao-mini"
-            title="Salvar">
-            💾
-        </button>
+                <td class="acoes-comissao nova-acoes-comissao">
 
-        <form method="POST"
-              action="/admin/comissao/deletar/{{ c.id }}"
-              style="display:inline;">
+                    <button type="button"
+                            class="btn-icon-admin btn-editar-comissao"
+                            title="Editar"
+                            onclick="abrirModalComissao(
+                                '{{ c.id }}',
+                                '{{ c.banco|e }}',
+                                '{{ c.tabela_nome|e }}',
+                                '{{ c.produto|e }}',
+                                '{{ c.comissao }}',
+                                '{{ c.prazo|e }}',
+                                '{{ c.promotora|e }}'
+                            )">
+                        <i data-lucide="pencil"></i>
+                    </button>
 
-            <button
-                type="submit"
-                class="btn btn-vermelho btn-acao-mini"
-                title="Excluir"
-                onclick="return confirm('Deseja excluir esta comissão?')">
-                🗑
+                    <form method="POST"
+                          action="/admin/comissao/deletar/{{ c.id }}"
+                          class="form-inline"
+                          onsubmit="return confirm('Deseja excluir esta comissão?')">
+
+                        <button type="submit"
+                                class="btn-icon-admin btn-danger-icon"
+                                title="Excluir">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+
+                    </form>
+
+                </td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+
+</div>
+
+<!-- MODAL EDITAR COMISSÃO -->
+<div id="modalComissao" class="modal-comissao">
+
+    <div class="modal-comissao-card">
+
+        <div class="modal-comissao-topo">
+            <div>
+                <h3>
+                    <i data-lucide="pencil"></i>
+                    Editar Comissão
+                </h3>
+                <p>Atualize os dados da tabela de comissão.</p>
+            </div>
+
+            <button type="button"
+                    class="btn-fechar-modal"
+                    onclick="fecharModalComissao()">
+                <i data-lucide="x"></i>
             </button>
+        </div>
 
-        </form>
+        <form id="formEditarComissao" method="POST">
 
-    </td>
+            <div class="grid-modal-comissao">
 
-</tr>
-{% endfor %}
-</tbody>
+                <div>
+                    <label>Banco</label>
+                    <input type="text" name="banco" id="modalBanco" required>
+                </div>
 
+                <div>
+                    <label>Produto</label>
+                    <input type="text" name="produto" id="modalProduto" required>
+                </div>
 
-                </table>
+                <div>
+                    <label>Tabela</label>
+                    <input type="text" name="tabela_nome" id="modalTabela" required>
+                </div>
+
+                <div>
+                    <label>Comissão (%)</label>
+                    <input type="number" step="0.01" name="comissao" id="modalComissaoValor" required>
+                </div>
+
+                <div>
+                    <label>Prazo</label>
+                    <input type="text" name="prazo" id="modalPrazo">
+                </div>
+
+                <div>
+                    <label>Promotora</label>
+                    <input type="text" name="promotora" id="modalPromotora">
+                </div>
 
             </div>
 
-            
+            <div class="modal-comissao-acoes">
+                <button type="button"
+                        class="btn-admin-soft"
+                        onclick="fecharModalComissao()">
+                    Cancelar
+                </button>
+
+                <button type="submit" class="btn-admin-primary">
+                    <i data-lucide="save"></i>
+                    Salvar alterações
+                </button>
+            </div>
 
         </form>
 
     </div>
+
 </div>
 {% endif %}
 
 <!-- ========================= AVISOS ========================= -->
+
 <div id="avisos" class="admin-box" style="display:none;">
 
-<div class="box">
+<div class="box avisos-page">
 
-    <h2>📢 Avisos</h2>
+    <div class="avisos-header">
 
-    <form method="POST" action="/admin/aviso/criar" class="top-form">
-        <input name="titulo" placeholder="Título" required>
-        <input name="mensagem" placeholder="Mensagem" required>
-        <button class="btn btn-roxo">Criar</button>
-    </form>
+        <div>
 
-    <div class="table-wrapper">
+            <h2>
+                <i data-lucide="megaphone"></i>
+                Gestão de Avisos
+            </h2>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Título</th>
-                    <th>Mensagem</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
+            <p>
+                Comunique novidades e informações importantes para toda a equipe.
+            </p>
 
-            <tbody>
+        </div>
+
+        <button
+            type="button"
+            class="btn-admin-primary"
+            onclick="toggleNovoAviso()">
+
+            <i data-lucide="plus"></i>
+
+            Novo Aviso
+
+        </button>
+
+    </div>
+
+    <div id="novoAviso" class="novo-aviso-card" style="display:none;">
+
+        <form method="POST" action="/admin/aviso/criar">
+
+            <input
+                name="titulo"
+                placeholder="Título do aviso"
+                required>
+
+            <textarea
+                name="mensagem"
+                placeholder="Digite o comunicado..."
+                required></textarea>
+
+            <div class="novo-aviso-acoes">
+
+                <button class="btn-admin-primary">
+
+                    <i data-lucide="send"></i>
+
+                    Publicar
+
+                </button>
+
+                <button
+                    type="button"
+                    class="btn-admin-soft"
+                    onclick="toggleNovoAviso()">
+
+                    Cancelar
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    <div class="lista-avisos">
                 {% for aviso in avisos %}
                 <tr>
                     <td>{{ aviso["titulo"] }}</td>
@@ -645,6 +1230,54 @@ function selecionarTodos(master) {
 
 </div>
 </div>
+<script>
+function toggleNovaComissao() {
+    const form = document.getElementById("formNovaComissao");
 
+    if (form.style.display === "none" || form.style.display === "") {
+        form.style.display = "block";
+    } else {
+        form.style.display = "none";
+    }
+}
+</script>
+<script>
+function editarUsuario(id){
+    document.getElementById("linha-view-" + id).style.display = "none";
+    document.getElementById("linha-edit-" + id).style.display = "table-row";
+    lucide.createIcons();
+}
+
+function cancelarEditarUsuario(id){
+    document.getElementById("linha-edit-" + id).style.display = "none";
+    document.getElementById("linha-view-" + id).style.display = "table-row";
+}
+</script>
+
+<script>
+function abrirModalComissao(id, banco, tabela, produto, comissao, prazo, promotora){
+
+    document.getElementById("formEditarComissao").action =
+        "/admin/comissao/editar/" + id;
+
+    document.getElementById("modalBanco").value = banco;
+    document.getElementById("modalTabela").value = tabela;
+    document.getElementById("modalProduto").value = produto;
+    document.getElementById("modalComissaoValor").value = comissao;
+    document.getElementById("modalPrazo").value = prazo;
+    document.getElementById("modalPromotora").value = promotora;
+
+    document.getElementById("modalComissao").style.display = "flex";
+
+    lucide.createIcons();
+}
+
+function fecharModalComissao(){
+    document.getElementById("modalComissao").style.display = "none";
+}
+</script>
+<script>
+lucide.createIcons();
+</script>
 </body>
 </html>

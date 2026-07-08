@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="{{ tema }}">
 
 <head>
 
 <meta charset="UTF-8">
 <title>{{ titulo }}</title>
-
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}">
+<script src="https://unpkg.com/lucide@latest"></script>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <script>
@@ -68,15 +69,27 @@ function highlightText(root, term){
 
     walk(root);
 }
+function toggleTabelaUnica(id){
 
-function toggleTabela(id){
+    const atual = document.getElementById(id);
 
-    let div = document.getElementById(id);
+    if(!atual){
+        return;
+    }
 
-    if(div.style.display === "block"){
-        div.style.display = "none";
-    } else {
-        div.style.display = "block";
+    const jaAberta = atual.style.display === "block";
+
+    document.querySelectorAll(".produto-tabela-area").forEach(area => {
+        area.style.display = "none";
+    });
+
+    document.querySelectorAll(".produto-banco").forEach(card => {
+        card.classList.remove("aberto");
+    });
+
+    if(!jaAberta){
+        atual.style.display = "block";
+        atual.closest(".produto-banco").classList.add("aberto");
     }
 }
 function filtrarBancos(){
@@ -175,67 +188,77 @@ function highlightSimple(element, term){
 <body>
 <div class="sidebar" id="sidebar">
 
-    <button class="toggle-btn" onclick="toggleSidebar()">
-        ◀
+    <button class="toggle-btn sidebar-toggle" onclick="toggleSidebar()" title="Recolher menu">
+    <i data-lucide="panel-left-close"></i>
     </button>
 
-    <a href="/home" class="{% if titulo == 'Home' %}active{% endif %}">
-        <span class="icon">🏠</span>
-        <span class="text">Home</span>
-    </a>
+<a href="/home" >
+    <i data-lucide="home"></i>
+    <span class="text">Home</span>
+</a>
 
-    <a href="/vendas">
-        <span class="icon">💰</span>
-        <span class="text">Minhas Vendas</span>
-    </a>
-    
-    <a href="/termos">
-    <span class="icon">📄</span>
+{% if tipo == "user" %}
+<a href="/vendas">
+    <i data-lucide="circle-dollar-sign"></i>
+    <span class="text">Produção</span>
+</a>
+{% endif %}
+
+<a href="/compra-divida/clientes">
+    <i data-lucide="calculator"></i>
+    <span class="text">Compras</span>
+</a>
+
+<a href="/termos">
+    <i data-lucide="file-text"></i>
     <span class="text">Gerar Termo</span>
-    </a>
+</a>
 
-    <a href="/termos/historico">
-    <span class="icon">📚</span>
-    <span class="text">Termos Gerados</span>
-    </a>
+<a href="/termos/historico">
+    <i data-lucide="files"></i>
+    <span class="text">Termos</span>
+</a>
 
-    <a href="/bancos" class="{% if titulo == 'Bancos' %}active{% endif %}">
-        <span class="icon">🏦</span>
-        <span class="text">Bancos</span>
-    </a>
+<a href="/bancos">
+    <i data-lucide="building-2"></i>
+    <span class="text">Bancos</span>
+</a>
 
-    <a href="/clt" class="{% if titulo == 'CLT' %}active{% endif %}">
-        <span class="icon">💼</span>
-        <span class="text">CLT</span>
-    </a>
+<a href="/clt"
+   class="{% if pagina_ativa == 'clt' %}active{% endif %}">
+    <i data-lucide="briefcase-business"></i>
+    <span class="text">CLT</span>
+</a>
 
-    <a href="/inss" class="{% if titulo == 'INSS' %}active{% endif %}">
-        <span class="icon">👴</span>
-        <span class="text">INSS</span>
-    </a>
+<a href="/inss"
+   class="{% if pagina_ativa == 'inss' %}active{% endif %}">
+    <i data-lucide="badge-dollar-sign"></i>
+    <span class="text">INSS</span>
+</a>
 
-    <a href="/fgts" class="{% if titulo == 'FGTS' %}active{% endif %}">
-        <span class="icon">🔐</span>
-        <span class="text">FGTS</span>
-    </a>
+<a href="/fgts"
+   class="{% if pagina_ativa == 'fgts' %}active{% endif %}">
+    <i data-lucide="lock-keyhole"></i>
+    <span class="text">FGTS</span>
+</a>
 
-    <a href="/compra-divida"
-       class="{% if 'COMPRA' in titulo|upper %}active{% endif %}">
-        <span class="icon">💲</span>
-        <span class="text">Compra</span>
-    </a>
+<a href="/compra-divida"
+   class="{% if pagina_ativa == 'compra' %}active{% endif %}">
+    <i data-lucide="landmark"></i>
+    <span class="text">Compra</span>
+</a>
 
-    {% if tipo|lower|trim in ["master", "admin", "adm"] %}
-    <a href="/admin">
-        <span class="icon">⚙️</span>
-        <span class="text">Admin</span>
-    </a>
-    {% endif %}
+{% if tipo in ["master", "adm"] %}
+<a href="/admin">
+    <i data-lucide="settings"></i>
+    <span class="text">Admin</span>
+</a>
+{% endif %}
 
-    <a href="/logout">
-        <span class="icon">🚪</span>
-        <span class="text">Sair</span>
-    </a>
+<a href="/logout">
+    <i data-lucide="log-out"></i>
+    <span class="text">Sair</span>
+</a>
 
 </div>
 
@@ -243,134 +266,179 @@ function highlightSimple(element, term){
 <div class="conteudo">
 
     <!-- TOPO -->
-    <div class="topo">
-       
-
+    <div class="topo produto-topo">
         <div>
+            <h1>
+                {% if pagina_ativa == "clt" %}
+                    <i data-lucide="briefcase-business"></i> CLT
+                {% elif pagina_ativa == "inss" %}
+                    <i data-lucide="badge-dollar-sign"></i> INSS
+                {% elif pagina_ativa == "fgts" %}
+                    <i data-lucide="lock-keyhole"></i> FGTS
+                {% else %}
+                    <i data-lucide="landmark"></i> Compra
+                {% endif %}
+            </h1>
 
-            
-
-            <span>Consulte prioridades e tabelas disponíveis</span>
-
+            <span>Prioridades, promotoras e tabelas disponíveis para consulta.</span>
         </div>
-
     </div>
 
-    <!-- BUSCA GLOBAL (ÚNICA) -->
-    <div class="box">
+    <!-- BUSCA -->
+    <div class="produto-busca">
+        <i data-lucide="search"></i>
 
         <input
             type="text"
             id="buscaBanco"
-            placeholder="Buscar banco, promotora ou tabela..."
-            oninput="filtrarBancos()"
-        >
-
+            placeholder="Buscar banco, promotora, prazo ou comissão..."
+            oninput="filtrarBancos()">
     </div>
 
     <!-- AVISOS -->
     {% if avisos %}
-
-    <div class="box">
-
-        <h2 style="margin-bottom:20px;">📢 Avisos</h2>
+    <div class="box-compra">
+        <h2>
+            <i data-lucide="megaphone"></i>
+            Avisos
+        </h2>
 
         {% for aviso in avisos %}
-
-        <div class="aviso">
-
+        <div class="admin-aviso-item">
             <strong>{{ aviso["titulo"] }}</strong>
-
-            <div style="margin-top:8px;">
-                {{ aviso["mensagem"] }}
-            </div>
-
+            <p>{{ aviso["mensagem"] }}</p>
         </div>
-
         {% endfor %}
-
     </div>
-
     {% endif %}
+<!-- BANCOS -->
+<div class="produtos-lista">
 
-    <!-- BANCOS -->
     {% for banco in bancos %}
     {% set posicao = loop.index %}
 
-    <div class="produto-card box">
+    <div class="produto-banco">
 
-        <!-- HEADER -->
-        <div class="banco-header"
-             onclick="toggleTabela('banco{{ loop.index }}')">
+        <!-- HEADER DO BANCO -->
+        <div class="produto-banco-header"
+             onclick="toggleTabelaUnica('banco{{ loop.index }}')">
 
-            <h2>
+            <div class="produto-banco-info">
+                <span class="produto-rank">#{{ posicao }}</span>
 
-                {% if posicao == 1 %} 🥇 {% elif posicao == 2 %} 🥈 {% elif posicao == 3 %} 🥉 {% endif %}
+                <i data-lucide="landmark"></i>
 
-                🏦 {{ banco.nome }}
+                <strong>{{ banco.nome }}</strong>
 
-            </h2>
+                <span class="produto-count">
+                    {{ banco.tabelas|length }} tabelas
+                </span>
+            </div>
 
+            <i class="produto-chev" data-lucide="chevron-down"></i>
         </div>
 
-        <!-- TABELAS -->
-        <div class="tabelas"
+        <!-- TABELA -->
+        <div class="produto-tabela-area"
              id="banco{{ loop.index }}"
              style="display:none;">
 
-            {% for tabela in banco.tabelas %}
+            <div class="produto-table-scroll">
 
-           <div class="tabela-item tabela-compacta {% if tabela['ativo'] == 0 %}tabela-desativada{% endif %}"
-            data-tabela="{{ tabela['tabela_nome'] }}"
-            data-prazo="{{ tabela['prazo'] }}"
-            data-promotora="{{ tabela['promotora'] }}"
-            data-comissao="{{ tabela['comissao'] }}">
+                <table class="produto-table">
 
-    <div class="tabela-info">
+                    <thead>
+                        <tr>
+                            <th>Tabela</th>
+                            <th>Promotora</th>
+                            <th>Prazo</th>
 
-        <div class="tabela-principal">
-            <strong>{{ tabela["tabela_nome"] }}</strong>
+                            {% if tipo|lower|trim == "master" %}
+                            <th>Comissão</th>
+                            {% endif %}
 
-            {% if tabela["promotora"] %}
-            <span>👩‍💼 {{ tabela["promotora"] }}</span>
-            {% endif %}
-        </div>
-<div class="tabela-item tabela-compacta {% if tabela['ativo'] == 0 %}inativa{% endif %}"></div>
-        <div class="tabela-dados">
+                            <th>Data</th>
+                            <th>Status</th>
 
-            <span>📅 {{ tabela["prazo"] }}</span>
-            {% if tipo|lower|trim == "master" %}
-            <span>💰 {{ tabela["comissao"] }}%</span>
-            {% endif %}
-            <span class="badge-info">🕒 {{ tabela["data_importacao"] or "—" }}
-            </span>
+                            {% if tipo|lower|trim in ["master", "adm", "admin"] %}
+                            <th>Ação</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
 
-            {% if tabela["status"] == "LIBERADA" %}
-                <span class="status-liberada">✅ LIBERADA</span>
-            {% elif tabela["status"] == "PRECISA_LIBERACAO" %}
-                <span class="status-liberacao">⚠ LIBERAÇÃO</span>
-            {% else %}
-                <span class="status-pausada">⛔ PAUSADA</span>
-            {% endif %}
+                    <tbody>
+                        {% for tabela in banco.tabelas %}
 
-        </div>
+                        <tr class="{% if tabela['ativo'] == 0 %}tabela-desativada{% endif %}"
+                            data-tabela="{{ tabela['tabela_nome'] }}"
+                            data-prazo="{{ tabela['prazo'] }}"
+                            data-promotora="{{ tabela['promotora'] }}"
+                            data-comissao="{{ tabela['comissao'] }}">
 
-    </div>
+                            <td>
+                                <div class="produto-table-name">
+                                    <span class="produto-status-dot
+                                        {% if tabela['status'] == 'LIBERADA' %}dot-ok
+                                        {% elif tabela['status'] == 'PRECISA_LIBERACAO' %}dot-alert
+                                        {% else %}dot-off
+                                        {% endif %}">
+                                    </span>
 
-    {% if tipo|lower|trim in ["master", "adm", "admin"] %}
-    <a class="btn-toggle-tabela"
-       href="/toggle-tabela/{{ tabela['id'] }}">
-        {% if tabela["ativo"] == 1 %}
-            Desativar
-        {% else %}
-            Ativar
-        {% endif %}
-    </a>
-    {% endif %}
+                                    <strong title="{{ tabela['tabela_nome'] }}">
+                                        {{ tabela["tabela_nome"] }}
+                                    </strong>
+                                </div>
+                            </td>
 
-</div>
+                            <td>{{ tabela["promotora"] or "—" }}</td>
 
-            {% endfor %}
+                            <td>{{ tabela["prazo"] or "—" }}</td>
+
+                            {% if tipo|lower|trim == "master" %}
+                            <td>
+                                <span class="badge-comissao">
+                                    {{ tabela["comissao"] }}%
+                                </span>
+                            </td>
+                            {% endif %}
+
+                            <td>{{ tabela["data_importacao"] or "—" }}</td>
+
+                            <td>
+                                {% if tabela["status"] == "LIBERADA" %}
+                                    <span class="ds-status liberada">LIBERADA</span>
+                                {% elif tabela["status"] == "PRECISA_LIBERACAO" %}
+                                    <span class="ds-status liberacao">LIBERAÇÃO</span>
+                                {% else %}
+                                    <span class="ds-status pausada">PAUSADA</span>
+                                {% endif %}
+                            </td>
+
+                            {% if tipo|lower|trim in ["master", "adm", "admin"] %}
+                            <td>
+                                <a class="btn-toggle-tabela compact"
+                                   href="/toggle-tabela/{{ tabela['id'] }}">
+                                    {% if tabela["ativo"] == 1 %}
+                                        Desativar
+                                    {% else %}
+                                        Ativar
+                                    {% endif %}
+                                </a>
+                            </td>
+                            {% endif %}
+
+
+
+                            
+
+                        </tr>
+
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+
+            </div>
 
         </div>
 
@@ -378,6 +446,8 @@ function highlightSimple(element, term){
 
     {% endfor %}
 
+</div>
+    
 </div>
 <script>
 
@@ -435,6 +505,10 @@ window.addEventListener("load", () => {
         btn.innerHTML = "▶";
     }
 });
+</script>
+
+<script>
+lucide.createIcons();
 </script>
 </body>
 </html>

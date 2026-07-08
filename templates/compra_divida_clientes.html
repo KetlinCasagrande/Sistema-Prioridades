@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-theme="{{ tema }}">
+<head>
+<meta charset="UTF-8">
+<title>Compra de Dívida</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}">
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div class="sidebar" id="sidebar">
+
+    <button class="toggle-btn sidebar-toggle" onclick="toggleSidebar()" title="Recolher menu">
+    <i data-lucide="panel-left-close"></i>
+    </button>
+
+<a href="/home" class=>
+    <i data-lucide="home"></i>
+    <span class="text">Home</span>
+</a>
+
+{% if tipo == "user" %}
+<a href="/vendas">
+    <i data-lucide="circle-dollar-sign"></i>
+    <span class="text">Produção</span>
+</a>
+{% endif %}
+
+<a href="/compra-divida/clientes"class="active">
+    <i data-lucide="calculator"></i>
+    <span class="text">Compras</span>
+</a>
+
+<a href="/termos">
+    <i data-lucide="file-text"></i>
+    <span class="text">Gerar Termo</span>
+</a>
+
+<a href="/termos/historico">
+    <i data-lucide="files"></i>
+    <span class="text">Termos</span>
+</a>
+
+<a href="/bancos">
+    <i data-lucide="building-2"></i>
+    <span class="text">Bancos</span>
+</a>
+
+<a href="/clt">
+    <i data-lucide="briefcase-business"></i>
+    <span class="text">CLT</span>
+</a>
+
+<a href="/inss">
+    <i data-lucide="badge-dollar-sign"></i>
+    <span class="text">INSS</span>
+</a>
+
+<a href="/fgts">
+    <i data-lucide="lock-keyhole"></i>
+    <span class="text">FGTS</span>
+</a>
+
+<a href="/compra-divida">
+    <i data-lucide="landmark"></i>
+    <span class="text">Compra</span>
+</a>
+
+{% if tipo in ["master", "adm"] %}
+<a href="/admin">
+    <i data-lucide="settings"></i>
+    <span class="text">Admin</span>
+</a>
+{% endif %}
+
+<a href="/logout">
+    <i data-lucide="log-out"></i>
+    <span class="text">Sair</span>
+</a>
+
+</div>
+
+<div class="conteudo">
+<div class="page">
+
+<div class="topo compra-topo">
+    <div>
+        <h1>
+            <i data-lucide="calculator"></i>
+            Compras
+        </h1>
+        <span>Cadastre clientes, acompanhe dívidas e simulações.</span>
+    </div>
+</div>
+
+  <div class="compra-form-card">
+
+    <h2>
+        <i data-lucide="user-plus"></i>
+        Novo Cliente
+    </h2>
+
+    <form method="POST" action="/compra-divida/clientes/criar" class="compra-form-inline">
+
+        <input name="nome" placeholder="Nome do cliente" required>
+
+        <input name="cpf" placeholder="CPF">
+
+        <button class="btn btn-roxo">
+            <i data-lucide="plus"></i>
+            Criar Cliente
+        </button>
+
+    </form>
+
+</div>
+
+<div class="filtros-compra">
+
+    <a href="/compra-divida/clientes?status=ativos"
+       class="filtro-btn {% if status=='ativos' %}active{% endif %}">
+        🚀 Em andamento
+    </a>
+
+    <a href="/compra-divida/clientes?status=concluidos"
+       class="filtro-btn {% if status=='concluidos' %}active{% endif %}">
+        ✅ Concluídos
+    </a>
+
+    <a href="/compra-divida/clientes?status=cancelados"
+       class="filtro-btn {% if status=='cancelados' %}active{% endif %}">
+        ❌ Cancelados
+    </a>
+
+    <a href="/compra-divida/clientes?status=todos"
+       class="filtro-btn {% if status=='todos' %}active{% endif %}">
+        📂 Todos
+    </a>
+
+</div>
+
+
+    <div class="clientes-grid">
+
+{% for cliente in clientes %}
+
+<div class="cliente-card">
+
+    <div class="cliente-topo">
+
+        <div class="cliente-avatar">
+            {{ cliente.nome[0]|upper }}
+        </div>
+
+        <div class="cliente-nome">
+
+            <h3>{{ cliente.nome }}</h3>
+
+            <span>
+                CPF {{ cliente.cpf or "Não informado" }}
+            </span>
+
+        </div>
+
+    </div>
+
+   <div class="cliente-info">
+
+    <div>
+        <small>Dívida</small>
+        <strong>
+            R$ {{ "{:,.2f}".format(cliente.total_divida or 0).replace(",", "X").replace(".", ",").replace("X", ".") }}
+        </strong>
+    </div>
+
+    <div>
+        <small>Sobra</small>
+        <strong>
+            R$ {{ "{:,.2f}".format(cliente.sobra or 0).replace(",", "X").replace(".", ",").replace("X", ".") }}
+        </strong>
+    </div>
+
+</div>
+    <div class="cliente-rodape">
+
+        <span class="status-liberada">
+
+            Em andamento
+
+        </span>
+
+       <a
+        href="/compra-divida/cliente/{{ cliente.id }}"
+        class="btn-cliente">
+
+        Abrir
+
+        <i data-lucide="arrow-right"></i>
+
+    </a>
+
+    </div>
+
+</div>
+
+{% endfor %}
+
+</div>
+ 
+
+    {% if clientes|length == 0 %}
+    <div class="sem-metas">
+        Nenhum cliente cadastrado ainda.
+    </div>
+    {% endif %}
+
+</div>
+</div>
+
+<script>
+function filtrarClientesCompra(){
+
+    let termo = document
+        .getElementById("buscarClienteCompra")
+        .value
+        .toLowerCase();
+
+    let cards = document.querySelectorAll(".cliente-compra-card");
+
+    cards.forEach(card => {
+
+        let texto = card.innerText.toLowerCase();
+
+        card.style.display =
+            texto.includes(termo)
+            ? ""
+            : "none";
+    });
+}
+
+function toggleSidebar() {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    sidebar.classList.toggle("closed");
+
+    if (conteudo) {
+        conteudo.classList.toggle("sidebar-fechada");
+    }
+
+    const fechada = sidebar.classList.contains("closed");
+
+    localStorage.setItem("sidebarFechada", fechada);
+
+    if (btn) {
+
+        btn.innerHTML = fechada
+            ? '<i data-lucide="panel-left-open"></i>'
+            : '<i data-lucide="panel-left-close"></i>';
+
+        lucide.createIcons();
+    }
+
+}
+window.addEventListener("load", function () {
+
+    const sidebar = document.getElementById("sidebar");
+    const conteudo = document.querySelector(".conteudo");
+    const btn = document.querySelector(".toggle-btn");
+
+    const fechada = localStorage.getItem("sidebarFechada") === "true";
+
+    if (fechada) {
+
+        sidebar.classList.add("closed");
+
+        if (conteudo) {
+            conteudo.classList.add("sidebar-fechada");
+        }
+
+        if (btn) {
+            btn.innerHTML = '<i data-lucide="panel-left-open"></i>';
+        }
+
+    } else {
+
+        sidebar.classList.remove("closed");
+
+        if (conteudo) {
+            conteudo.classList.remove("sidebar-fechada");
+        }
+
+        if (btn) {
+            btn.innerHTML = '<i data-lucide="panel-left-close"></i>';
+        }
+
+    }
+
+    lucide.createIcons();
+
+});
+
+</script>
+<script>
+lucide.createIcons();
+</script>
+</body>
+</html>

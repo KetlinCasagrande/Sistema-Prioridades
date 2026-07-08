@@ -204,64 +204,8 @@ body {
     white-space:nowrap;
 }
 
-/* HOVER */
 
-.sidebar a:hover{
-    background:rgba(109,40,217,0.18);
 
-    color:white;
-
-    transform:translateX(4px);
-}
-
-/* ITEM ATIVO */
-
-.sidebar a.active{
-    background:linear-gradient(
-        135deg,
-        #6d28d9,
-        #7c3aed
-    );
-
-    color:white;
-
-    box-shadow:
-        0 10px 25px rgba(109,40,217,0.28);
-}
-
-/* LOGOUT */
-
-.sidebar a[href="/logout"]{
-    margin-top:auto;
-
-    background:rgba(220,38,38,0.08);
-}
-
-.sidebar a[href="/logout"]:hover{
-    background:rgba(220,38,38,0.18);
-}
-
-/* =========================
-SIDEBAR FECHADA
-========================= */
-
-.sidebar.closed .text{
-    display:none;
-}
-
-.sidebar.closed a{
-    justify-content:center;
-    gap:0;
-    padding:14px 0;
-}
-
-.sidebar.closed a:hover{
-    transform:none;
-}
-
-.sidebar.closed .icon{
-    margin:0;
-}
 /* =========================
    LAYOUT PRINCIPAL (CORREÇÃO IMPORTANTE)
 ========================= */
@@ -328,36 +272,7 @@ SIDEBAR FECHADA
 }
 
 
-.card-mini:hover{
-    transform:translateY(-4px);
 
-    border-color:rgba(109,40,217,0.4);
-
-    box-shadow:0 12px 25px rgba(109,40,217,0.12);
-}
-
-.card-mini h3{
-    font-size:14px;
-    margin-bottom:10px;
-
-    color:#c4b5fd;
-
-    border-bottom:1px solid rgba(255,255,255,0.08);
-
-    padding-bottom:8px;
-}
-.card-mini span{
-    font-size:12px;
-    color:#cbd5e1;
-    line-height:1.4;
-}
-
-.card-mini p{
-    margin:0;
-    font-size:13px;
-    font-weight:600;
-    color:white;
-}
 /* =========================
    BOX / PAINÉIS
 ========================= */
@@ -408,12 +323,7 @@ SIDEBAR FECHADA
     transition: 0.2s;
 }
 
-.card:hover,
-.card-home:hover,
-.acesso:hover {
-    transform: translateY(-4px);
-    background: rgba(255,255,255,0.05);
-}
+
 
 .card h3,
 .card-home h3 {
@@ -614,9 +524,6 @@ td {
     border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-tbody tr:hover {
-    background: rgba(255,255,255,0.03);
-}
 
 
 
@@ -785,7 +692,7 @@ tag-master{
 
 .comissao-card:hover {
     transform: translateY(-2px);
-    background: rgba(255,255,255,0.05);
+    background:rgb(147, 52, 219);
 }
 
 .comissao-linha {
@@ -864,7 +771,7 @@ tag-master{
 }
 
 .banco-header:hover {
-    background: rgba(255,255,255,0.06);
+    background: rgb(147, 52, 219);
 }
 
 /* ÁREA DAS TABELAS */
@@ -890,7 +797,7 @@ tag-master{
 
 .tabela-item:hover {
     transform: translateY(-2px);
-    background: rgba(255,255,255,0.05);
+    background: rgb(147, 52, 219);
 }
 
 /* =========================
@@ -956,7 +863,7 @@ tag-master{
     transform:translateY(-5px);
     border-color:rgba(109,40,217,0.5);
 
-    background:rgba(109,40,217,0.08);
+    background:rgb(147, 52, 219);
 
     box-shadow:0 10px 30px rgba(109,40,217,0.18);
 }
@@ -1027,76 +934,8 @@ tag-master{
     box-shadow:0 0 10px #22c55e;
 }
 
-/* =========================
-   ACESSO RAPIDO
-========================= */
 
-.atalhos-grid{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:12px;
-}
 
-.atalho-btn{
-    background:rgba(255,255,255,0.04);
-
-    border:1px solid rgba(255,255,255,0.06);
-
-    border-radius:12px;
-
-    padding:14px;
-
-    text-decoration:none;
-    color:white;
-
-    text-align:center;
-
-    transition:0.2s;
-}
-
-.atalho-btn:hover{
-    background:rgba(109,40,217,0.15);
-
-    border-color:rgba(109,40,217,0.4);
-
-    transform:translateY(-3px);
-}
-
-/* =========================
-   AVISOS HOME
-========================= */
-.aviso-home{
-    background: linear-gradient(
-        135deg,
-        rgba(57, 41, 93, 0.98),
-        rgba(15,23,42,0.98)
-    ) !important;
-
-    border: 1px solid rgba(255,255,255,0.06) !important;
-    border-left: 4px solid #6d28d9 !important;
-
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 12px;
-
-    color: #e5e7eb !important;
-}
-
-.aviso-home:hover{
-    transform: translateY(-3px);
-    border-left-color: #a78bfa;
-}
-
-.aviso-home strong{
-    display: block;
-    margin-bottom: 6px;
-    color: #f9fafb;
-}
-
-.aviso-home p{
-    font-size: 14px;
-    color: #cbd5e1;
-}
 .banco-topo{
     display:flex;
     justify-content:space-between;
@@ -1169,7 +1008,7 @@ tag-master{
 
 .tabela-metas tr:hover{
 
-    background:rgba(109,40,217,0.5);
+    background:rgb(147, 52, 219);
 
 }
 
@@ -1330,10 +1169,7 @@ AVISOS HOME
 
     transition:all 0.25s ease;
 }
-.page{
-    display:block !important;
-    width:100%;
-}
+
 
 .ranking-card{
     background: linear-gradient(
@@ -1354,30 +1190,9 @@ AVISOS HOME
     transition: 0.3s;
 }
 
-.ranking-card:hover{
-    transform: translateY(-3px);
-    border-color: rgba(109,40,217,0.4);
-}
 
-.ranking-card h3{
-    margin-bottom: 15px;
-    font-size: 16px;
-    color: #f9fafb;
-}
 
-.ranking .posicao{
-    padding: 10px 0;
-    font-size: 14px;
-    font-weight: 500;
-    color: #cbd5e1;
-    letter-spacing: 0.3px;
-}
 
-.ranking .primeiro{
-    font-size: 18px;
-    font-weight: 700;
-    color: #fbbf24;
-}
 
 .filtros-comissoes{
     display:flex;
@@ -1406,7 +1221,7 @@ thead th a{
 }
 
 thead th a:hover{
-    color: #7c3aed;
+    color: rgb(147, 52, 219);
 }
 /* =========================
    CARD BASE (PADRÃO)
@@ -1440,120 +1255,6 @@ thead th a:hover{
     color: #e5e7eb;
 
     margin-bottom: 20px;
-}
-
-/* =========================
-   HOVER PADRÃO (SUAVE)
-========================= */
-
-.card:hover,
-.card-home:hover,
-.acesso:hover,
-.progresso-card:hover,
-.comissao-card:hover,
-.tabela-item:hover,
-.ranking-card:hover,
-.section:hover,
-.box:hover{
-
-    transform: translateY(-4px);
-
-    border-color: rgba(109,40,217,0.4);
-
-    background: rgba(17,24,39,0.9);
-
-    box-shadow: 0 15px 35px rgba(109,40,217,0.12);
-}
-
-/* =========================
-   CARD DESTAQUE (IMPORTANTE)
-========================= */
-
-.card.destaque,
-.card-home.destaque{
-    background: linear-gradient(
-        135deg,
-        rgba(109,40,217,0.25),
-        rgba(17,24,39,0.85)
-    );
-
-    border: 1px solid rgba(109,40,217,0.4);
-}
-/* TABELA MAIS VIVA - MINHAS VENDAS */
-
-table tbody tr{
-    transition: all 0.25s ease;
-}
-
-table tbody tr:hover{
-    background: rgba(109,40,217,0.10);
-    transform: scale(1.01);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-}
-
-td{
-    transition: 0.2s ease;
-}
-
-table tbody tr:hover td{
-    color: #ffffff;
-}
-/* BLOCO PRINCIPAL DA PÁGINA MINHAS VENDAS */
-
-.vendas-container{
-    background: linear-gradient(
-        135deg,
-        rgba(17,24,39,0.92),
-        rgba(15,23,42,0.92)
-    );
-
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 16px;
-
-    padding: 20px;
-
-    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
-
-    animation: fadeIn 0.4s ease;
-}
-
-
-.card-mini:hover{
-    transform: translateY(-6px);
-    border-color: rgba(109,40,217,0.4);
-    box-shadow: 0 18px 40px rgba(109,40,217,0.15);
-}
-
-@keyframes fadeIn {
-    from { 
-        opacity: 0; 
-        transform: translateY(10px); 
-    }
-    to { 
-        opacity: 1; 
-        transform: translateY(0); 
-    }
-}
-
-.form-venda label {
-    font-size: 13px;
-    font-weight: 500;
-    color: #444;
-}
-
-.form-venda select,
-.form-venda input {
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    outline: none;
-    transition: 0.2s;
-}
-
-.form-venda select:focus,
-.form-venda input:focus {
-    border-color: #6c2bd9;
-    box-shadow: 0 0 0 3px rgba(108, 43, 217, 0.15);
 }
 
 html, body {
@@ -1700,20 +1401,7 @@ td, th {
     margin-bottom: 20px;
 }
 
-.card {
-    flex: 1;
-    background: #2b2b3d;
-    color: white;
-    padding: 15px;
-    border-radius: 10px;
-    text-align: center;
-    transition: 0.3s;
-}
 
-.card:hover {
-    transform: translateY(-3px);
-    background: #3a3a55;
-}
 /* =====================================================
    MINHAS VENDAS - LAYOUT FINAL LIMPO
 ===================================================== */
@@ -2012,9 +1700,7 @@ td, th {
     border-bottom: 1px solid rgba(255,255,255,.12);
 }
 
-.area-operacional .tabela-metas tr:hover td {
-    background: rgba(124,58,237,.08);
-}
+
 
 .area-operacional .tabela-metas a {
     text-decoration: none;
@@ -2160,7 +1846,7 @@ td, th {
 }
 
 .atalhos-home a {
-    background: rgba(255,255,255,.04);
+    background: rgba(124,58,237,.18);
     border: 1px solid rgba(255,255,255,.08);
     border-radius: 14px;
     padding: 14px;
@@ -2174,7 +1860,7 @@ td, th {
 }
 
 .atalhos-home a:hover {
-    background: rgba(124,58,237,.18);
+    background: #82006c;
     border-color: rgba(168,85,247,.45);
     transform: translateY(-2px);
 }
@@ -2288,7 +1974,7 @@ td, th {
 }
 
 .btn-copiar{
-    width:48px;
+    width:115px;
     height:42px;
     border:none;
     border-radius:10px;
@@ -2299,47 +1985,42 @@ td, th {
 }
 
 .btn-copiar:hover{
-    background:#7c3aed;
+    background:#82006c;
 }
 
 /* ===== SENHA + COPIAR ALINHADO ===== */
 
 .senha-box{
-    display:grid;
-    grid-template-columns: 1fr 42px;
-    gap:8px;
-    width:100%;
+    position:relative;
+    display:flex;
     align-items:center;
-    margin-bottom:8px;
 }
 
 .senha-box input{
     width:100%;
-    height:40px;
-    min-width:0;
+    padding-right:75px;
 }
+.btn-icone{
 
-.btn-copiar{
-    width:42px !important;
-    height:40px !important;
+    width:28px;
+    height:28px;
 
     border:none;
-    border-radius:10px;
+    border-radius:8px;
 
-    background:#6d28d9;
-    color:white;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    background:transparent;
 
     cursor:pointer;
-    font-size:15px;
-    padding:0 !important;
+
+    transition:.2s;
 }
 
-.btn-copiar:hover{
-    background:#7c3aed;
+.btn-icone:hover{
+
+    background:rgba(124,58,237,.18);
+
+    transform:scale(1.08);
+
 }
 /* ===== FORÇAR COMPACTAÇÃO BANCOS ===== */
 
@@ -3067,4 +2748,911 @@ thead th{
     font-weight:800;
     text-align:right;
     outline:none;
+}
+.subtitulo-metas{
+    margin:18px 0 8px;
+    font-size:15px;
+    color:#cbd5e1;
+    font-weight:700;
+}
+
+#metas .form-meta{
+    margin-bottom:16px;
+}
+
+
+/* =========================
+   METAS - NOVO LAYOUT
+========================= */
+
+.metas-header{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin-bottom:22px;
+}
+
+.metas-header h2{
+    margin:0;
+    font-size:30px;
+}
+
+.metas-header p{
+    margin:4px 0 0;
+    color:#94a3b8;
+}
+
+.metas-icon{
+    width:58px;
+    height:58px;
+    border-radius:16px;
+    background:linear-gradient(135deg,#7c3aed,#4c1d95);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:28px;
+    box-shadow:0 0 35px rgba(124,58,237,.35);
+}
+
+.metas-card{
+    background:linear-gradient(180deg,rgba(15,23,42,.98),rgba(15,23,42,.82));
+    border:1px solid rgba(124,58,237,.45);
+    border-radius:16px;
+    padding:22px;
+    margin-bottom:18px;
+    box-shadow:0 12px 35px rgba(0,0,0,.18);
+}
+
+.metas-card h3{
+    margin:0 0 18px;
+    color:#a78bfa;
+    font-size:18px;
+}
+
+.metas-grid-form{
+    display:grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap:16px;
+    align-items:end;
+}
+
+.metas-grid-add{
+    grid-template-columns: 1.4fr 1fr auto;
+}
+
+.metas-grid-form label{
+    display:block;
+    margin-bottom:8px;
+    color:#cbd5e1;
+    font-size:13px;
+    font-weight:700;
+}
+
+.metas-grid-form input,
+.metas-grid-form select{
+    width:100%;
+    height:46px;
+    border-radius:10px;
+    border:1px solid #334155;
+    background:#1e293b;
+    color:#fff;
+    padding:0 14px;
+    font-family:Poppins, sans-serif;
+}
+
+.metas-botoes{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.btn-limpar{
+    background:transparent !important;
+    border:1px solid rgba(124,58,237,.8) !important;
+    color:#fff !important;
+}
+
+.aviso-metas{
+    margin:14px 0 0;
+    color:#fbbf24;
+    font-size:13px;
+}
+
+.metas-lista-card{
+    padding:0;
+    overflow:hidden;
+}
+
+.metas-lista-topo{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:22px;
+    border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.metas-lista-topo h3{
+    margin:0;
+}
+
+.metas-tags{
+    display:flex;
+    gap:10px;
+}
+
+.metas-tags span{
+    padding:9px 13px;
+    border-radius:10px;
+    background:rgba(124,58,237,.18);
+    border:1px solid rgba(124,58,237,.35);
+    color:#ddd6fe;
+    font-weight:700;
+    font-size:13px;
+}
+
+.metas-table{
+    border-spacing:0 8px;
+    padding:14px 18px 18px;
+}
+
+.produto-meta-cell{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.produto-bolinha{
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#7c3aed,#4c1d95);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+    color:white;
+}
+
+.sem-metas{
+    padding:30px;
+    text-align:center;
+    color:#94a3b8;
+    font-weight:600;
+}
+
+@media(max-width:900px){
+    .metas-grid-form,
+    .metas-grid-add{
+        grid-template-columns:1fr;
+    }
+
+    .metas-lista-topo{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:12px;
+    }
+}
+/* =========================
+   COMPRA DE DÍVIDA
+========================= */
+
+
+.box-compra h2{
+    margin:0 0 18px;
+    color:#a78bfa;
+}
+
+.form-compra-cliente{
+    display:grid;
+    grid-template-columns: 1.5fr 1fr 1fr auto;
+    gap:14px;
+    align-items:center;
+}
+
+.grid-clientes-compra{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(330px, 1fr));
+    gap:18px;
+    margin-top:22px;
+}
+
+.cliente-compra-card{
+    background:#111827;
+    border:1px solid rgba(124,58,237,.35);
+    border-radius:18px;
+    padding:18px;
+    transition:.2s;
+}
+
+
+
+.resumo-compra-card span{
+    display:block;
+    color:#94a3b8;
+    font-size:13px;
+    margin-bottom:8px;
+}
+
+.resumo-compra-card strong{
+    color:white;
+    font-size:22px;
+}
+
+.resumo-compra-card.positivo{
+    border-color:rgba(34,197,94,.5);
+}
+
+.resumo-compra-card.positivo strong{
+    color:#86efac;
+}
+
+.resumo-compra-card.negativo{
+    border-color:rgba(239,68,68,.5);
+}
+
+.resumo-compra-card.negativo strong{
+    color:#fca5a5;
+}
+.linha-editavel-compra{
+    display:grid;
+    grid-template-columns: 1fr 1fr 1.2fr auto auto;
+    gap:12px;
+    align-items:center;
+    background:#111827;
+    border:1px solid rgba(124,58,237,.25);
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:12px;
+}
+
+.valor-liberado-box{
+    background:rgba(124,58,237,.12);
+    border:1px solid rgba(124,58,237,.25);
+    border-radius:12px;
+    padding:10px 14px;
+}
+
+.valor-liberado-box span{
+    display:block;
+    color:#94a3b8;
+    font-size:12px;
+}
+
+.valor-liberado-box strong{
+    color:#fff;
+    font-size:16px;
+}
+
+.form-divida-compra{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:12px;
+}
+
+.form-divida-compra button{
+    grid-column: span 1;
+}
+
+.tabela-dividas-compra input,
+.tabela-dividas-compra select{
+    width:100%;
+    min-width:120px;
+    height:38px;
+    border-radius:8px;
+    border:1px solid #334155;
+    background:#1e293b;
+    color:white;
+    padding:0 10px;
+}
+
+.tabela-dividas-compra td{
+    vertical-align:middle;
+}
+
+@media(max-width:1000px){
+    .linha-editavel-compra,
+    .form-divida-compra{
+        grid-template-columns:1fr;
+    }
+}
+.abas-compra{
+    display:flex;
+    gap:10px;
+    margin:22px 0;
+    flex-wrap:wrap;
+}
+
+.aba-compra{
+    border:none;
+    border-radius:12px;
+    padding:12px 16px;
+    background:#111827;
+    color:#cbd5e1;
+    font-weight:700;
+    cursor:pointer;
+    border:1px solid rgba(124,58,237,.25);
+}
+
+.aba-compra.active{
+    background:#7c3aed;
+    color:white;
+    box-shadow:0 0 25px rgba(124,58,237,.35);
+}
+
+.conteudo-aba-compra{
+    display:none;
+}
+
+.conteudo-aba-compra.active{
+    display:block;
+}
+
+
+.resumo-card-cliente{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin:14px 0;
+}
+
+.resumo-card-cliente div{
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:12px;
+    padding:10px;
+}
+
+.resumo-card-cliente span{
+    display:block;
+    color:#94a3b8;
+    font-size:11px;
+    margin-bottom:5px;
+}
+
+.resumo-card-cliente strong{
+    color:#fff;
+    font-size:13px;
+}
+
+.resumo-card-cliente .positivo strong{
+    color:#86efac;
+}
+
+.resumo-card-cliente .negativo strong{
+    color:#fca5a5;
+}
+
+.status-em-andamento{
+    background:rgba(234,179,8,.14);
+    color:#fde68a;
+    border-color:rgba(234,179,8,.25);
+}
+
+.status-aguardando-boletos{
+    background:rgba(59,130,246,.14);
+    color:#93c5fd;
+    border-color:rgba(59,130,246,.25);
+}
+
+.status-proposta-montada{
+    background:rgba(168,85,247,.14);
+    color:#d8b4fe;
+    border-color:rgba(168,85,247,.25);
+}
+
+.status-concluído,
+.status-concluido{
+    background:rgba(34,197,94,.14);
+    color:#86efac;
+    border-color:rgba(34,197,94,.25);
+}
+
+.status-cancelado{
+    background:rgba(239,68,68,.14);
+    color:#fca5a5;
+    border-color:rgba(239,68,68,.25);
+}
+.linha-ranking-vendas{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 14px;
+    margin-bottom:10px;
+    border-radius:12px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(124,58,237,.25);
+}
+
+.linha-ranking-vendas strong{
+    color:white;
+    margin-left:8px;
+}
+
+.linha-ranking-vendas span{
+    color:#a78bfa;
+    font-weight:800;
+}
+
+
+/* =========================
+   HOME VENDAS
+========================= */
+
+.home-vendas-hero{
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr;
+    gap:18px;
+    margin:22px 0;
+}
+
+.home-vendas-meta,
+.home-vendas-card{
+    background:linear-gradient(180deg,rgba(15,23,42,.98),rgba(15,23,42,.82));
+    border:1px solid rgba(124,58,237,.35);
+    border-radius:18px;
+    padding:22px;
+    box-shadow:0 12px 35px rgba(0,0,0,.18);
+}
+
+.home-vendas-meta span,
+.home-vendas-card span{
+    color:#94a3b8;
+    font-size:14px;
+}
+
+.home-vendas-meta h2{
+    color:white;
+    font-size:34px;
+    margin:10px 0 16px;
+}
+
+.home-vendas-card{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+}
+
+.home-vendas-card strong{
+    color:white;
+    font-size:28px;
+    margin-top:10px;
+}
+
+.barra-meta-home{
+    width:100%;
+    height:12px;
+    background:#1e293b;
+    border-radius:999px;
+    overflow:hidden;
+    margin:12px 0;
+}
+
+.barra-meta-home div{
+    height:100%;
+    background:linear-gradient(90deg,#7c3aed,#a78bfa);
+    border-radius:999px;
+}
+
+.barra-meta-home.pequena{
+    height:8px;
+}
+
+.atalhos-vendas{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:14px;
+}
+
+.atalho-vendas-card{
+    text-decoration:none;
+    background:#111827;
+    border:1px solid rgba(124,58,237,.25);
+    border-radius:16px;
+    padding:18px;
+    transition:.2s;
+}
+
+
+
+.atalho-vendas-card span{
+    font-size:26px;
+}
+
+.atalho-vendas-card strong{
+    display:block;
+    color:white;
+    margin:8px 0 4px;
+}
+
+.atalho-vendas-card p{
+    color:#94a3b8;
+    font-size:13px;
+    margin:0;
+}
+
+.grid-home-vendas{
+    display:grid;
+    grid-template-columns:1.4fr .9fr;
+    gap:18px;
+    margin-bottom:18px;
+}
+
+.produto-progresso-card{
+    background:#111827;
+    border:1px solid rgba(124,58,237,.25);
+    border-radius:16px;
+    padding:16px;
+    margin-bottom:12px;
+}
+
+.produto-progresso-topo,
+.produto-progresso-valores,
+.home-vendas-section-topo{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+}
+
+.produto-progresso-topo strong{
+    color:white;
+}
+
+.produto-progresso-topo span{
+    color:#a78bfa;
+    font-weight:800;
+}
+
+.produto-progresso-valores{
+    color:#94a3b8;
+    font-size:12px;
+    margin-top:8px;
+}
+
+.produto-progresso-card p{
+    color:#cbd5e1;
+    margin:10px 0 0;
+}
+
+
+.grid-clientes-home-vendas{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:14px;
+    margin-top:16px;
+}
+
+.cliente-home-vendas-card{
+    background:#111827;
+    border:1px solid rgba(124,58,237,.25);
+    border-radius:16px;
+    padding:16px;
+}
+
+.cliente-home-vendas-card h3{
+    color:white;
+    margin:0 0 6px;
+}
+
+.cliente-home-vendas-card p{
+    color:#94a3b8;
+    margin:0 0 12px;
+    font-size:13px;
+}
+
+.cliente-home-vendas-card .btn{
+    margin-top:12px;
+}
+
+.aviso-home-vendas{
+    background:#111827;
+    border:1px solid rgba(124,58,237,.25);
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:12px;
+}
+
+.aviso-home-vendas strong{
+    color:#f8fafc;
+}
+
+.aviso-home-vendas p{
+    color:#94a3b8;
+    margin:6px 0 0;
+}
+
+@media(max-width:1000px){
+    .home-vendas-hero,
+    .grid-home-vendas{
+        grid-template-columns:1fr;
+    }
+}
+.home-destaque{
+    margin-bottom:18px;
+}
+
+
+.meta-mini-home{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin:18px 0 8px;
+}
+
+.meta-mini-home div{
+    background:#111827;
+    border:1px solid rgba(124,58,237,.25);
+    border-radius:14px;
+    padding:14px;
+}
+
+.meta-mini-home span{
+    display:block;
+    color:#94a3b8;
+    font-size:12px;
+    margin-bottom:6px;
+}
+
+.meta-mini-home strong{
+    color:white;
+    font-size:18px;
+}
+
+@media(max-width:800px){
+    .meta-mini-home{
+        grid-template-columns:1fr;
+    }
+}
+.compras-compactas{
+    padding:18px;
+}
+
+.compras-compactas h2{
+    font-size:20px;
+}
+
+.lista-compras-compacta{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:12px;
+}
+
+.compra-compacta-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:10px 12px;
+    border-radius:10px;
+    background:rgba(255,255,255,.035);
+    border:1px solid rgba(124,58,237,.18);
+}
+
+.compra-compacta-item span{
+    color:white;
+    font-weight:600;
+    font-size:13px;
+}
+
+.compra-compacta-item a{
+    color:#a78bfa;
+    text-decoration:none;
+    font-weight:800;
+    font-size:13px;
+    white-space:nowrap;
+}
+
+.btn-mini{
+    padding:8px 12px !important;
+    font-size:12px !important;
+}
+
+.grid-home-vendas{
+    display:grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap:18px !important;
+    align-items:start !important;
+}
+
+.ranking-compacto,
+.compras-compactas{
+    padding:18px !important;
+}
+
+.ranking-item{
+    margin-bottom:10px !important;
+}
+
+.ranking-topo{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:5px;
+}
+
+.ranking-topo strong,
+.ranking-topo span{
+    font-size:13px !important;
+}
+
+.ranking-barra{
+    height:7px;
+    background:#1f2937;
+    border-radius:999px;
+    overflow:hidden;
+}
+
+.ranking-barra div{
+    height:100%;
+    background:linear-gradient(90deg,#7c3aed,#a78bfa);
+}
+
+@media(max-width:1000px){
+    .grid-home-vendas{
+        grid-template-columns:1fr !important;
+    }
+}
+/* RANKING LIMPO */
+.ranking-compacto{
+    padding:18px !important;
+}
+
+.ranking-compacto h2{
+    font-size:24px !important;
+    margin-bottom:16px !important;
+}
+
+.ranking-limpo{
+    display:grid;
+    grid-template-columns:40px 1fr auto;
+    align-items:center;
+    gap:10px;
+    padding:12px 10px;
+    border-radius:12px;
+    background:rgba(255,255,255,.035);
+    border:1px solid rgba(124,58,237,.18);
+    margin-bottom:10px;
+}
+
+.ranking-posicao{
+    font-size:22px;
+}
+
+.ranking-nome strong{
+    display:block;
+    color:white;
+    font-size:14px;
+}
+
+.ranking-nome span{
+    color:#a78bfa;
+    font-size:11px;
+    font-weight:700;
+}
+
+.ranking-valor{
+    color:#22c55e;
+    font-size:14px;
+    font-weight:900;
+    white-space:nowrap;
+}
+
+.ranking-eu{
+    background:rgba(124,58,237,.16);
+    border-color:rgba(167,139,250,.45);
+}
+/* ==========================
+   ADMIN - USUÁRIOS
+========================== */
+
+.admin-topo{
+    margin-bottom:25px;
+}
+
+.admin-topo h1{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:0;
+}
+
+.admin-topo h1 i{
+    color:var(--primary-2);
+}
+
+.admin-topo span{
+    color:var(--muted);
+}
+
+.admin-section-title{
+    margin-bottom:22px;
+}
+
+.admin-section-title h2{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:0;
+    color:var(--text);
+}
+
+.admin-section-title h2 i{
+    color:var(--primary-2);
+}
+
+.admin-section-title p{
+    margin:5px 0 0;
+    color:var(--muted);
+    font-size:14px;
+}
+
+.admin-user-form{
+    display:grid;
+    grid-template-columns:1.5fr 1.2fr 1fr auto;
+    gap:15px;
+    align-items:end;
+
+    padding:18px;
+    margin-bottom:22px;
+
+    border-radius:16px;
+    background:rgba(255,255,255,.04);
+    border:1px solid var(--border);
+}
+
+.admin-user-form label{
+    display:block;
+    margin-bottom:7px;
+    color:var(--muted);
+    font-size:13px;
+    font-weight:600;
+}
+
+.admin-user-form input,
+.admin-user-form select{
+    width:100%;
+    height:46px;
+    border:none;
+    outline:none;
+    border-radius:12px;
+    padding:0 14px;
+    background:rgba(15,23,42,.75);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:'Poppins',sans-serif;
+}
+
+.btn-criar-usuario{
+    height:46px;
+    padding:0 18px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(135deg,var(--primary),var(--primary-2));
+    color:white;
+    font-weight:700;
+    cursor:pointer;
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+}
+
+.btn-criar-usuario:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 22px rgba(236,72,153,.22);
+}
+
+@media(max-width:900px){
+    .admin-user-form{
+        grid-template-columns:1fr;
+    }
+
+    .btn-criar-usuario{
+        width:100%;
+    }
+}
+.admin-user-form-completo{
+    grid-template-columns:1.2fr 1fr 1.5fr 1fr 1fr auto;
 }
