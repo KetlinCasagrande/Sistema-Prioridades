@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="{{ tema }}">
 
 <head>
     <meta charset="UTF-8">
     <title>Editar Venda</title>
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
 </head>
@@ -56,6 +57,8 @@
     </div>
 
 </div>
-
+<script>
+lucide.createIcons();
+</script>
 </body>
 </html>

@@ -402,7 +402,33 @@ function highlightSimple(element, term){
                             </td>
                             {% endif %}
 
-                            <td>{{ tabela["data_importacao"] or "—" }}</td>
+                          <td class="produto-data">
+
+    {% if tabela["atualizado_em"] %}
+
+        <strong>
+            {{ tabela["atualizado_em"][8:10] }}/{{ tabela["atualizado_em"][5:7] }}/{{ tabela["atualizado_em"][0:4] }}
+        </strong>
+
+        <small>
+            {{ tabela["atualizado_em"][11:16] }}
+
+            {% if tabela["atualizado_por"] %}
+                · {{ tabela["atualizado_por"] }}
+            {% endif %}
+        </small>
+
+    {% elif tabela["data_importacao"] %}
+
+        {{ tabela["data_importacao"] }}
+
+    {% else %}
+
+        —
+
+    {% endif %}
+
+</td>
 
                             <td>
                                 {% if tabela["status"] == "LIBERADA" %}

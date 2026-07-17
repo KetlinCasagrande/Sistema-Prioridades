@@ -181,6 +181,47 @@ def criar_tabelas_compra_divida():
     print("✔ Tabelas de compra de dívida criadas.")
 
 
+def atualizar_tabela_clientes_compra():
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("PRAGMA table_info(clientes_compra)")
+    colunas_existentes = [
+        coluna[1]
+        for coluna in cursor.fetchall()
+    ]
+
+    novas_colunas = {
+        "rg": "TEXT",
+        "profissao": "TEXT",
+        "endereco": "TEXT",
+        "numero": "TEXT",
+        "bairro_complemento": "TEXT",
+        "cidade": "TEXT DEFAULT 'Paraguaçu Paulista'",
+        "estado": "TEXT DEFAULT 'SP'"
+    }
+
+    for nome_coluna, tipo_coluna in novas_colunas.items():
+
+        if nome_coluna not in colunas_existentes:
+
+            cursor.execute(
+                f"""
+                ALTER TABLE clientes_compra
+                ADD COLUMN {nome_coluna} {tipo_coluna}
+                """
+            )
+
+            print(
+                f"Coluna adicionada em clientes_compra: "
+                f"{nome_coluna}"
+            )
+
+    conn.commit()
+    conn.close()
+
+
 def mascarar_email(email):
     if not email or "@" not in email:
         return ""
@@ -462,6 +503,32 @@ def limpar_promotora(promotora):
     return removidas
 
 
+def limpar_promotora_produto(promotora, produto):
+
+    promotora = promotora.strip().upper()
+    produto = produto.strip().upper()
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        DELETE FROM comissoes
+        WHERE UPPER(TRIM(promotora)) = ?
+        AND UPPER(TRIM(produto)) = ?
+    """, (
+        promotora,
+        produto
+    ))
+
+    removidas = cursor.rowcount
+
+    conn.commit()
+    conn.close()
+
+    return removidas
+
+
+
 def status_meta(meta, projecao):
 
     if meta <= 0:
@@ -528,6 +595,35 @@ def conectar():
 
     return conn
 
+def atualizar_tabela_avisos():
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("PRAGMA table_info(avisos)")
+    colunas = [coluna[1] for coluna in cursor.fetchall()]
+
+    print("COLUNAS DA TABELA AVISOS:", colunas)
+
+    if "criado_em" not in colunas:
+
+        cursor.execute("""
+            ALTER TABLE avisos
+            ADD COLUMN criado_em TEXT
+        """)
+    if "categoria" not in colunas:
+        cursor.execute("""
+            ALTER TABLE avisos
+            ADD COLUMN categoria TEXT DEFAULT 'informativo'
+        """)
+
+
+        conn.commit()
+
+        print("Coluna criado_em adicionada com sucesso.")
+
+    conn.close()
+
 def registrar_auditoria(acao, descricao):
     try:
         conn = conectar()
@@ -565,6 +661,44 @@ def registrar_auditoria(acao, descricao):
 # =========================
 def verificar_login():
     return "usuario" in session
+
+
+
+
+def atualizar_tabela_comissoes():
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("PRAGMA table_info(comissoes)")
+    colunas_existentes = [
+        coluna[1]
+        for coluna in cursor.fetchall()
+    ]
+
+    novas_colunas = {
+        "atualizado_em": "TEXT",
+        "atualizado_por": "TEXT"
+    }
+
+    for nome_coluna, tipo_coluna in novas_colunas.items():
+
+        if nome_coluna not in colunas_existentes:
+
+            cursor.execute(
+                f"""
+                ALTER TABLE comissoes
+                ADD COLUMN {nome_coluna} {tipo_coluna}
+                """
+            )
+
+            print(
+                f"Coluna adicionada em comissoes: {nome_coluna}"
+            )
+
+    conn.commit()
+    conn.close()
+
 
 
 # =========================
@@ -1805,7 +1939,6 @@ def criar_usuario():
         print("❌ ERRO AO CRIAR USUÁRIO:", e)
         return redirect("/admin?aba=usuarios")
 
-
 @app.route("/admin/usuario/editar/<int:id>", methods=["POST"])
 @apenas_admin
 def editar_usuario(id):
@@ -1815,32 +1948,121 @@ def editar_usuario(id):
     email = request.form.get("email", "").strip()
     tipo = request.form.get("tipo", "user").strip()
     ativo = request.form.get("ativo", "1")
-
-    if session.get("tipo") != "master":
-        tipo = "user"
-
+    nova_senha = request.form.get("nova_senha", "").strip()
 
     conn = conectar()
     cursor = conn.cursor()
 
+    # Busca o usuário que está sendo alterado
     cursor.execute("""
-        UPDATE usuarios
-        SET usuario = ?, cpf = ?, email = ?, tipo = ?, ativo = ?
+        SELECT id, usuario, tipo
+        FROM usuarios
         WHERE id = ?
-    """, (
-        usuario,
-        cpf,
-        email,
-        tipo,
-        ativo,
-        id
-    ))
+    """, (id,))
+
+    usuario_editado = cursor.fetchone()
+
+    if not usuario_editado:
+        conn.close()
+        flash("Usuário não encontrado.", "error")
+        return redirect("/admin?aba=usuarios")
+
+    tipo_logado = session.get("tipo", "").lower().strip()
+    tipo_atual_usuario = usuario_editado["tipo"].lower().strip()
+
+    # Administrador não pode alterar usuário master
+    if tipo_logado != "master" and tipo_atual_usuario == "master":
+        conn.close()
+        flash("Apenas o master pode alterar outro usuário master.", "error")
+        return redirect("/admin?aba=usuarios")
+
+    # Somente o master pode escolher o tipo do usuário
+    if tipo_logado != "master":
+        tipo = tipo_atual_usuario
+
+    tipos_permitidos = ["user", "adm", "master"]
+
+    if tipo not in tipos_permitidos:
+        tipo = tipo_atual_usuario
+
+    if ativo not in ["0", "1"]:
+        ativo = "1"
+
+    if not usuario:
+        conn.close()
+        flash("O nome do usuário é obrigatório.", "error")
+        return redirect("/admin?aba=usuarios")
+
+    # Caso tenha sido preenchida uma nova senha
+    if nova_senha:
+
+        if len(nova_senha) < 6:
+            conn.close()
+            flash("A nova senha deve ter pelo menos 6 caracteres.", "error")
+            return redirect("/admin?aba=usuarios")
+
+        senha_hash = bcrypt.hashpw(
+            nova_senha.encode("utf-8"),
+            bcrypt.gensalt()
+        ).decode("utf-8")
+
+        cursor.execute("""
+            UPDATE usuarios
+            SET usuario = ?,
+                cpf = ?,
+                email = ?,
+                tipo = ?,
+                ativo = ?,
+                senha = ?
+            WHERE id = ?
+        """, (
+            usuario,
+            cpf,
+            email,
+            tipo,
+            ativo,
+            senha_hash,
+            id
+        ))
+
+        descricao_auditoria = (
+            f"Dados e senha do usuário {usuario} foram alterados"
+        )
+
+    else:
+
+        cursor.execute("""
+            UPDATE usuarios
+            SET usuario = ?,
+                cpf = ?,
+                email = ?,
+                tipo = ?,
+                ativo = ?
+            WHERE id = ?
+        """, (
+            usuario,
+            cpf,
+            email,
+            tipo,
+            ativo,
+            id
+        ))
+
+        descricao_auditoria = (
+            f"Dados do usuário {usuario} foram alterados"
+        )
 
     conn.commit()
     conn.close()
 
-    return redirect("/admin?aba=usuarios")
+    registrar_auditoria(
+        "EDITAR_USUARIO",
+        descricao_auditoria
+    )
 
+    flash("Usuário atualizado com sucesso!", "success")
+
+    return redirect("/admin?aba=usuarios")
 
 @app.route("/admin/usuario/deletar/<int:id>")
 @apenas_admin
@@ -1865,26 +2087,30 @@ def deletar_usuario(id):
 @apenas_admin
 def criar_aviso():
 
-    titulo = request.form["titulo"]
-    mensagem = request.form["mensagem"]
+    titulo = request.form["titulo"].strip()
+    mensagem = request.form["mensagem"].strip()
+    categoria = request.form.get("categoria", "informativo")
+
+    criado_em = datetime.now().strftime("%d/%m/%Y às %H:%M")
 
     conn = conectar()
     cursor = conn.cursor()
 
     cursor.execute("""
         INSERT INTO avisos
-        (titulo, mensagem)
-        VALUES (?, ?)
+        (titulo, mensagem, criado_em, categoria)
+        VALUES (?, ?, ?, ?)
     """, (
         titulo,
-        mensagem
+        mensagem,
+        criado_em,
+        categoria
     ))
 
     conn.commit()
     conn.close()
 
-    return redirect("/admin")
-
+    return redirect("/admin?aba=avisos")
 
 @app.route("/admin/aviso/deletar/<int:id>")
 @apenas_admin
@@ -1907,26 +2133,30 @@ def deletar_aviso(id):
 @apenas_admin
 def editar_aviso(id):
 
-    titulo = request.form["titulo"]
-    mensagem = request.form["mensagem"]
+    titulo = request.form["titulo"].strip()
+    mensagem = request.form["mensagem"].strip()
+    categoria = request.form.get("categoria", "informativo")
 
     conn = conectar()
     cursor = conn.cursor()
 
     cursor.execute("""
         UPDATE avisos
-        SET titulo = ?, mensagem = ?
+        SET titulo = ?,
+            mensagem = ?,
+            categoria = ?
         WHERE id = ?
     """, (
         titulo,
         mensagem,
+        categoria,
         id
     ))
 
     conn.commit()
     conn.close()
 
-    return redirect("/admin")
+    return redirect("/admin?aba=avisos")
 
 @app.route("/termos", methods=["GET", "POST"])
 def termos():
@@ -2433,6 +2663,7 @@ def editar_comissao(id):
     produto = request.form.get("produto")
     comissao = request.form.get("comissao")
     prazo = request.form.get("prazo")
+
     promotora = request.form.get("promotora")
 
     conn = conectar()
@@ -2638,11 +2869,14 @@ def importar_excel_painel():
     total_novos = 0
     total_atualizados = 0
 
+    data_atualizacao = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    usuario_atualizacao = session.get("usuario", "Sistema")
+
     for nome_aba, df in abas.items():
 
         produto_aba = nome_aba.strip().upper()
 
-        # normaliza colunas
+        # Normaliza os nomes das colunas
         df.columns = [c.strip().lower() for c in df.columns]
 
         for _, row in df.iterrows():
@@ -2651,16 +2885,19 @@ def importar_excel_painel():
             tabela_nome = str(row.get("tabela", "")).strip().upper()
             prazo = str(row.get("prazo", "")).strip().upper()
             promotora = str(row.get("promotora", "")).strip().upper()
-            comissao = str(row.get("comissão", row.get("comissao", "0")))
 
-            # normalização forte
+            comissao = str(
+                row.get("comissão", row.get("comissao", "0"))
+            )
+
             comissao = comissao.replace(",", ".").strip()
 
             if not banco or not tabela_nome:
                 continue
 
             cursor.execute("""
-                SELECT id FROM comissoes
+                SELECT id
+                FROM comissoes
                 WHERE banco = ?
                 AND produto = ?
                 AND tabela_nome = ?
@@ -2677,26 +2914,47 @@ def importar_excel_painel():
             existe = cursor.fetchone()
 
             if existe:
+
                 cursor.execute("""
                     UPDATE comissoes
-                    SET comissao = ?
+                    SET
+                        comissao = ?,
+                        atualizado_em = ?,
+                        atualizado_por = ?
                     WHERE id = ?
-                """, (comissao, existe["id"]))
+                """, (
+                    comissao,
+                    data_atualizacao,
+                    usuario_atualizacao,
+                    existe["id"]
+                ))
 
                 total_atualizados += 1
 
             else:
+
                 cursor.execute("""
-                    INSERT INTO comissoes
-                    (banco, produto, tabela_nome, comissao, prazo, promotora, ativo)
-                    VALUES (?, ?, ?, ?, ?, ?, 1)
+                    INSERT INTO comissoes (
+                        banco,
+                        produto,
+                        tabela_nome,
+                        comissao,
+                        prazo,
+                        promotora,
+                        ativo,
+                        atualizado_em,
+                        atualizado_por
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
                 """, (
                     banco,
                     produto_aba,
                     tabela_nome,
                     comissao,
                     prazo,
-                    promotora
+                    promotora,
+                    data_atualizacao,
+                    usuario_atualizacao
                 ))
 
                 total_novos += 1
@@ -2704,7 +2962,16 @@ def importar_excel_painel():
     conn.commit()
     conn.close()
 
-    return f"✔ Importação concluída! Novos: {total_novos} | Atualizados: {total_atualizados}"
+    registrar_auditoria(
+        "IMPORTAR_COMISSOES",
+        f"Novos: {total_novos} | Atualizados: {total_atualizados}"
+    )
+
+    return (
+        f"✔ Importação concluída! "
+        f"Novos: {total_novos} | "
+        f"Atualizados: {total_atualizados}"
+    )
 
 @app.route("/termos/historico")
 def historico():
@@ -2946,23 +3213,37 @@ def editar_acesso_banco(id):
     if "usuario" not in session:
         return redirect("/")
 
+    descricao = request.form.get("descricao", "").strip()
+    login = request.form.get("login", "").strip()
+    senha = request.form.get("senha", "").strip()
+
     conn = sqlite3.connect("banco.db")
     cursor = conn.cursor()
 
-    cursor.execute("""
-        UPDATE acessos_banco
-        SET descricao = ?,
-            login = ?,
-            senha = ?
-        WHERE id = ?
-    """, (
-
-        request.form["descricao"],
-        request.form["login"],
-        request.form["senha"],
-        id
-
-    ))
+    if senha:
+        cursor.execute("""
+            UPDATE acessos_banco
+            SET descricao = ?,
+                login = ?,
+                senha = ?
+            WHERE id = ?
+        """, (
+            descricao,
+            login,
+            senha,
+            id
+        ))
+    else:
+        cursor.execute("""
+            UPDATE acessos_banco
+            SET descricao = ?,
+                login = ?
+            WHERE id = ?
+        """, (
+            descricao,
+            login,
+            id
+        ))
 
     conn.commit()
     conn.close()
@@ -3466,24 +3747,48 @@ def minhas_vendas():
         tipo=session["tipo"],
         usuario=session["usuario"]
     )
-
 @app.route("/admin/comissoes/limpar-promotora", methods=["POST"])
 @apenas_master
 def limpar_comissoes_promotora():
 
     promotora = request.form.get("promotora", "").strip()
+    produto = request.form.get("produto", "").strip()
 
-    if not promotora:
+    if not promotora or not produto:
+        flash(
+            "Selecione a promotora e o produto antes de limpar.",
+            "error"
+        )
+
         return redirect("/admin?aba=comissoes")
 
-    removidas = limpar_promotora(promotora)
-
-    registrar_auditoria(
-        "LIMPAR_PROMOTORA",
-        f"Promotora: {promotora} | Registros removidos: {removidas}"
+    removidas = limpar_promotora_produto(
+        promotora,
+        produto
     )
 
-    return redirect("/admin?aba=comissoes")
+    registrar_auditoria(
+        "LIMPAR_PROMOTORA_PRODUTO",
+        (
+            f"Promotora: {promotora} | "
+            f"Produto: {produto} | "
+            f"Registros removidos: {removidas}"
+        )
+    )
+
+    flash(
+        (
+            f"{removidas} comissões de {produto} da promotora "
+            f"{promotora} foram removidas."
+        ),
+        "success"
+    )
+
+    return redirect(
+        f"/admin?aba=comissoes"
+        f"&promotora={promotora}"
+        f"&produto={produto}"
+    )
 
 @app.route("/excluir-venda/<int:id>")
 def excluir_venda(id):
@@ -3808,7 +4113,6 @@ def compra_divida_clientes():
         usuario=session["usuario"]
     )
 
-
 @app.route("/compra-divida/clientes/criar", methods=["POST"])
 def criar_cliente_compra():
 
@@ -3817,7 +4121,28 @@ def criar_cliente_compra():
 
     nome = request.form.get("nome", "").strip()
     cpf = request.form.get("cpf", "").strip()
-    telefone = request.form.get("telefone", "").strip()
+    rg = request.form.get("rg", "").strip()
+    profissao = request.form.get("profissao", "").strip()
+
+    endereco = request.form.get("endereco", "").strip()
+    numero = request.form.get("numero", "").strip()
+    bairro_complemento = request.form.get(
+        "bairro_complemento", ""
+    ).strip()
+
+    cidade = request.form.get(
+        "cidade",
+        "Paraguaçu Paulista"
+    ).strip()
+
+    estado = request.form.get(
+        "estado",
+        "SP"
+    ).strip().upper()
+
+    if not nome:
+        flash("Informe o nome do cliente.", "error")
+        return redirect("/compra-divida/clientes")
 
     conn = conectar()
     cursor = conn.cursor()
@@ -3828,21 +4153,39 @@ def criar_cliente_compra():
             usuario_nome,
             nome,
             cpf,
-            telefone
+            rg,
+            profissao,
+            endereco,
+            numero,
+            bairro_complemento,
+            cidade,
+            estado
         )
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         session["usuario_id"],
         session["usuario"],
         nome,
         cpf,
-        telefone
+        rg,
+        profissao,
+        endereco,
+        numero,
+        bairro_complemento,
+        cidade or "Paraguaçu Paulista",
+        estado or "SP"
     ))
+
+    cliente_id = cursor.lastrowid
 
     conn.commit()
     conn.close()
 
-    return redirect("/compra-divida/clientes")
+    flash("Cliente criado com sucesso!", "success")
+
+    return redirect(
+        f"/compra-divida/cliente/{cliente_id}"
+    )
 
 
 @app.route("/compra-divida/cliente/<int:id>")
@@ -4302,5 +4645,8 @@ def atualizar_tabela_usuarios():
 if __name__ == "__main__":
     print("🔥 FLASK INICIANDO...")
     atualizar_tabela_usuarios()
+    atualizar_tabela_comissoes()
+    atualizar_tabela_clientes_compra()
+    atualizar_tabela_avisos()
     criar_tabela_recuperacao_senha()
-    app.run(host="192.168.0.66", port=5000, debug=True)
+    app.run(debug=True, host="192.168.0.200", port=5000)

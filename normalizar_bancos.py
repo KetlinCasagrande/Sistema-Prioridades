@@ -19,6 +19,9 @@ MAPA_BANCOS = {
     "C6": "C6 BANK",
     "C6 BANK": "C6 BANK",
 
+    "EASYCRED": "EASY CRED",
+    "BANCO EASYCRED": "EASY CRED",
+
     "PAN": "PAN",
     "BANCO PAN": "PAN",
 

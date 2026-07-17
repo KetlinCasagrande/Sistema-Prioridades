@@ -102,19 +102,82 @@
         Novo Cliente
     </h2>
 
-    <form method="POST" action="/compra-divida/clientes/criar" class="compra-form-inline">
+    <form method="POST"
+      action="/compra-divida/clientes/criar"
+      class="compra-form-dados">
 
-        <input name="nome" placeholder="Nome do cliente" required>
+    <div class="compra-form-secao">
 
-        <input name="cpf" placeholder="CPF">
+        <h3>
+            <i data-lucide="user"></i>
+            Dados do Cliente
+        </h3>
 
-        <button class="btn btn-roxo">
-            <i data-lucide="plus"></i>
-            Criar Cliente
-        </button>
+        <div class="compra-form-grid compra-grid-cliente">
 
-    </form>
+            <input
+                name="nome"
+                placeholder="Nome do cliente"
+                required>
 
+            <input
+                name="cpf"
+                placeholder="CPF">
+
+            <input
+                name="rg"
+                placeholder="RG do cliente">
+
+            <input
+                name="profissao"
+                placeholder="Profissão">
+
+        </div>
+
+    </div>
+
+    <div class="compra-form-secao">
+
+        <h3>
+            <i data-lucide="map-pin"></i>
+            Endereço
+        </h3>
+
+        <div class="compra-form-grid compra-grid-endereco">
+
+            <input
+                name="endereco"
+                placeholder="Endereço / Logradouro">
+
+            <input
+                name="numero"
+                placeholder="Número">
+
+            <input
+                name="bairro_complemento"
+                placeholder="Bairro / Complemento">
+
+            <input
+                name="cidade"
+                value="Paraguaçu Paulista"
+                placeholder="Cidade">
+
+            <input
+                name="estado"
+                value="SP"
+                placeholder="Estado"
+                maxlength="2">
+
+        </div>
+
+    </div>
+
+    <button class="btn btn-roxo" type="submit">
+        <i data-lucide="plus"></i>
+        Criar Cliente
+    </button>
+
+</form>
 </div>
 
 <div class="filtros-compra">

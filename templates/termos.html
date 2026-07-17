@@ -120,10 +120,11 @@
 
                 <input
                     name="rg"
+                    value="{{ dados_compra['rg'] if dados_compra else '' }}"
                     placeholder="RG do Cliente">
-
                 <input
                     name="profissao"
+                    value="{{ dados_compra['profissao'] if dados_compra else '' }}"
                     placeholder="Profissão">
 
             </div>
@@ -142,14 +143,15 @@
 
                 <input
                     name="endereco"
+                    value="{{ dados_compra['endereco'] if dados_compra else '' }}"
                     placeholder="Endereço / Logradouro">
-
                 <input
                     name="numero"
+                    value="{{ dados_compra['numero'] if dados_compra else '' }}"
                     placeholder="Número">
-
-                <input
+               <input
                     name="complemento"
+                    value="{{ dados_compra['bairro_complemento'] if dados_compra else '' }}"
                     placeholder="Bairro / Complemento">
 
             </div>
@@ -158,12 +160,12 @@
 
                 <input
                     name="cidade"
-                    value="Paraguaçu Paulista"
+                    value="{{ dados_compra['cidade'] if dados_compra else 'Paraguaçu Paulista' }}"
                     placeholder="Cidade">
 
                 <input
                     name="estado"
-                    value="SP"
+                    value="{{ dados_compra['estado'] if dados_compra else 'SP' }}"
                     placeholder="Estado (UF)">
 
             </div>
@@ -547,7 +549,82 @@ window.addEventListener("load", function () {
 });
 
 </script>
+<script>
+function adicionarContrato() {
 
+    const container = document.getElementById("container-contratos");
+
+    if (!container) {
+        return;
+    }
+
+    const novaLinha = document.createElement("div");
+    novaLinha.className = "linha-contrato";
+
+    novaLinha.innerHTML = `
+        <input
+            name="contrato[]"
+            placeholder="Número do Contrato"
+            required>
+
+        <input
+            name="banco[]"
+            placeholder="Nome do Banco / Cartão"
+            required>
+
+        <input
+            name="parcela[]"
+            placeholder="Parcela Ex: 31,40"
+            required>
+
+        <input
+            name="saldo[]"
+            class="saldo-input"
+            placeholder="Valor / Saldo Ex: 890,14"
+            required>
+
+        <button
+            type="button"
+            class="btn-remover-contrato"
+            onclick="removerContrato(this)"
+            title="Remover contrato">
+
+            <i data-lucide="trash-2"></i>
+
+        </button>
+    `;
+
+    container.appendChild(novaLinha);
+
+    lucide.createIcons();
+
+    const primeiroCampo = novaLinha.querySelector('input[name="contrato[]"]');
+
+    if (primeiroCampo) {
+        primeiroCampo.focus();
+    }
+}
+
+
+function removerContrato(botao) {
+
+    const container = document.getElementById("container-contratos");
+    const linha = botao.closest(".linha-contrato");
+
+    if (!container || !linha) {
+        return;
+    }
+
+    const linhas = container.querySelectorAll(".linha-contrato");
+
+    if (linhas.length <= 1) {
+        alert("É necessário manter pelo menos um contrato.");
+        return;
+    }
+
+    linha.remove();
+}
+</script>
 
 <script>
 lucide.createIcons();

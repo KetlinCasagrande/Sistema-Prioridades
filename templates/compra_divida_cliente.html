@@ -311,6 +311,7 @@
                                 <th>Parcela</th>
                                 <th>Saldo</th>
                                 <th>Status</th>
+                                <th>Atualização</th>
                                 <th>Obs.</th>
                                 <th>Ações</th>
                             </tr>
@@ -325,8 +326,8 @@
                                     <td><input name="banco" value="{{ d['banco'] or '' }}" placeholder="Banco"></td>
                                     <td><input name="contrato" value="{{ d['contrato'] or '' }}" placeholder="Contrato"></td>
                                     <td><input name="data_contratacao" value="{{ d['data_contratacao'] or '' }}" placeholder="Data"></td>
-                                    <td><input name="parcela" value="{{ '%.2f'|format(d['parcela'] or 0) }}" placeholder="Parcela"></td>
-                                    <td><input name="saldo" value="{{ '%.2f'|format(d['saldo'] or 0) }}" placeholder="Saldo"></td>
+                                    <td><input name="parcela"value="{{ ('%.2f'|format(d['parcela'] or 0)).replace('.', ',') }}" placeholder="Parcela"></td>
+                                    <td><input name="saldo" value="{{ ('%.2f'|format(d['saldo'] or 0)).replace('.', ',') }}" placeholder="Saldo"></td>
 
                                     <td>
                                         <select name="status_boleto">

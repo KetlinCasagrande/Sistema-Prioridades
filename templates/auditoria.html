@@ -2,194 +2,337 @@
 <html lang="pt-br" data-theme="{{ tema }}">
 
 <head>
-<meta charset="UTF-8">
-<title>Auditoria</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}">
-<script src="https://unpkg.com/lucide@latest"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Auditoria</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='design.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
-<div class="sidebar" id="sidebar">
 
-    <button class="toggle-btn sidebar-toggle" onclick="toggleSidebar()" title="Recolher menu">
-        <i data-lucide="panel-left-close"></i>
-    </button>
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
 
-    <a href="/home"
-       class="{% if pagina_ativa == 'home' %}active{% endif %}">
-        <i data-lucide="home"></i>
-        <span class="text">Home</span>
-    </a>
+        <button
+            type="button"
+            class="toggle-btn sidebar-toggle"
+            onclick="toggleSidebar()"
+            title="Recolher menu">
 
-    {% if tipo|lower|trim in ["master","adm","admin"] %}
+            <i data-lucide="panel-left-close"></i>
 
-    <a href="/admin?aba=usuarios"
-       class="{% if pagina_ativa == 'usuarios' %}active{% endif %}">
-        <i data-lucide="users"></i>
-        <span class="text">Usuários</span>
-    </a>
+        </button>
 
-    {% if tipo|lower|trim == "master" %}
-    <a href="/admin?aba=comissoes"
-       class="{% if pagina_ativa == 'comissoes' %}active{% endif %}">
-        <i data-lucide="badge-dollar-sign"></i>
-        <span class="text">Comissões</span>
-    </a>
-    {% endif %}
+        <a
+            href="/home"
+            class="{% if pagina_ativa == 'home' %}active{% endif %}">
 
-    <a href="/admin?aba=avisos"
-       class="{% if pagina_ativa == 'avisos' %}active{% endif %}">
-        <i data-lucide="megaphone"></i>
-        <span class="text">Avisos</span>
-    </a>
+            <i data-lucide="home"></i>
+            <span class="text">Home</span>
 
-    <a href="/admin?aba=metas"
-       class="{% if pagina_ativa == 'metas' %}active{% endif %}">
-        <i data-lucide="target"></i>
-        <span class="text">Metas</span>
-    </a>
+        </a>
 
-    <div class="sidebar-divider"></div>
+        {% if tipo|lower|trim in ["master", "adm", "admin"] %}
 
-    <a href="/auditoria"
-       class="{% if pagina_ativa == 'auditoria' %}active{% endif %}">
-        <i data-lucide="clipboard-list"></i>
-        <span class="text">Auditoria</span>
-    </a>
+        <a
+            href="/admin?aba=usuarios"
+            class="{% if pagina_ativa == 'usuarios' %}active{% endif %}">
 
-    {% endif %}
+            <i data-lucide="users"></i>
+            <span class="text">Usuários</span>
 
-    <a href="/logout">
-        <i data-lucide="log-out"></i>
-        <span class="text">Sair</span>
-    </a>
+        </a>
 
-</div>
+        {% if tipo|lower|trim == "master" %}
 
-<div class="conteudo">
-<div class="page">
+        <a
+            href="/admin?aba=comissoes"
+            class="{% if pagina_ativa == 'comissoes' %}active{% endif %}">
 
-    <div class="topo">
-        <h1>📋 Auditoria do Sistema</h1>
-        <span>Histórico de ações realizadas</span>
+            <i data-lucide="badge-dollar-sign"></i>
+            <span class="text">Comissões</span>
+
+        </a>
+
+        {% endif %}
+
+        <a
+            href="/admin?aba=avisos"
+            class="{% if pagina_ativa == 'avisos' %}active{% endif %}">
+
+            <i data-lucide="megaphone"></i>
+            <span class="text">Avisos</span>
+
+        </a>
+
+        <a
+            href="/admin?aba=metas"
+            class="{% if pagina_ativa == 'metas' %}active{% endif %}">
+
+            <i data-lucide="target"></i>
+            <span class="text">Metas</span>
+
+        </a>
+
+        <div class="sidebar-divider"></div>
+
+        <a
+            href="/auditoria"
+            class="{% if pagina_ativa == 'auditoria' %}active{% endif %}">
+
+            <i data-lucide="clipboard-list"></i>
+            <span class="text">Auditoria</span>
+
+        </a>
+
+        {% endif %}
+
+        <a href="/logout">
+
+            <i data-lucide="log-out"></i>
+            <span class="text">Sair</span>
+
+        </a>
+
     </div>
 
-    <div class="box">
 
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:15px; margin-bottom:20px;">
-            <div>
-                <h2 style="margin-bottom:4px;">Registros</h2>
-                <p style="color:#94a3b8; font-size:14px;">
-                    Consulte as movimentações realizadas no sistema
-                </p>
+    <!-- CONTEÚDO -->
+    <div class="conteudo">
+
+        <div class="page auditoria-page">
+
+            <!-- CABEÇALHO -->
+            <div class="topo auditoria-topo">
+
+                <div>
+
+                    <h1>
+                        <i data-lucide="clipboard-list"></i>
+                        Auditoria do Sistema
+                    </h1>
+
+                    <span>
+                        Histórico de ações realizadas no sistema.
+                    </span>
+
+                </div>
+
             </div>
 
-            <span class="btn btn-roxo" style="pointer-events:none;">
-                Total: {{ registros|length }}
-            </span>
-        </div>
 
-        <div class="table-wrapper">
+            <!-- CARD DE REGISTROS -->
+            <section class="auditoria-card">
 
-            <table class="tabela-auditoria">
+                <div class="auditoria-header">
 
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Usuário</th>
-                        <th>Usuário ID</th>
-                        <th>Ação</th>
-                        <th>Descrição</th>
-                        <th>Data/Hora</th>
-                    </tr>
-                </thead>
+                    <div>
 
-                <tbody>
-                    {% for r in registros %}
-                    <tr>
-                        <td class="id-col">#{{ r["id"] }}</td>
+                        <h2>
+                            <i data-lucide="list-checks"></i>
+                            Registros
+                        </h2>
 
-                        <td>
-                            <strong>{{ r["usuario"] }}</strong>
-                        </td>
+                        <p>
+                            Consulte as movimentações realizadas no sistema.
+                        </p>
 
-                        <td>{{ r["usuario_id"] }}</td>
+                    </div>
 
-                        <td>
-                            <span class="badge-acao">
-                                {{ r["acao"] }}
-                            </span>
-                        </td>
+                    <div class="auditoria-total">
 
-                        <td class="descricao-auditoria">
-                            {{ r["descricao"] }}
-                        </td>
+                        <i data-lucide="database"></i>
 
-                        <td class="data-auditoria">
-                            {{ r["data_hora"] }}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">
-                            Nenhum registro encontrado.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
+                        <span>Total</span>
 
-            </table>
+                        <strong>
+                            {{ registros|length }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- TABELA -->
+                <div class="auditoria-table-wrapper">
+
+                    <table class="tabela-auditoria">
+
+                        <thead>
+
+                            <tr>
+                                <th>ID</th>
+                                <th>Usuário</th>
+                                <th>Usuário ID</th>
+                                <th>Ação</th>
+                                <th>Descrição</th>
+                                <th>Data/Hora</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for r in registros %}
+
+                            <tr>
+
+                                <td class="id-col">
+                                    #{{ r["id"] }}
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        {{ r["usuario"] }}
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    {{ r["usuario_id"] }}
+                                </td>
+
+                                <td>
+
+                                    <span class="audit-action-badge">
+                                        {{ r["acao"] }}
+                                    </span>
+
+                                </td>
+
+                                <td class="descricao-auditoria">
+                                    {{ r["descricao"] }}
+                                </td>
+
+                                <td class="data-auditoria">
+
+                                    <i data-lucide="clock-3"></i>
+
+                                    {{ r["data_hora"] }}
+
+                                </td>
+
+                            </tr>
+
+                            {% else %}
+
+                            <tr>
+
+                                <td colspan="6">
+
+                                    <div class="auditoria-vazia">
+
+                                        <div class="auditoria-vazia-icone">
+                                            <i data-lucide="clipboard-x"></i>
+                                        </div>
+
+                                        <h3>
+                                            Nenhum registro encontrado
+                                        </h3>
+
+                                        <p>
+                                            Ainda não existem movimentações registradas.
+                                        </p>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
 
         </div>
 
     </div>
 
-</div>
-</div>
 
-<script>
-window.addEventListener("load", function () {
+    <script>
+        function atualizarIconeSidebar() {
 
-    const sidebar = document.getElementById("sidebar");
-    const conteudo = document.querySelector(".conteudo");
-    const btn = document.querySelector(".toggle-btn");
+            const sidebar = document.getElementById("sidebar");
+            const btn = document.querySelector(".toggle-btn");
 
-    if (localStorage.getItem("sidebarFechada") === "true") {
-        sidebar.classList.add("closed");
+            if (!sidebar || !btn) {
+                return;
+            }
 
-        if (conteudo) conteudo.classList.add("sidebar-fechada");
+            btn.innerHTML = sidebar.classList.contains("closed")
+                ? '<i data-lucide="panel-left-open"></i>'
+                : '<i data-lucide="panel-left-close"></i>';
 
-        if (btn) btn.innerHTML = "▶";
-    }
-});
+            lucide.createIcons();
+        }
 
-function toggleSidebar() {
 
-    const sidebar = document.getElementById("sidebar");
-    const conteudo = document.querySelector(".conteudo");
-    const btn = document.querySelector(".toggle-btn");
+        function toggleSidebar() {
 
-    sidebar.classList.toggle("closed");
+            const sidebar = document.getElementById("sidebar");
+            const conteudo = document.querySelector(".conteudo");
 
-    if (conteudo) {
-        conteudo.classList.toggle("sidebar-fechada");
-    }
+            if (!sidebar) {
+                return;
+            }
 
-    localStorage.setItem(
-        "sidebarFechada",
-        sidebar.classList.contains("closed")
-    );
+            sidebar.classList.toggle("closed");
 
-    btn.innerHTML =
-        sidebar.classList.contains("closed")
-        ? "▶"
-        : "◀";
-}
-</script>
-<script>
-lucide.createIcons();
-</script>
+            if (conteudo) {
+                conteudo.classList.toggle(
+                    "sidebar-fechada",
+                    sidebar.classList.contains("closed")
+                );
+            }
+
+            localStorage.setItem(
+                "sidebarFechada",
+                sidebar.classList.contains("closed")
+            );
+
+            atualizarIconeSidebar();
+        }
+
+
+        window.addEventListener("load", function () {
+
+            const sidebar = document.getElementById("sidebar");
+            const conteudo = document.querySelector(".conteudo");
+
+            if (!sidebar) {
+                return;
+            }
+
+            const sidebarFechada =
+                localStorage.getItem("sidebarFechada") === "true";
+
+            sidebar.classList.toggle("closed", sidebarFechada);
+
+            if (conteudo) {
+                conteudo.classList.toggle(
+                    "sidebar-fechada",
+                    sidebarFechada
+                );
+            }
+
+            atualizarIconeSidebar();
+            lucide.createIcons();
+        });
+    </script>
+
 </body>
+
 </html>

@@ -68,9 +68,21 @@ cursor.execute("""
 CREATE TABLE IF NOT EXISTS avisos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     titulo TEXT,
-    mensagem TEXT
+    mensagem TEXT,
+    criado_em TEXT
 )
 """)
+
+cursor.execute("PRAGMA table_info(avisos)")
+colunas_avisos = [coluna[1] for coluna in cursor.fetchall()]
+
+if "criado_em" not in colunas_avisos:
+    cursor.execute("""
+        ALTER TABLE avisos
+        ADD COLUMN criado_em TEXT
+    """)
+
+conn.commit()
 
 # =========================
 # COMISSÕES (NOVA E LIMPA)
@@ -94,4 +106,5 @@ conn.commit()
 conn.close()
 
 print("✔ Banco recriado com sucesso!")
+
 

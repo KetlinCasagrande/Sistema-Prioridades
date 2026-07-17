@@ -354,33 +354,42 @@ function toggleNovoAcesso(id){
         placeholder="Login"
         style="margin-bottom:10px;"
     >
-
- <div class="senha-box senha-box-inline">
+<div class="senha-box senha-box-inline">
 
     <input
-        id="senha-view{{ acesso.id }}"
+        id="senha-edit{{ acesso.id }}"
         type="password"
+        name="senha"
         value="{{ acesso.senha }}"
-        readonly
+        placeholder="Senha"
     >
 
     <div class="senha-acoes">
+
         <button
             type="button"
             class="btn-icone"
-            onclick="toggleSenha('senha-view{{ acesso.id }}', this)">
+            onclick="toggleSenha('senha-edit{{ acesso.id }}', this)"
+            title="Mostrar ou ocultar senha">
+
             <i data-lucide="eye"></i>
+
         </button>
 
         <button
             type="button"
             class="btn-icone"
-            onclick='copiarTexto({{ acesso.senha|tojson }})'>
+            onclick="copiarSenhaCampo('senha-edit{{ acesso.id }}')"
+            title="Copiar senha">
+
             <i data-lucide="copy"></i>
+
         </button>
+
     </div>
 
 </div>
+
     <div class="acoes-banco">
 
         <button class="btn btn-verde">
@@ -554,6 +563,19 @@ function toggleNovoAcesso(id){
     } else {
         box.style.display = "block";
     }
+}
+</script>
+
+<script>
+function copiarSenhaCampo(id) {
+
+    const campo = document.getElementById(id);
+
+    if (!campo) {
+        return;
+    }
+
+    copiarTexto(campo.value);
 }
 </script>
 <script>
