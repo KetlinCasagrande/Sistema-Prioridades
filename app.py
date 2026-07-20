@@ -4031,6 +4031,7 @@ def compra_divida_clientes():
     base_sql = """
     SELECT
         c.*,
+        u.usuario AS nome_criador,
 
         COALESCE((
             SELECT SUM(d.saldo)
@@ -4063,6 +4064,12 @@ def compra_divida_clientes():
         ) AS sobra
 
     FROM clientes_compra c
+
+LEFT JOIN usuarios u
+ON u.id = c.usuario_id
+
+
+
 """
     where = []
     params = []
