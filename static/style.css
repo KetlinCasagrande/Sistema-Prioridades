@@ -105,19 +105,7 @@ body {
     background:rgba(236,72,153,.05);
 
 }
-.btn-backup {
-    display: inline-block;
-    padding: 10px 15px;
-    background: #6a4cff;
-    color: white;
-    border-radius: 8px;
-    text-decoration: none;
-    margin-bottom: 15px;
-}
 
-.btn-backup:hover {
-    background: #7d5cff;
-}
 
 .tag {
     padding: 4px 8px;

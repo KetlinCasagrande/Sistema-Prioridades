@@ -258,11 +258,11 @@
 </div>
     <div class="cliente-rodape">
 
-        <span class="status-liberada">
+    <span class="status-liberada">
 
-            Em andamento
+        {{ cliente.status }}
 
-        </span>
+    </span>
 
        <a
         href="/compra-divida/cliente/{{ cliente.id }}"

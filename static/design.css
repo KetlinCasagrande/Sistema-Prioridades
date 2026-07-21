@@ -5608,3 +5608,54 @@ body.modal-aberto {
     font-weight:600;
 
 }
+
+.backup-card {
+
+    width: 100%;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 20px 25px;
+
+    border-radius: 16px;
+
+    background: var(--card-bg);
+
+    box-sizing: border-box;
+
+}
+
+
+.backup-info {
+
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+}
+
+
+.backup-info svg {
+
+    width: 35px;
+    height: 35px;
+
+}
+
+
+.backup-info h3 {
+
+    margin: 0 0 5px;
+
+}
+
+
+.backup-info p {
+
+    margin: 0;
+
+    opacity: .7;
+
+}

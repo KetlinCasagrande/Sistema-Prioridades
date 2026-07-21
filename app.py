@@ -1,6 +1,8 @@
 from flask import Flask, flash, render_template, url_for, request, redirect, session, g
 import sqlite3
 import bcrypt
+from apscheduler.schedulers.background import BackgroundScheduler
+from services.backup import fazer_backup
 from functools import wraps
 import os
 import shutil
@@ -23,6 +25,23 @@ load_dotenv()
 resend.api_key = os.environ.get("RESEND_API_KEY") 
 
 app = Flask(__name__)
+
+scheduler = BackgroundScheduler()
+
+scheduler.add_job(
+    fazer_backup,
+    "cron",
+    hour="9,14,17",
+    id="backup_diario",
+    replace_existing=True,
+    args=["sistema"]
+)
+
+
+
+
+if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+    scheduler.start()
 app.secret_key = "123"
 resend.api_key = os.getenv("RESEND_API_KEY")
 def db():
@@ -72,28 +91,8 @@ def converter_valor_brasileiro(valor):
         return float(valor)
     except:
         return 0.0
+    
 
-def fazer_backup(usuario="sistema"):
-    os.makedirs("backups", exist_ok=True)
-
-    data = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    destino = f"backups/banco_{data}.db"
-
-    shutil.copy2("banco.db", destino)
-
-    # registra no log
-    conn = sqlite3.connect("banco.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO logs (usuario, acao, detalhes)
-        VALUES (?, ?, ?)
-    """, (usuario, "BACKUP", destino))
-
-    conn.commit()
-    conn.close()
-
-    return destino
 
 def garantir_coluna_competencia_metas():
     conn = conectar()
@@ -3123,15 +3122,21 @@ def visualizar_termo(id):
         "visualizar_termo.html",
         termo=termo
     )
-
-@app.route("/backup")
-def backup():
+@app.route("/admin/backup", methods=["POST"])
+def backup_manual():
 
     usuario = session.get("usuario", "sistema")
+
     arquivo = fazer_backup(usuario)
 
-    return f"✔ Backup criado com sucesso: {arquivo}"
 
+    flash(
+        f"Backup realizado: {arquivo}",
+        "success"
+    )
+
+
+    return redirect("/auditoria")
 @app.route("/bancos")
 def bancos():
 

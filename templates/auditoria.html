@@ -104,10 +104,57 @@
     </div>
 
 
+
+
+
     <!-- CONTEÚDO -->
     <div class="conteudo">
 
         <div class="page auditoria-page">
+
+<!-- CARD BACKUP -->
+
+<div class="backup-container">
+
+    <div class="backup-card">
+
+        <div class="backup-info">
+
+            <i data-lucide="database"></i>
+
+            <div>
+                <h3>
+                    Backup do Sistema
+                </h3>
+
+                <p>
+                    Faça uma cópia de segurança do banco de dados.
+                </p>
+            </div>
+
+        </div>
+
+
+        <form 
+            action="/admin/backup" 
+            method="POST"
+            onsubmit="return confirm('Deseja criar um backup agora?')">
+
+            <button
+                type="submit"
+                class="btn-admin-primary">
+
+                <i data-lucide="hard-drive-download"></i>
+
+                Fazer Backup Agora
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
 
             <!-- CABEÇALHO -->
             <div class="topo auditoria-topo">
