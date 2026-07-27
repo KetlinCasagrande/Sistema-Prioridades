@@ -18,6 +18,8 @@ from datetime import datetime, timedelta
 import random
 from dotenv import load_dotenv
 import secrets
+from db import criar_tabelas
+
 
 
 
@@ -37,7 +39,7 @@ scheduler.add_job(
     args=["sistema"]
 )
 
-
+criar_tabelas()
 
 
 if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
@@ -112,6 +114,8 @@ def garantir_coluna_competencia_metas():
 
     conn.commit()
     conn.close()
+
+
 def criar_tabelas_compra_divida():
     conn = conectar()
     cursor = conn.cursor()
@@ -135,6 +139,8 @@ def criar_tabelas_compra_divida():
         )
     """)
 
+
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS clientes_compra_dividas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -156,6 +162,10 @@ def criar_tabelas_compra_divida():
             REFERENCES clientes_compra(id)
         )
     """)
+
+
+
+    
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS simulacoes_compra (
@@ -754,6 +764,26 @@ def buscar_avisos():
     conn.close()
 
     return avisos
+
+
+
+@app.route("/admin/boleto/<int:id>/excluir")
+
+def excluir_boleto(id):
+
+    conn = sqlite3.connect("banco.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM boletos WHERE id=?",
+        (id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin?aba=boletos")
+
 # =========================
 # LOGS
 # =========================
@@ -1587,6 +1617,36 @@ def admin():
     """)
     avisos = cursor.fetchall()
 
+# =========================
+# BOLETOS
+# =========================
+    boletos = []
+
+    if aba == "boletos":
+
+        buscar = request.args.get("buscar", "").strip()
+
+        if buscar:
+
+            cursor.execute("""
+                SELECT *
+                FROM boletos
+                WHERE devedor LIKE ?
+                ORDER BY id DESC
+            """, (f"%{buscar}%",))
+
+        else:
+
+            cursor.execute("""
+                SELECT *
+                FROM boletos
+                ORDER BY id DESC
+            """)
+
+        boletos = cursor.fetchall()
+
+
+
     # =========================
     # LOGS
     # =========================
@@ -1786,6 +1846,7 @@ def admin():
         metas_usuarios=metas_usuarios,
         lista_bancos=lista_bancos,
         lista_produtos=lista_produtos,
+        boletos=boletos,
         pagina=pagina,
         total_paginas=total_paginas,
         ordenar=ordenar,
@@ -2062,6 +2123,38 @@ def editar_usuario(id):
     flash("Usuário atualizado com sucesso!", "success")
 
     return redirect("/admin?aba=usuarios")
+
+@app.route("/admin/boleto/criar", methods=["POST"])
+@apenas_admin
+def criar_boleto():
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO boletos
+        (
+            valor,
+            origem,
+            pagador,
+            devedor
+        )
+        VALUES (?,?,?,?)
+    """,
+    (
+        request.form["valor"],
+        request.form["origem"],
+        request.form["pagador"],
+        request.form["devedor"]
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin?aba=boletos")
+
+
+   
 
 @app.route("/admin/usuario/deletar/<int:id>")
 @apenas_admin
@@ -3904,6 +3997,38 @@ def salvar_edicao_venda(id):
 
     return redirect("/vendas")
 
+
+@app.route("/admin/boletos/salvar", methods=["POST"])
+@apenas_admin
+def salvar_boleto():
+
+    valor = request.form["valor"]
+    origem = request.form["origem"]
+    pagador = request.form["pagador"]
+    devedor = request.form["devedor"]
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO boletos
+        (valor, origem, pagador, devedor)
+        VALUES (?, ?, ?, ?)
+    """, (
+        valor,
+        origem,
+        pagador,
+        devedor
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin?aba=boletos")
+
+
+
+
 @app.route("/teste-soma")
 def teste_soma():
 
@@ -4607,6 +4732,37 @@ def clonar_metas():
 
     return redirect(f"/admin?aba=metas&competencia={competencia_destino}")
 
+@app.route("/admin/boleto/editar", methods=["POST"])
+
+def editar_boleto():
+
+    conn = sqlite3.connect("banco.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE boletos
+        SET
+            valor=?,
+            origem=?,
+            pagador=?,
+            devedor=?
+        WHERE id=?
+    """,(
+
+        request.form["valor"],
+        request.form["origem"],
+        request.form["pagador"],
+        request.form["devedor"],
+        request.form["id"]
+
+    ))
+
+    conn.commit()
+    conn.close()
+
+    flash("Boleto atualizado com sucesso!", "success")
+
+    return redirect("/admin?aba=boletos")
 
 @app.route("/ver-vendas")
 def ver_vendas():
@@ -4656,9 +4812,15 @@ def atualizar_tabela_usuarios():
     conn.close()
 if __name__ == "__main__":
     print("🔥 FLASK INICIANDO...")
+
+    criar_tabelas()
     atualizar_tabela_usuarios()
     atualizar_tabela_comissoes()
     atualizar_tabela_clientes_compra()
     atualizar_tabela_avisos()
     criar_tabela_recuperacao_senha()
-    app.run(debug=True, host="192.168.0.200", port=5000)
+    app.run(
+    debug=False,
+    host="0.0.0.0",
+    port=5000
+)

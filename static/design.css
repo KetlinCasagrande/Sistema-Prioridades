@@ -3803,7 +3803,7 @@ width:100%;
 
     background:rgba(255,255,255,.03);
 
-    border:1px solid rgba(255,255,255,.08);
+    border:1px solid var(--border);
 
 }
 
@@ -3912,6 +3912,7 @@ width:100%;
     box-shadow:0 12px 28px rgba(249,115,22,.35);
 
 }
+
 /* ==========================
    TOPO HISTÓRICO
 ========================== */
@@ -3973,11 +3974,11 @@ width:100%;
 /* ==========================
    TABELA HISTÓRICO TERMOS
 ========================== */
-
-.box{
+.historico-termos-box{
     border:1px solid var(--border);
     background:rgba(255,255,255,.04);
 }
+
 
 th{
     color:var(--muted);
@@ -5658,4 +5659,558 @@ body.modal-aberto {
 
     opacity: .7;
 
+}
+/* ==========================
+   MÓDULO DE BOLETOS
+========================== */
+.pagina-boletos {
+    width:100%;
+    min-height:500px;
+    padding:30px;
+    border-radius:16px;
+    box-sizing:border-box;
+    margin-top:20px;
+}
+
+
+.pagina-boletos h2 {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    font-size: 26px;
+
+    margin-bottom: 10px;
+
+}
+
+
+.pagina-boletos p {
+
+    margin-bottom: 25px;
+
+}
+
+
+.boletos-form {
+
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 15px;
+
+    margin-bottom: 30px;
+
+}
+
+#boletos .boletos-form input {
+    width:100%;
+    padding:12px;
+    border-radius:10px;
+    border:1px solid #ccc;
+}
+
+
+.boletos-form button {
+
+    padding: 12px;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+}
+
+
+.tabela-boletos {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+}
+
+
+.tabela-boletos th,
+.tabela-boletos td {
+
+    padding: 12px;
+
+    border-bottom: 1px solid #ddd;
+
+    text-align: left;
+
+}
+
+.busca-boletos{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin:20px 0;
+}
+
+.busca-boletos input{
+    flex:1;
+}
+#boletos .btn-excluir{
+    color:var(--red);
+}
+
+#boletos .btn-excluir:hover{
+    background:var(--red-soft);
+    border-color:var(--red);
+}
+
+
+
+/* ===========================
+   MODAL EDITAR BOLETO
+=========================== */
+
+#modalEditarBoleto{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+#modalEditarBoleto .modal-aviso-content{
+    width:100%;
+    max-width:600px;
+    background:var(--card);
+    border-radius:14px;
+    padding:25px;
+    box-shadow:0 15px 40px rgba(0,0,0,.25);
+    animation:fadeModal .2s ease;
+}
+
+#modalEditarBoleto h2{
+    margin:0 0 20px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:var(--primary);
+    font-size:22px;
+}
+
+#modalEditarBoleto label{
+    display:block;
+    margin-top:15px;
+    margin-bottom:6px;
+    font-weight:600;
+    color:var(--muted);
+}
+
+#modalEditarBoleto input{
+    width:100%;
+    height:42px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:0 12px;
+    font-size:15px;
+    transition:.2s;
+}
+
+#modalEditarBoleto input:focus{
+    border-color:var(--primary);
+    outline:none;
+    box-shadow:0 0 0 3px rgba(6,25,95,.15);
+}
+
+#modalEditarBoleto .btn-admin-primary{
+    margin-top:25px;
+    width:100%;
+    height:45px;
+}
+
+#modalEditarBoleto .fechar-modal{
+    float:right;
+    cursor:pointer;
+    font-size:28px;
+    color:#888;
+}
+
+#modalEditarBoleto .fechar-modal:hover{
+    color:#d63031;
+}
+/* =========================
+   BOLETOS
+========================= */
+
+.boletos-card{
+    padding:25px;
+}
+
+
+.card-header-admin{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+}
+
+
+.card-header-admin h2{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:0;
+}
+
+
+.card-header-admin p{
+    margin-top:8px;
+    opacity:.7;
+}
+
+/* =========================
+   BOLETOS
+========================= */
+
+
+#boletos .box{
+
+    background:var(--card);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:16px;
+    padding:20px;
+
+}
+
+
+
+#boletos .admin-header h2{
+
+    display:flex;
+    align-items:center;
+    gap:12px;
+    font-size:28px;
+
+}
+
+
+
+#boletos .admin-header p{
+
+    color:#9ca3af;
+    margin-top:5px;
+
+}
+
+
+
+.form-admin-box{
+
+    margin-top:25px;
+    padding:20px;
+    background:var(--card-2);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:15px;
+
+}
+
+
+
+.grid-admin-form{
+
+    display:grid;
+
+    grid-template-columns: repeat(5, 1fr);
+
+    gap:15px;
+
+    align-items:end;
+
+}
+
+
+
+.grid-admin-form label{
+
+    display:block;
+    margin-bottom:8px;
+    font-weight:600;
+
+}
+
+
+
+.grid-admin-form input{
+
+    width:100%;
+    height:42px;
+    background:var(--bg-soft);
+    border:1px solid #334155;
+    border-radius:8px;
+    padding:0 12px;
+    color:var(--text);
+
+}
+
+
+
+.busca-admin{
+
+    display:flex;
+    gap:10px;
+    margin:25px 0;
+
+}
+
+
+
+.input-admin{
+
+    flex:1;
+    height:40px;
+    background:#202c42;
+    border:1px solid #334155;
+    border-radius:8px;
+    padding:0 15px;
+    color:white;
+
+}
+
+
+
+.table-admin{
+
+    width:100%;
+    border-collapse:collapse;
+
+}
+
+
+
+.table-admin th{
+
+    text-align:left;
+    padding:15px;
+    font-size:12px;
+
+}
+
+
+
+.table-admin td{
+
+    padding:15px;
+    border-top:1px solid rgba(255,255,255,.08);
+
+}
+
+
+
+.table-admin tr:hover{
+
+    background:rgba(255,255,255,.03);
+
+}
+
+/* =========================
+   BOTÕES AÇÕES BOLETOS
+========================= */
+
+
+#boletos .btn-acao-tabela{
+
+    width:36px;
+    height:36px;
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:var(--radius-sm);
+
+    border:1px solid var(--border);
+
+    background:transparent;
+
+    color:var(--text);
+
+    cursor:pointer;
+
+    transition:.2s;
+
+    text-decoration:none;
+
+}
+
+
+
+#boletos .btn-editar{
+
+    color:var(--yellow);
+
+}
+
+
+
+#boletos .btn-editar:hover{
+
+    background:var(--yellow-soft);
+
+    border-color:var(--yellow);
+
+}
+
+
+
+#boletos .btn-excluir-tabela{
+
+    color:var(--red);
+
+}
+
+
+
+#boletos .btn-excluir-tabela:hover{
+
+    background:var(--red-soft);
+
+    border-color:var(--red);
+
+}
+#boletos .btn-acao-tabela svg{
+
+    width:18px;
+    height:18px;
+
+    stroke-width:2;
+
+}
+
+
+#boletos .btn-salvar{
+
+    color:var(--green);
+
+}
+
+
+#boletos .btn-salvar:hover{
+
+    background:var(--green-soft);
+
+    border-color:var(--green);
+
+}
+.campo-botao{
+
+    display:flex;
+
+    align-items:end;
+
+    height:100%;
+
+}
+#comissoes{
+    width:100%;
+}
+
+.comissoes-page{
+
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+
+    padding:0;
+
+}
+/* TESTE COMISSÕES */
+
+#comissoes.admin-box{
+    padding:0 !important;
+    background:transparent !important;
+    border:none !important;
+}
+
+
+#comissoes .comissoes-page{
+    padding:25px !important;
+    background:var(--card) !important;
+    border:1px solid var(--border) !important;
+    border-radius:22px !important;
+}
+/* =====================================
+   AJUSTE CONTAINER COMISSÕES IGUAL ERP
+===================================== */
+
+#comissoes.admin-box{
+    width:100%;
+    max-width:1400px;
+    margin:20px auto;
+    padding:0;
+    box-sizing:border-box;
+}
+
+
+#comissoes .comissoes-page{
+    width:100%;
+    box-sizing:border-box;
+
+    padding:25px;
+
+    background:var(--card);
+
+    border:1px solid var(--border);
+
+    border-radius:16px;
+
+    margin:0 auto;
+}
+/* =====================================
+   AJUSTE CONTAINER AVISOS IGUAL ERP
+===================================== */
+
+#avisos.admin-box{
+    width:100%;
+    max-width:1400px;
+    margin:20px auto;
+    padding:0;
+    box-sizing:border-box;
+}
+
+
+#avisos .avisos-page{
+
+    width:100%;
+    box-sizing:border-box;
+
+    padding:25px;
+
+    background:var(--card);
+
+    border:1px solid var(--border);
+
+    border-radius:16px;
+
+    margin:0 auto;
+
+}
+/* ================================
+   CORREÇÃO VISUAL DOCUMENTO TERMO
+================================ */
+
+.documento-oficial {
+    color:#000;
+}
+
+.documento-oficial p,
+.documento-oficial div,
+.documento-oficial span,
+.documento-oficial strong,
+.documento-oficial b,
+.documento-oficial label,
+.documento-oficial td,
+.documento-oficial th {
+    color:#000;
 }

@@ -62,6 +62,8 @@ function paginaAnterior(){
 ABRIR ABAS
 ========================= */
 function abrir(id){
+    console.log("ABA ABERTA:", id);
+    console.log("ELEMENTO:", document.getElementById(id));
 
     document.querySelectorAll(".admin-box, .conteudo-admin").forEach(box=>{
         box.style.display = "none";
@@ -187,6 +189,13 @@ function selecionarTodos(master) {
         <i data-lucide="target"></i>
         <span class="text">Metas</span>
     </a>
+
+
+    <a href="/admin?aba=boletos"
+   class="{% if pagina_ativa == 'boletos' %}active{% endif %}">
+    <i data-lucide="receipt"></i>
+    <span class="text">Boletos</span>
+</a>
 
     <div class="sidebar-divider"></div>
 
@@ -1120,11 +1129,236 @@ function selecionarTodos(master) {
     </div>
 
 </div>
+
+
+<!-- ========================= BOLETOS ========================= -->
+<div id="boletos" class="admin-box" style="display:none;">
+
+<div class="historico-termos-box">
+
+<div class="admin-header">
+
+<h2>
+<i data-lucide="receipt"></i>
+Controle de Boletos Pagos
+</h2>
+
+<p>
+Registre boletos pagos e informe quem realizou o pagamento.
+</p>
+
+</div>
+</div>
+
+<div class="form-admin-box">
+
+<form method="POST" action="/admin/boleto/criar">
+<div class="grid-admin-form">
+
+
+<div>
+<label>Valor</label>
+<input type="number" step="0.01" name="valor" required>
+</div>
+
+
+<div>
+<label>Banco</label>
+<input type="text" name="origem" placeholder="Ex: Pan, Itau..." required>
+</div>
+
+
+<div>
+<label>Investidor</label>
+<input type="text" name="pagador" required>
+</div>
+
+
+<div>
+<label>Cliente</label>
+<input type="text" name="devedor" required>
+</div>
+
+
+<div class="campo-botao">
+
+<button class="btn-salvar-user" type="submit">
+<i data-lucide="save"></i>
+Salvar
+</button>
+
+</div>
+
+
+</div>
+</form>
+
+</div>
+
+<hr>
+
+<hr>
+
+<form method="GET" action="/admin" class="busca-boletos">
+
+    <input type="hidden" name="aba" value="boletos">
+
+    <input
+        type="text"
+        name="buscar"
+        placeholder="Pesquisar pelo nome do cliente..."
+        value="{{ request.args.get('buscar','') }}">
+
+    <button class="btn-admin-primary">
+        🔍 Pesquisar
+    </button>
+
+</form>
+
+<br>
+<table class="table-admin">
+
+<thead>
+<tr>
+    <th>Valor</th>
+    <th>Origem</th>
+    <th>Pagador</th>
+    <th>Devedor</th>
+    <th>Data</th>
+    <th>Ações</th>
+</tr>
+</thead>
+
+
+<tbody>
+
+{% for b in boletos %}
+
+<tr>
+
+<td>
+R$ {{ "%.2f"|format(b["valor"]) }}
+</td>
+
+<td>
+{{ b["origem"] }}
+</td>
+
+<td>
+{{ b["pagador"] }}
+</td>
+
+<td>
+{{ b["devedor"] }}
+</td>
+
+<td>
+{{ b["data_pagamento"] }}
+</td>
+
+
+<td class="acoes-tabela">
+
+
+<button
+    class="btn-acao-tabela btn-editar"
+    title="Editar boleto"
+    onclick="abrirEditarBoleto(
+        '{{ b["id"] }}',
+        '{{ b["valor"] }}',
+        '{{ b["origem"] }}',
+        '{{ b["pagador"] }}',
+        '{{ b["devedor"] }}'
+    )">
+
+    <i data-lucide="square-pen"></i>
+
+</button>
+
+
+<a
+href="/admin/boleto/{{ b['id'] }}/excluir"
+class="btn-acao-tabela btn-excluir-tabela"
+title="Excluir boleto"
+onclick="return confirm('Deseja realmente excluir este boleto?')">
+
+<i data-lucide="trash-2"></i>
+
+</a>
+
+
+</td>
+
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+<!-- MODAL EDITAR BOLETO -->
+
+<div id="modalEditarBoleto" class="modal-aviso">
+
+    <div class="modal-aviso-content">
+
+        <span class="fechar-modal" onclick="fecharEditarBoleto()">&times;</span>
+
+        <h2>Editar boleto</h2>
+
+        <form method="POST" action="/admin/boleto/editar">
+
+            <input type="hidden" id="edit_id" name="id">
+
+            <label>Valor</label>
+            <input
+                type="number"
+                step="0.01"
+                id="edit_valor"
+                name="valor"
+                required>
+
+            <label>Origem</label>
+            <input
+                type="text"
+                id="edit_origem"
+                name="origem"
+                required>
+
+            <label>Investidor</label>
+            <input
+                type="text"
+                id="edit_pagador"
+                name="pagador"
+                required>
+
+            <label>Cliente (Devedor)</label>
+            <input
+                type="text"
+                id="edit_devedor"
+                name="devedor"
+                required>
+
+            <button class="btn-admin-primary">
+                Salvar alterações
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+</div>
+
+</div>
+
 <!-- ========================= COMISSÕES ========================= -->
 {% if tipo|lower|trim in ["master"] %}
-<div id="comissoes" class="admin-box" style="display:none;">
-
-    <div class="box comissoes-page">
+<div id="comissoes" class="admin-box comissoes-page" style="display:none;">
 
         <div class="comissoes-header">
             <div>
@@ -1311,6 +1545,8 @@ function selecionarTodos(master) {
             </form>
 
         </div>
+
+
 
 <!-- CONTROLES DA LISTA -->
 <div class="comissoes-list-controls">
@@ -1652,7 +1888,7 @@ Comissão
 
 </div>
 
-</div>
+
 
 
 {% endif %}
@@ -2025,6 +2261,7 @@ Comissão
 </form>
 
 </div>
+
 </div>
 
 
@@ -2201,6 +2438,22 @@ window.addEventListener("keydown", function(e){
 });
 </script>
 <script>
+function abrirEditarBoleto(id, valor, origem, pagador, devedor){
+
+    document.getElementById("edit_id").value = id;
+    document.getElementById("edit_valor").value = valor;
+    document.getElementById("edit_origem").value = origem;
+    document.getElementById("edit_pagador").value = pagador;
+    document.getElementById("edit_devedor").value = devedor;
+
+    document.getElementById("modalEditarBoleto").style.display = "flex";
+}
+
+function fecharEditarBoleto(){
+
+    document.getElementById("modalEditarBoleto").style.display = "none";
+
+}
 function confirmarLimpezaComissoes(form) {
 
     const promotora = form.promotora.value;
@@ -2220,8 +2473,12 @@ function confirmarLimpezaComissoes(form) {
     );
 }
 </script>
+
 <script>
 lucide.createIcons();
 </script>
+
+
+
 </body>
 </html>

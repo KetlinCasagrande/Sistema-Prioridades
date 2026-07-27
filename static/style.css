@@ -1,5 +1,4 @@
 
-
 * {
     margin: 0;
     padding: 0;
@@ -284,15 +283,23 @@ body {
 ========================= */
 
 .box {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
-
-    border-radius: 16px;
-    padding: 20px;
-
-    margin-bottom: 20px;
+    border:1px solid var(--border);
+    background:rgba(255,255,255,.04);
+}
+#comissoes .box{
+    padding:0;
+    background:transparent;
+    border:none;
 }
 
+#comissoes .comissoes-page{
+    padding:22px;
+}
+#avisos .box{
+    padding:0;
+    background:transparent;
+    border:none;
+}
 /* =========================
    GRID PADRÃO ERP
 ========================= */
@@ -471,6 +478,8 @@ input, select, textarea {
 /* =========================
    TABELA ESTILO ERP
 ========================= */
+
+
 
 .table-wrapper {
     width: 100%;
@@ -3239,26 +3248,64 @@ thead th{
 /* ==========================
    ADMIN - USUÁRIOS
 ========================== */
+/* ==========================
+   CABEÇALHO ADMIN PRINCIPAL
+========================== */
 
 .admin-topo{
-    margin-bottom:25px;
-}
 
-.admin-topo h1{
     display:flex;
     align-items:center;
-    gap:10px;
-    margin:0;
+
+    padding:28px;
+
+    margin-bottom:24px;
+
+    border-radius:22px;
+
+    background:var(--card);
+
+    border:1px solid var(--border);
+
 }
+
+
+.admin-topo h1{
+
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    margin:0;
+
+    font-size:34px;
+
+    color:var(--text);
+
+}
+
 
 .admin-topo h1 i{
+
+    width:34px;
+    height:34px;
+
     color:var(--primary-2);
+
 }
+
 
 .admin-topo span{
-    color:var(--muted);
-}
 
+    display:block;
+
+    margin-top:8px;
+
+    color:var(--muted);
+
+    font-size:14px;
+
+}
 .admin-section-title{
     margin-bottom:22px;
 }
