@@ -178,7 +178,7 @@ def criar_tabelas():
     conn.commit()
     conn.close()
 
-    print("✔ banco.db criado")
+    print("banco.db criado")
 
 if __name__ == "__main__":
     criar_tabelas()

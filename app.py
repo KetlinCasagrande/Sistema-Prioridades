@@ -1,5 +1,8 @@
 from flask import Flask, flash, render_template, url_for, request, redirect, session, g
 import sqlite3
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import bcrypt
 from apscheduler.schedulers.background import BackgroundScheduler
 from services.backup import fazer_backup
@@ -13,7 +16,6 @@ from math import ceil
 from num2words import num2words
 from flask import send_file
 import os
-import resend
 from datetime import datetime, timedelta
 import random
 from dotenv import load_dotenv
@@ -245,14 +247,17 @@ def mascarar_email(email):
     return nome_mascarado + "@" + dominio
 def enviar_email_recuperacao(destino, nome, link):
 
+    EMAIL = "grupo.hipercred@gmail.com"
+    SENHA = "vvkb xazq aivw lkxy"
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Redefinição de senha - Grupo Hipercred"
+    msg["From"] = f"Grupo Hipercred <{EMAIL}>"
+    msg["To"] = destino
+
     html = f"""
-    <!DOCTYPE html>
     <html>
-    <body style="
-        margin:0;
-        background:#f4f6fb;
-        font-family:Arial,Helvetica,sans-serif;
-    ">
+    <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
 
     <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
@@ -357,14 +362,12 @@ def enviar_email_recuperacao(destino, nome, link):
     </html>
     """
 
-    params = {
-        "from": "Hipercred <onboarding@resend.dev>",
-        "to": [destino],
-        "subject": "Redefinição de senha - Grupo Hipercred",
-        "html": html
-    }
+    msg.attach(MIMEText(html, "html"))
 
-    return resend.Emails.send(params)
+    with smtplib.SMTP("smtp.gmail.com", 587) as servidor:
+        servidor.starttls()
+        servidor.login(EMAIL, SENHA)
+        servidor.send_message(msg)
 
 
 def criar_tabela_recuperacao_senha():
