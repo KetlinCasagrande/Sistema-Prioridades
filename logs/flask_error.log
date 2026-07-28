@@ -853,3 +853,11 @@ resend.exceptions.ResendError: API key is invalid
 127.0.0.1 - - [28/Jul/2026 08:54:24] "POST /esqueci-senha HTTP/1.1" 500 -
 127.0.0.1 - - [28/Jul/2026 08:55:21] "GET / HTTP/1.1" 200 -
 127.0.0.1 - - [28/Jul/2026 08:55:24] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [28/Jul/2026 08:57:36] "POST /termos HTTP/1.1" 302 -
+127.0.0.1 - - [28/Jul/2026 08:57:36] "GET /termos/historico HTTP/1.1" 200 -
+127.0.0.1 - - [28/Jul/2026 08:57:46] "GET /termos/historico HTTP/1.1" 200 -
+127.0.0.1 - - [28/Jul/2026 08:57:46] "GET /termos HTTP/1.1" 200 -
+127.0.0.1 - - [28/Jul/2026 08:59:02] "POST /termos HTTP/1.1" 302 -
+127.0.0.1 - - [28/Jul/2026 08:59:02] "GET /termos/historico HTTP/1.1" 200 -
+127.0.0.1 - - [28/Jul/2026 08:59:04] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [28/Jul/2026 08:59:11] "GET /termos/ver/246 HTTP/1.1" 200 -
